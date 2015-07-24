@@ -1,0 +1,414 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript" src="static/script/raphael-min.js"></script>
+
+<script type="text/javascript">
+//<![CDATA[	  
+var cur_domain = "";
+var nwmaps = [];
+var map;
+var networks_data=[]
+var apcpu_data=[]
+var apConnect_data=[]
+	
+function webInit()
+{          	
+	$("#tabs_0").addClass("current");
+	$("#network_sel").html('<option value="0" selected>All network</option>');
+	cur_domain = getCookie('Lgdomain');
+	//alert("cur_domain is "+cur_domain);
+}
+
+function MapInit()
+{
+	map = new AMap.Map('mapContainer', {
+		resizeEnable: true,
+	});
+}
+
+function MarkedDomainMapList()
+{
+	map = new AMap.Map("mapContainer", {
+		resizeEnable: true,
+		view: new AMap.View2D({
+			resizeEnable: true,
+			center:new AMap.LngLat(nwmaps[0].longitude, nwmaps[0].latitude),//地图中心点
+			zoom:nwmaps[0].zoomlevel//地图显示的缩放级别
+		}),
+	});
+	
+	for(var i = 0; i < nwmaps.length; i++)
+	{
+		var marker = new AMap.Marker({	
+			//复杂图标
+			/*icon: new AMap.Icon({    
+					//图标大小
+					size:new AMap.Size(28,37),
+					//大图地址
+					//image:"static/images/network.png", 
+					image:"http://webapi.amap.com/images/custom_a_j.png", 
+					imageOffset:new AMap.Pixel(-28,0)
+				}),*/
+			//在地图上添加点
+			position:new AMap.LngLat(nwmaps[i].longitude, nwmaps[i].latitude)
+		});
+		marker.setMap(map); 
+		marker.setTitle("network: "+nwmaps[i].network_name); 
+	}
+}
+
+function GetFirmwareList()
+{
+	var param = {"domain_name": cur_domain};
+	$.getJSON("get-domain-map-list",param,function(data){
+		if(data == null || data == "")return;
+		$.each(data,function(we, el){	
+			nwmaps.push(el);  
+		});						
+	});
+	
+	if( nwmaps.length == 0 )
+	{
+		loadScript('MapInit')
+		//MapInit();
+	}
+	else
+	{	
+		loadScript('MarkedDomainMapList')
+		//MarkedDomainMapList();
+	}
+}
+
+function loadScript(Init) {
+	/*initlng = 116.327911;
+	initlat = 39.939229;
+	initzoom = 16;*/
+  var script = document.createElement("script");
+  	script.type = "text/javascript";
+	script.src ="http://webapi.amap.com/maps?v=1.3&key=9ce441d7b1fe68999fc41be3d60c7acb&&callback="+Init;
+	document.body.appendChild(script);
+}
+
+function Get_networksAP_info()
+{
+	
+	$.getJSON("get-networks-ap-info",function(data){
+		
+		$.each(data,function(key,value){ 					
+			networks_data.push(value);                     
+		});
+		RefreshAps()
+	});
+	
+}
+
+function Get_APCPU_Info()
+{
+	
+	$.getJSON("get-ap-cpu-connetnum",function(data){
+
+		$.each(data,function(key,value){
+			if(value.type=="cpu") 					
+				apcpu_data.push(value); 
+			else
+				apConnect_data.push(value);                    
+		});
+		//console.log(data)
+		RefreshApsCPU()
+		Refreshconnets()
+	});
+	
+}
+
+function RefreshAps()
+{
+	var TR=''
+	$.each(networks_data,function(we, el){
+		TR+='<tr>'
+		if(el.onlineap==el.totalap&&el.totalap!=0)
+		{
+			TR+='<td align="left" width="140"><div  class="Summary_in_table_img"><img src="static/images/networkok.png" ></div> <div class="Summary_networks">'+el.networks_name+'</div></td>'
+		}
+		else
+			TR+='<td align="left" width="140"><div  class="Summary_in_table_img"><img src="static/images/networkfail.png" ></div> <div class="Summary_networks">'+el.networks_name+'</div></td>'
+			
+		TR+='<td align="right"><div  class="float_right">'+WebdashboardString.Devices+':<span class="Summary_in_table_font">'+(el.upok == undefined ? "0":el.upok)+'</span>'+WebdashboardString.Upgrades +'--<span class="Summary_in_table_font">'+(el.onlineap == undefined ? "0":el.onlineap)+'</span>'+WebdashboardString.Online+'/<span class="Summary_in_table_font">'+el.totalap+'</span>'+WebdashboardString.Tot+'</div></td>'
+		TR+='</tr>'
+	})
+    $("#networksaps").html(TR);                  
+}
+
+
+function Refreshconnets()
+{
+	var TR=''
+	var i=0
+	$.each(apConnect_data,function(we, el){
+		var cs = i%2 ? "row2":"row1";		
+		TR+='<tr  class="'+cs+'">'
+		TR+='<td style="text-align: left">'
+		TR+='<div  class="Acme_mgdiv"><img  class="shadow Acme_img" src="static/images/status_ap_ok.png" alt="Access Point offline" title="Access Point offline"></div>'
+		TR+='<div  class="Acme_mdgdiv">'+el.dev_name+'</div>'
+		TR+='<div  class="Acme_megdiv">'+el.dev_sta_num+'</div>'
+		TR+='</td>'
+		TR+='</tr>'
+		i++
+	})
+    $("#connetnumber").html(TR); }
+
+
+
+
+function RefreshApsCPU()
+{
+	var TR=''
+	var i=0
+	$.each(apcpu_data,function(we, el){
+		var cs = i%2 ? "row2":"row1";		
+		TR+='<tr  class="'+cs+'">'
+		TR+='<td style="text-align: left">'
+		TR+='<div  class="Acme_mgdiv"><img  class="shadow Acme_img" src="static/images/status_ap_ok.png" alt="Access Point offline" title="Access Point offline"></div>'
+		TR+='<div  class="Acme_mdgdiv">'+el.dev_name+'</div>'
+		TR+='<div  class="Acme_megdiv">'+el.dev_cpu_utilize+'%</div>'
+		TR+='</td>'
+		TR+='</tr>'
+		i++
+	})
+    $("#ap_cpu").html(TR);                  
+}
+
+
+
+
+$(document).ready(function(){ 
+	webInit();	
+	GetFirmwareList();
+	Get_networksAP_info()
+	Get_APCPU_Info()
+	$("#Firmware").click(function(){
+		 
+		 if($("#Firmware_in").is(":visible")==true)
+		{
+			$("#Firmware div img").attr("src","static/images/dashboard_button.png")
+			$("#Firmware_in").hide()
+		}
+		else
+		{
+			$("#Firmware div img").attr("src","static/images/dashboard_button_down.png")
+			$("#Firmware_in").show()
+		}
+		
+	})
+	$("#Summary").click(function(){
+		 
+		 if($("#Summary_in").is(":visible")==true)
+		{
+			$("#Summary div img").attr("src","static/images/dashboard_button.png")
+			$("#Summary_in").hide()
+		}
+		else
+		{
+			$("#Summary div img").attr("src","static/images/dashboard_button_down.png")
+			$("#Summary_in").show()
+		}
+		
+	})
+	
+	$("#Acme").click(function(){
+		 
+		 if($("#Acme_in").is(":visible")==true)
+		{
+			$("#Acme div img").attr("src","static/images/dashboard_button.png")
+			$("#Acme_in").hide()
+		}
+		else
+		{
+			$("#Acme div img").attr("src","static/images/dashboard_button_down.png")
+			$("#Acme_in").show()
+		}
+		
+	})
+	
+   	var values = [9.1,0.9],
+		labels = ["90%","10%"];
+    Raphael("holder",0, 0).pieChart(120, 80, 70, values, labels, "#fff");					
+});  
+	
+	
+	
+Raphael.fn.pieChart = function (cx, cy, r, values, labels, stroke) {
+    var paper = this,
+        rad = Math.PI / 180,
+        chart = this.set();
+    function sector(cx, cy, r, startAngle, endAngle, params) {
+        var x1 = cx + r * Math.cos(-startAngle * rad),
+            x2 = cx + r * Math.cos(-endAngle * rad),
+            y1 = cy + r * Math.sin(-startAngle * rad),
+            y2 = cy + r * Math.sin(-endAngle * rad);
+        return paper.path(["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 0, x2, y2, "z"]).attr(params);
+    }
+    var angle = 0,
+        total = 0,
+        start = 0,
+        process = function (j) {
+            var value = values[j],
+                angleplus = 360 * value / total,
+                popangle = angle + (angleplus / 2),
+                color = Raphael.hsb(start, .75, 1),
+                ms = 500,
+                delta = 30,
+                bcolor = Raphael.hsb(start, 1, 1),
+                p = sector(cx, cy, r, angle, angle + angleplus, {fill: "90-" + bcolor + "-" + color, stroke: stroke, "stroke-width": 1}),
+                txt = paper.text(cx + (r + delta + 5) * Math.cos(-popangle * rad), cy + (r + delta + 25) * Math.sin(-popangle * rad), labels[j]).attr({fill: bcolor, stroke: "none", opacity: 0, "font-size": 20});
+            p.mouseover(function () {
+                p.stop().animate({transform: "s1.1 1.1 " + cx + " " + cy}, ms, "elastic");
+                txt.stop().animate({opacity: 1}, ms, "elastic");
+            }).mouseout(function () {
+                p.stop().animate({transform: ""}, ms, "elastic");
+                txt.stop().animate({opacity: 0}, ms);
+            });
+            angle += angleplus;
+            chart.push(p);
+            chart.push(txt);
+            start += .1;
+        };
+    for (var i = 0, ii = values.length; i < ii; i++) {
+        total += values[i];
+    }
+    for (i = 0; i < ii; i++) {
+        process(i);
+    }
+    return chart;
+};
+			  
+	//]]>
+</script>
+<style>
+.headertitle,.headertitle_right{width:508px; height:auto;border:#ccc solid 1px;float:left;margin:5px auto 10px 10px; -moz-border-radius: 5px;   -webkit-border-radius: 5px; border-radius:5px; overflow:hidden ;}
+.headertitle_right{float:right; margin-right:8px}
+#Summary,#Acme,#Firmware{width:100%;height:30px;background-color: #b5d6ea; cursor:pointer;text-align:left;line-height:28px }
+.titlemide{float:left; margin:2px 5px auto 200px; }
+#Summary_in,#Firmware_in{padding:10px 20px 10px 10px; float:left; width:500px; height:auto}
+.Summary_in_table{padding-left:10PX; width:480px; border:1px #e0e0e0 solid; height:auto; background-color:#f8f8f8; margin-top:10px; font-size:12px; font-weight:bold;}
+.Summary_networks{ margin-top:10px;}
+.Summary_in_table,.float_left,.Summary_networks{ float:left}
+.float_right{ float:right}
+.Summary_in_table_img{float:left; margin:6px 5px auto;}
+.Summary_in_table_font{font-size:22px; color:#3c86be; font-weight:normal}
+#holder{border:#039 0px solid; height:160PX; width:250PX;overflow:hidden; float:left}
+.Acme_mgdiv{width:40px;text-align:right;float:left}
+.Acme_img{float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;}
+.Acme_mdgdiv{width:350px;text-align:center;float:left}
+.Acme_megdiv{width:40px;text-align:center;float:left}
+
+</style>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+    
+	<div id="mainExt">
+		<div style="height: auto; min-height: 614px;" id="main"  >
+			<div style="width:1051px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+				<span><script>if(getCookie("Language")=="EN")
+								document.write('Networks of "'+getCookie('Lgdomain')+'" on Map')
+                			 else
+							 	document.write('"'+getCookie('Lgdomain')+'"网络地图')
+                             </script></span>
+			</div>
+			<div style="width:1051px;height:480px;border:#ccc solid 1px;" id="mapContainer"></div>
+         	 
+            <div class="headertitle">
+                <div id="Summary" >
+                    <div class="titlemide"><img src="static/images/dashboard_button_down.png"></div><span><script>document.write(WebdashboardString.summary)</script></span>
+                </div>
+                <div id="Summary_in" > 
+                	<div  class="float_left"><script>document.write(WebdashboardString.Networks)</script></div>
+       
+                    <div class="Summary_in_table" >
+                    <table width="450" border="0"  id="networksaps"  height="100%"  >
+                     
+                   </table>
+
+                    </div>
+                 </div>
+                
+            </div>
+            
+
+            
+             <div class="headertitle_right" >
+                <div  id="Acme" >
+                    <div class="titlemide"><img src="static/images/dashboard_button_down.png"></div><span><script>document.write(WebdashboardString.Performance)</script></span>
+                </div>
+                <div style="padding:15px; text-align:left" id="Acme_in"> 
+                
+                    <span ><script>document.write(WebdashboardString.CPU_Utilization)</script></span>
+                    <table id="ap_cpu"  width="100%" class="networkTable bootstrap-scope" border="0" cellpadding="0" cellspacing="2">
+                        <tr  class="row1">
+                            <td style="text-align:center"><script>document.write(WebdashboardString.No_Devices)</script>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    
+                      
+                    <span style=" margin-left:" ><script>document.write(WebdashboardString.Connection_number)</script></span>
+                    <table  width="100%" class="networkTable bootstrap-scope" border="0" id="connetnumber" cellpadding="0" cellspacing="2">
+                        <tr  class="row1">
+                            <td style="text-align:center">
+                            	<script>document.write(WebdashboardString.No_Devices)</script>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                  
+                </div>
+            </div>
+            
+            
+           <div class="headertitle" style="display:none">
+                <div id="Firmware" >
+                    <div  class="titlemide"><img src="static/images/dashboard_button_down.png"></div><span>Firmware Upgrades</span>
+                </div>
+                <div id="Firmware_in" > 
+                    <div id="holder" ></div>
+                    	
+                    <table border="0" cellspacing="5" width="190" style="float:left; margin-top:30px"> 
+                      <tr>
+                        <td ><div style="background-color:#F00; height:15px; width:15px"></div></td>
+                        <td>Firmware OK</td>
+                      </tr>
+                      <tr>
+                        <td ><div style="background-color:#ffa722; height:15px; width:15px"></div></td>
+                        <td>Firmware Fail</td>
+                      </tr>
+                       <tr height="40">
+                        <td colspan="2"  align="left" >Total:3000 OK:3999</td>
+                       
+                      </tr>
+                    </table>
+
+                    <div style="float:left">Firmware Upgrades Statistical Chart</div>
+                </div>
+            </div>
+			
+            <div class="cleared"></div>
+	  </div>
+     
+	</div>
+
+
+	
+	<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+	
+	<div id="footerExt">
+		<div id="footer">
+			<div id="copyright" style="text-align:center; margin-top:20px">
+				<span style="color: white; font-family: Arial; font-size: 11px"><script>document.write(WebString.Copyright)</script></span>
+			</div>               
+		</div>
+	</div>
+	
+	
+{% include "page-end.html" %} 

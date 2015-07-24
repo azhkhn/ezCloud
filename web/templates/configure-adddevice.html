@@ -1,0 +1,262 @@
+{% include "page-head.html" %} 
+<script type="text/javascript">
+//<![CDATA[
+var Data = []; 
+var cur_network = "";
+
+cur_network = getURLParam();
+
+document.title = "ezCloud AP Management | Configure - Add Access Point"
+
+function doCheckVal()
+{
+	if($("#dev_sn").val().length == 0)
+	{
+		alert(Webconfigure_adddeviceString.Serial_Number);
+		return false;
+	}
+	
+	if($("#dev_mac").val().length == 0)
+	{
+		alert(Webconfigure_adddeviceString.MAC_Address);
+		return false;
+	}
+	else
+	{
+		if(isValidMacAddress($("#dev_mac").val()) == false)
+		{
+			alert(Webconfigure_adddeviceString.MAC_Address_false);
+			return false;
+		}
+	}
+	return true;
+}
+
+function configure_select_network(network)
+{
+	url = "configure-overview.html?network=" + network;
+	window.top.location.href = url;
+} 
+
+function fresh_devtype_select()
+{
+	var TR = "";
+	if(Data == null)
+	{
+		return;
+	}
+	else
+	{
+		$.each(Data,function(wid,wel){
+			if(wel.dev_type != undefined)
+			{
+				TR += '<option value="' + wel.dev_type + '">' + wel.dev_type +'</option>';	
+			}
+		});
+	}
+	$("#devtype_sel").html(TR);
+}
+
+function FillNetworkSelectOption()
+{
+	var TR = "";
+	$.each(Data,function(wid,wel){
+		if(wel.data_type != "undefined" && wel.data_type == "network")
+		{
+			if(wel.network_name != "undefined")
+			{
+				TR += '<option value="' + wel.network_name + '">' + wel.network_name +'</option>';
+			}					
+		}
+	});
+	$("#network_sel").html(TR);
+	
+	$("#network_sel").val(cur_network);
+}
+
+function doLoad()
+{
+	FillNetworkSelectOption();
+	$("#network_name").val(cur_network);
+	fresh_devtype_select();
+}
+
+function webInit()
+{          	
+	$("#secondaryMenu2").show();
+	$("#tabs_2").addClass("current");
+	$("#secondaryMenu2Selection0").addClass("current secondarysectionSelected");
+}
+
+function getDATA(){ 
+	var url = "get-configure-adddev";
+	$.getJSON(url, 
+		function(data){ 
+			$.each(data,function(key,value){
+				Data.push(value);
+			});
+			doLoad();
+		} 
+    );
+} 
+
+$(document).ready(function(){
+	webInit();
+	getDATA();
+	if($(":radio").val() == 1)
+	{
+		$("#add_single_div").hide();
+		$("#add_bulk_div").show();
+	}
+	else
+	{
+		$("#add_single_div").show();
+		$("#add_bulk_div").hide();
+	}
+	
+	$("#apply_bttn").click(function(){
+		if($(":radio").val() == 1)
+		{
+			var dev_file = $("#dev_file").val();
+			if(dev_file == "")
+			{
+				alert(Webconfigure_adddeviceString.CSV_file);
+				return;
+			}
+			
+			var file_type = dev_file.substring(dev_file.lastIndexOf(".")+1);
+			if(file_type != "csv")
+			{
+				alert(Webconfigure_adddeviceString.format_CSV_file)
+				return;
+			}
+		}
+		else
+		{
+			if(doCheckVal() == false)
+			{
+				return;
+			}
+		}
+
+		$("#addDev_Form").submit();
+	});
+	
+	$(":radio").click(function(){
+		var is_checked = jQuery("#radio2").attr("checked");
+		if(is_checked == "checked")
+		{
+			$("#add_single_div").hide();
+			$("#add_bulk_div").show();
+			$(":radio").val(1);
+		}
+		else
+		{
+			$("#add_single_div").show();
+			$("#add_bulk_div").hide();
+			$(":radio").val(0);
+		}
+	});
+	WebLoadString("configure_adddevice")
+});
+//]]>
+</script>
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<form id="addDev_Form" name="addDev_Form" method="post" enctype="multipart/form-data" action="/add-device">
+<input id="network_name" name="network_name" type="hidden" value="" />
+<input id="device_type" name="device_type" type="hidden" value="0" />
+<div id="mainExt">
+	<div style="height: auto; min-height: 571px;" id="main">
+		<div style="width: 930px; left: 0px;" id="content">
+		<div style="width: 930px; opacity: 1;" id="contentInner">
+			<div style="min-height:571px">
+				<div id="cloud-content">            
+
+				<!-- Start ezcloud Choose -->
+				<div id="blq-ezcloud" class="showw">
+					<div id="cloud-diagram-intro">			
+						<div id="cloud" class="cloud-size diagram-img">
+							<h3 class="sans-narrow-normal title-right size-cloud-label">ezCloud</h3>
+						</div>					
+						<div id="diagram-tanaza" class="diagram-img diagram-tanaza-size ">
+							<h4 class="sans-narrow-normal ap1-location1 size-ap-label title-right">EZCLOUD POWERED WIRELESS DEVICE </h4> 
+							<h5 class="sans-narrow-normal ap1-location2 size-ap-label title-right"></h5>
+						</div>		
+					</div>
+					<div id="cloud-text-intro">	
+						<h2 class="title-orange-dark title-right sans-strong">ezCloud</h2>
+						<h5 class="title-orange-light title-right sans-narrow-normal ">powered</h5>
+						<h3 class="title-gray-light sans-narrow-normal" style="margin-bottom:3px;"><script>document.write(Webconfigure_adddeviceString.Add_device)</script></h3>
+						<h5 class="title-gray-light sans-narrow-normal" style="margin-top:10px;"> <script>document.write(Webconfigure_adddeviceString.Step_1)</script></h5>
+						<div style="width: 100%;height:40px;margin-top: 10px">
+							<div id = "way_dropmenu" class="bootstrap-scope">
+								<input type="radio" name="add_way" id="radio1" value="0" checked="checked"/><script>document.write(Webconfigure_adddeviceString.Single_Add)</script>
+								&nbsp;&nbsp;
+								<input type="radio" name="add_way" id="radio2" value="1"/><script>document.write(Webconfigure_adddeviceString.Bulk_Add)</script>
+							</div>
+						</div>
+						<div id="add_single_div">
+							<h5 class="title-gray-light sans-narrow-normal" style="margin-top:10px;"> <script>document.write(Webconfigure_adddeviceString.single_Step_2)</script></h5>
+							<div style="width: 100%;height:40px;margin-top: 10px">
+								<div id = "devtype_dropmenu" class="bootstrap-scope">
+								<select id="devtype_sel" name="devtype_sel" style="width:150px;text-align:left" >														
+								</select>
+								</div>
+							</div>
+							<h5 class="title-gray-light sans-narrow-normal" style="margin-top:10px;"><script>document.write(Webconfigure_adddeviceString.single_Step_3)</script> </h5>
+							<div class="showw" style="width: 280px;text-align:left">
+								<h3 class="title-gray-light sans-narrow-normal" style="margin-top:19px">
+								<input name="dev_sn" value="" maxlength="20" class="txtfield sans-narrow-normal title-gray-light" id="dev_sn" style="width: 195px"
+           onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)">
+								</h3>
+								<div class="cleared"></div>                    
+							</div>
+							<h5 class="title-gray-light sans-narrow-normal" style="margin-top:10px;"> <script>document.write(Webconfigure_adddeviceString.single_Step_4)</script></h5>
+							<div class="showw" style="width: 280px;text-align:left">
+								<h3 class="title-gray-light sans-narrow-normal" style="margin-top:19px">
+									<input name="dev_mac" value="" class="txtfield sans-narrow-normal title-gray-light" id="dev_mac" style="width: 195px" onkeypress="return OnKeyPress(event, X_INPUT_MAC);">
+								</h3>
+								<div class="cleared"></div>                    
+							</div>
+						</div>
+						<div id="add_bulk_div">
+							<h5 class="title-gray-light sans-narrow-normal" style="margin-top:10px;"> <script>document.write(Webconfigure_adddeviceString.Bulk_Step_2)</script></h5>
+							<div style="width: 100%;height:40px;margin-top: 10px">
+								<input type="file" id="dev_file" name="dev_file"/>
+							</div>						
+						</div>
+						<div style="position:relative;width:200px; margin-left:350px; margin-top:5px;height:80px;"> 
+							<table>
+								<tr>
+									<td>
+										<div id="apply_bttn" class="bttn bttn_red">
+											<a id="addButton" href="javascript:{void(0)}">
+										<div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>&nbsp;<script>document.write(WebString.Add)</script></a><span></span>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+			</div>
+		</div>
+		</div>
+		<div class="cleared"></div>
+	</div>
+</div>
+<div id="footerExt">
+	<div id="footer">
+		<div id="copyright" style="text-align:center; margin-top:20px">
+			<span style="color: white; font-family: Arial; font-size: 11px">
+			        <script>document.write(WebString.Copyright)</script>
+			</span>
+		</div>                
+		<div class="cleared"></div>
+	</div>  
+</div>
+</form>
+{% include "page-end.html" %}

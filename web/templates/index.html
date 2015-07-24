@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<meta name="keywords" content="wifi,access,point,management,cloud,hotspot,monitor,configure,centralized,central,centrally" />
+<meta name="description" content="WiFi Access Points management system offered through the cloud" />
+<title>Cloud AP Management | Dashboard</title>
+
+<link rel="image_src" type="image/png" href="static/images/logot.png" />
+<link rel="shortcut icon" href="static/images/favicon.ico" />
+
+<!-- JQuery and Jquery validate -->
+<script type="text/javascript" src="static/jquery/jquery-1.10.1.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/jquery/jquery-migrate-1.2.1.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/jquery/jquery.validate.1.9.0.min.js?v=2.8.6"></script>
+
+<!-- Tanaza frontend libs -->
+<script type="text/javascript" src="static/script/tanaza-overlay.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/tanaza-expose.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/tanaza-tooltip.js?v=2.8.6"></script>
+
+<!-- JSON Lib -->
+<script type="text/javascript" src="static/json/json.min.js?v=2.8.6"></script>
+    
+<!-- JQuery Ui -->
+<link type="text/css" href="static/css/jquery-ui-refactored.css?v=2.8.6" rel="stylesheet" />
+
+<!-- TABLESCROLL -->
+<script type="text/javascript" src="static/jquery-tablescroll/jquery.tablescroll.min.js?v=2.8.6"></script>
+<link type="text/css" rel="stylesheet" href="static/jquery-tablescroll/jquery.tablescroll.css?v=2.8.6"/>
+
+<!-- Diagrams -->
+<script src="static/dygraph/dygraph-full.min.js?v=2.8.6"></script>
+
+<!-- IP LIB -->
+<script type="text/javascript" src="static/script/iplib/Base.min.js?v=2.8.6"></script> 
+<script type="text/javascript" src="static/script/iplib/iplib.js?v=2.8.6"></script> 
+
+<!--TANAZA FRAMEWORK -->
+<script type="text/javascript" src="static/script/common.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/menu.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/layout.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/transitions.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/framework.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/registration.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/hubspot.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/multipleadd.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/dashboard.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/monitor.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure_ssid.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure_internet.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/manage.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure_ssid_conflict.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/account.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/payment.js?v=2.8.6"></script> 
+<script type="text/javascript" src="static/script/ajax/search.js?v=2.8.6"></script> 
+
+<!-- TANAZA STYLES -->
+<link type="text/css" rel="stylesheet" href="static/css/all.css?v=2.8.6" />
+<link type="text/css" rel="stylesheet" href="static/css/multipleAdd.css?v=2.8.6" />
+<link type="text/css" rel="stylesheet" href="static/css/payment.css?v=2.8.6" />
+
+<!-- BOOTSTRAP -->
+<link type="text/css" rel="stylesheet" href="static/bootstrap/css/bootstrap.css?v=2.8.6" />
+<script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-progressbar.min.js?v=2.8.6"></script> 
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-inputmask.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-colorpalette.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-slider.js?v=2.8.6"></script>
+<link type="text/css" rel="stylesheet" href="static/bootstrap/css/bootstrap-slider.css?v=2.8.6" />
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-clockface.js?v=2.8.6"></script>
+<link type="text/css" rel="stylesheet" href="static/bootstrap/css/bootstrap-clockface.css?v=2.8.6" />
+<link type="text/css" rel="stylesheet" href="static/css/fix.css?v=2.8.6" />
+<script src="static/dataTables/jquery.dataTables.js"></script>
+<script src="static/dataTables/dataTables.bootstrap.js"></script>   
+<script src="static/bootstrap/x-editable/bootstrap-editable.js"></script>
+<link type="text/css" rel="stylesheet" href="static/bootstrap/x-editable/bootstrap-editable.css" />
+<script src="static/script/d3.v3.min.js"></script>
+<script src="static/script/d3-timeline.js"></script>
+
+<!--引用百度地图API-->
+<style type="text/css">
+    html,body{margin:0;padding:0;}
+    
+    .socialAppCredential{
+        width:140px;
+    }
+    .socialAppName{
+        border-bottom: 1px solid lightgray;
+    }
+    .socialAppOptions{
+        border-bottom: 1px solid lightgray;
+    }
+    
+    .bootstrap-scope .bootstrap-colorpalette {
+        padding-left:4px;
+        padding-right:4px;
+        white-space: normal;
+        line-height:1;
+    }
+
+    .bootstrap-scope .bootstrap-colorpalette div {
+        line-height:0;
+    }
+
+    .bootstrap-scope .bootstrap-colorpalette .btn-color {
+        width: 17px;
+        height: 17px;
+        border: 1px solid #fff;
+        margin: 0;
+        padding: 0;
+        float: left;
+    }
+
+    .bootstrap-scope .bootstrap-colorpalette .btn-color:hover {
+        border: 1px solid #000;
+    }
+    
+    #tzcp_splash_domain_dropdown .dropdown-menu{
+        width:300px !important;
+    }
+    
+    .iw_poi_title {color:#CC5522;font-size:14px;font-weight:bold;overflow:hidden;padding-right:13px;white-space:nowrap}
+    .iw_poi_content {font:12px arial,sans-serif;overflow:visible;padding-top:4px;white-space:-moz-pre-wrap;word-wrap:break-word}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?key=&v=1.1&services=true"></script>
+</head>
+
+
+<body>
+
+    <div class="bootstrap-scope">
+        <header class="navbar navbar-inverse navbar-fixed-top " role="banner">
+            <div class="container"  id="header">
+                <div class="row">                
+                    <div class="col-md-7" id="logoSection">
+                        <a href="/" class="navbar-brand" style="margin:0px;padding:0px;padding-top: 6px;"><img src="static/images/tzlogo-logo-min.png" alt="Tanaza" class="pngimg" /></a>            
+                        <label style="padding-top: 15px; margin-left:50px;">Network</label>
+                        <select style="margin-left: 10px;"><option selected>network0</option></select>
+                    </div>
+                    <div class="col-md-5 accountinfo" style="padding-top:10px">         
+                        <div class="btn-group pull-right" style="height:30px;margin-left:10px;" id="accountSection">
+                            <button data-toggle="dropdown" class="btn btn-sm btn-default dropdown-toggle" type="button" style="max-width:220px;text-overflow:ellipsis;overflow:hidden">
+                                <span class="glyphicon glyphicon-user" style="color:rgba(255,255,255,0.7);padding-right: 8px">Demo User </span>
+                                <span class="caret caret-white"></span>
+                            </button>
+                            <ul style="max-height: 300px;overflow-y: auto" role="menu" class="dropdown-menu">
+                                <li class="accountinfoHeader">
+                                    <a href="javascript:{void(0)}" style="font-weight: bold" class="disabled"><span class="glyphicon glyphicon-user text-color" style="padding-right: 8px"></span>higgins78@vip.sina.com</a>
+                                </li>
+                                <li class="divider"></li>
+                                <li>
+                                    <span class="glyphicon glyphicon-info-sign text-color" style="padding-right: 8px">Support Center</span>
+                                </li> 
+                                <li>
+                                <!--a href="index.php?action=logout"--><span class="glyphicon glyphicon-off text-color" style="padding-right: 8px">Logout</span>
+                                </li>            
+                            </ul>
+                        </div>
+                        <div class="form-inline pull-right" id="searchDiv" role="form">
+                            <div class="form-group">
+                                <input id="searchField" size="25" name="searchField" autocomplete="off" data-content="" type="search" class="form-control input-sm" placeholder="Search for ... ap, network" onKeyUp="showSearch()"  onclick="showSearch()">
+                            </div>
+                        </div>
+                        <!--div class="cleared"></div-->
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+    
+        <div style="width:100%;height:60px"></div>
+    
+    <div id="menuLevel1">
+        <div id="menuLevel1Container">
+            <!--div id="titleText"></div-->
+            <ul class="menuLevel_1"> 
+                <li id="menuLevel1Selection0" class="section">
+                    <a id="tabs_0" href="dashboard.html" class="w0 current" onClick="showSecondaryMenu(0, 0);" onMouseOver="changeMenu(0,0,'over');" onMouseOut="changeMenu(0,0,'out');">
+                        <img id="menuLevel1Img0" src="static/images/button/dash_img_gr.png" class="i_menu" alt="Dashboard"/> Dashboard
+                    </a>
+                </li>
+                <li id="menuLevel1Selection1" class="section" onClick="showSecondaryMenu(1, 0);" onMouseOver="changeMenu(1,0,'over');" onMouseOut="changeMenu(1,0,'out');">
+                    <a id="tabs_1" href="monitor-overview.html" class="w1">
+                        <img id="menuLevel1Img1" src="static/images/button/monitor_img_gr.png" class="i_menu" alt="Monitor"/> Monitor
+                    </a>
+                </li>
+                <li id="menuLevel1Selection2" class="section" onClick="showSecondaryMenu(2, 0);" onMouseOver="changeMenu(2,0,'over');" onMouseOut="changeMenu(2,0,'out');">
+                    <a id="tabs_2" href="configure-overview.html" class="w2">
+                        <img id="menuLevel1Img2" src="static/images/button/conf_img_gr.png" class="i_menu" alt="Configure"/> Configure
+                    </a>
+                </li>
+                <li id="menuLevel1Selection3" class="section" onClick="showSecondaryMenu(3, 0);" onMouseOver="changeMenu(3,0,'over');" onMouseOut="changeMenu(3,0,'out');">
+                    <a id="tabs_3" href="diagnose.html" class="w3">
+                        <img id="menuLevel1Img3" src="static/images/button/manage_img_gr.png" class="i_menu" alt="Manage Networks"/> Diagnose
+                    </a>
+                </li>
+                <li id="menuLevel1Selection4" class="section" onClick="showSecondaryMenu(4, 0);" onMouseOver="changeMenu(4,0,'over');" onMouseOut="changeMenu(4,0,'out');">
+                    <a id="tabs_4" href="management-network.html" class="w4">
+                        <img id="menuLevel1Img4" src="static/images/button/manage_img_gr.png" class="i_menu" alt="Manage Networks"/> Management
+                    </a>
+                </li>
+                <!--li class="cleared"></li-->
+            </ul>
+            <ul id="placeholederMenu" style="display: none">
+                <li id="menuLevel1Selection5" class="section" onMouseOver="changeMenu(5,0,'over');" onMouseOut="changeMenu(5,0,'out');">
+                    <a id="tabs_5" href="javascript:{loadPage('userAccount_subscription','','withMenu')}" class="w1 current">
+                        <img width="25" id="menuLevel1Img5" src="static/images/button/account_img_gr.png" style="margin-top:10px;vertical-align: top;" class="i_menu" alt="Account"/> Account
+                    </a>
+                </li>
+                <li id="menuLevel1Selection5" class="section" onClick="window.location.href='/'" onMouseOver="changeMenu(4,0,'over');" onMouseOut="changeMenu(4,0,'out');">
+                    <a id="tabs_4" href="#" class="w1">
+                        <img id="menuLevel1Img4" src="static/images/button/back_img_gr.png" style="margin-top:10px;vertical-align: top;" class="i_menu" alt="Back"/> Back
+                    </a>
+                </li>
+                <!--li class="cleared"></li-->
+            </ul>
+        </div>
+    </div>
+   
+       <div id="menuLevel2">
+        <div id="menuLevel2Container">
+            <div id="secondaryMenu0">
+                <div class="submenu_none">
+                    <div class="secondaryMenuContainer">
+                        <div id="secondaryMenu0Selection0"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="secondaryMenu1" >
+                <div class="secondaryMenuContainer submenu">
+                    <ul class="menuLevel_2">
+                        <li>
+                            <a id="secondaryMenu1Selection0" class="secondarysection" onClick="showSecondaryMenu(1, 0);" onMouseOver="changeSubMenu(1,0,'over');" onMouseOut="changeSubMenu(1,0,'out');" href="monitor-overview.html">
+                                &nbsp;&nbsp;Overview <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Overview"/>&nbsp;&nbsp;
+                            </a>
+                        </li>
+                        <li>
+                            <a id="secondaryMenu1Selection1" class="secondarysection" onClick="showSecondaryMenu(1, 1);" onMouseOver="changeSubMenu(1,1,'over');" onMouseOut="changeSubMenu(1,1,'out');" href="monitor-network">
+                                &nbsp;&nbsp;Network Statistics <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Network Statistics"/>&nbsp;&nbsp;
+                            </a>
+                        </li>
+                        <li>
+                            <a id="secondaryMenu1Selection2" class="secondarysection" onClick="showSecondaryMenu(1, 2);" onMouseOver="changeSubMenu(1,2,'over');" onMouseOut="changeSubMenu(1,2,'out');" href="monitor-device.html">
+                                &nbsp;&nbsp;Device Statistics <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Device Statistics"/>&nbsp;&nbsp;
+                            </a>
+                        </li>
+                        <li>
+                            <a id="secondaryMenu1Selection3" class="secondarysection" onClick="showSecondaryMenu(1, 3);" onMouseOver="changeSubMenu(1,3,'over');" onMouseOut="changeSubMenu(1,3,'out');" href="monitor-client.html">
+                                &nbsp;&nbsp;Client Statistics <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Client Statistics"/>&nbsp;&nbsp;
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div id="secondaryMenu2">
+                <div class="secondaryMenuContainer submenu">
+                    <ul class="menuLevel_2">
+                        <li>
+		                        <a id="secondaryMenu2Selection0" class="secondarysection" onClick="showSecondaryMenu(2, 0);" onMouseOver="changeSubMenu(2,0,'over');" onMouseOut="changeSubMenu(2,0,'out');" href="configure-overview.html">
+		                            &nbsp;&nbsp;Overview <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Overview"/>&nbsp;&nbsp;
+		                        </a>
+		                    </li>
+                        <li>
+                            <a id="secondaryMenu2Selection2" class="secondarysection" onClick="showSecondaryMenu(2,2);" onMouseOver="changeSubMenu(2,2,'over');" onMouseOut="changeSubMenu(2,2,'out');" href="configure-device.html">
+                                &nbsp;&nbsp;Device <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Device"/>&nbsp;&nbsp;
+                            </a>
+                        </li>
+                        <li>
+                            <a id="secondaryMenu2Selection3" class="secondarysection" onClick="showSecondaryMenu(2, 3);" onMouseOver="changeSubMenu(2,3,'over');" onMouseOut="changeSubMenu(2,3,'out');" href="configure-ssid.html">
+                                &nbsp;&nbsp;SSID <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Ssid"/>&nbsp;&nbsp;
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>     
+            <div id="secondaryMenu3">
+            <div style="display: none;" class="submenu_none">
+                <div style="display: none;" class="secondaryMenuContainer">
+                    <div id="secondaryMenu3Selection0"></div>
+                </div>
+            </div>
+        </div>        
+        <div id="secondaryMenu4">
+            <div style="display: none;" class="secondaryMenuContainer submenu">
+                <ul class="menuLevel_2">
+                    <li>
+                        <a id="secondaryMenu4Selection0" class="secondarysection" onclick="showSecondaryMenu(4, 0);" onmouseover="changeSubMenu(4,0,'over');" onmouseout="changeSubMenu(4,0,'out');" href="management-network.html">
+                            &nbsp;&nbsp;Networks <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Networks">&nbsp;&nbsp;
+                        </a>
+                    </li>
+                    <li>
+                        <a id="secondaryMenu4Selection1" class="secondarysection" onclick="showSecondaryMenu(4,1);" onmouseover="changeSubMenu(4,1,'over');" onmouseout="changeSubMenu(4,1,'out');" href="management-firmware.html">
+                            &nbsp;&nbsp;Firmware <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Firmware">&nbsp;&nbsp;
+                        </a>
+                    </li>
+                    <li>
+                        <a id="secondaryMenu4Selection2" class="secondarysection" onClick="showSecondaryMenu(4, 2);" onMouseOver="changeSubMenu(4,2,'over');" onMouseOut="changeSubMenu(4,1,'out');" href="management-user.html">
+                            &nbsp;&nbsp;User <img src="static/images/button/arrow_og.png" class="i_submenu" alt="User"/>&nbsp;&nbsp;
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        </div>
+    </div>
+    
+    <div id="mainExt">
+        <div id="main">
+            <!--div id="menuLevel3" class="panes">
+                <div id="menuLevel3Loader" class="loader">
+                </div>
+                <div id="menuLevel3Inner" >
+                </div>
+            </div>
+            <div id="content">
+                <div id="contentLoader" class="loader">
+                    <div style="text-align:center" id="dituContent">
+                    </div>
+                </div>
+            </div>            
+            <div id="help">
+                <div id="helpLoader" class="loader">
+                </div>
+                <div id="helpInner">
+                </div>
+            </div-->
+            <div style="width:1056px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+                 <span> Aps with problem on Map</span>
+            </div>
+            <div style="width:1056px;height:480px;border:#ccc solid 1px;" id="dituContent"></div>
+            <div style="width:1056px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+                 <span>Summary</span>
+            </div>
+            <div style="width:1056px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+                 <span>Acme Inc</span>                 
+            </div>
+            <!--table>
+            <tr>
+            <td>
+            <div style="width:470px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+                 <span>Summary</span>
+            </div>
+            <div style="width:470px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+                 <span>Firmware upgrades</span>
+            </div>
+            </td>
+            <td style="vertical-align:top">
+            <div style="width:470px;height:30px;background-color: #d2d3d0;border:#ccc solid 1px;">
+                 <span>Acme Inc</span>                 
+            </div>
+            <div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Network</th>
+                                    <th>Ap Name</th>
+                                    <th>Last Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                </div>
+            </td>
+            </tr>
+            </table-->
+            
+        </div>
+        <!--div class="cleared"></div-->
+    </div>
+    
+    <div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+    
+    <div id="footerExt">
+        <div id="footer">
+            <div id="copyright" style="text-align:center; margin-top:20px">
+                <span style="color: white; font-family: Arial; font-size: 11px">Copyright &copy; 2015 CIG. All rights reserved.</span>
+            </div>               
+            <!--div class="cleared"></div-->
+        </div>
+    </div>
+    
+  <!--百度地图容器-->
+  <!--div style="width:697px;height:550px;border:#ccc solid 1px;" id="dituContent"></div-->
+</body>
+<script type="text/javascript">
+    //创建和初始化地图函数：
+    function initMap(){
+        createMap();//创建地图
+        setMapEvent();//设置地图事件
+        addMapControl();//向地图添加控件
+        addMarker();//向地图中添加marker
+    }
+    
+    //创建地图函数：
+    function createMap(){
+        var map = new BMap.Map("dituContent");//在百度地图容器中创建一个地图
+        var point = new BMap.Point(121.411803,31.176566);//定义一个中心点坐标
+        map.centerAndZoom(point,18);//设定地图的中心点和坐标并将地图显示在地图容器中
+        window.map = map;//将map变量存储在全局
+    }
+    
+    //地图事件设置函数：
+    function setMapEvent(){
+        map.enableDragging();//启用地图拖拽事件，默认启用(可不写)
+        map.enableScrollWheelZoom();//启用地图滚轮放大缩小
+        map.enableDoubleClickZoom();//启用鼠标双击放大，默认启用(可不写)
+        map.enableKeyboard();//启用键盘上下左右键移动地图
+    }
+    
+    //地图控件添加函数：
+    function addMapControl(){
+        //向地图中添加缩放控件
+var ctrl_nav = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_LEFT,type:BMAP_NAVIGATION_CONTROL_LARGE});
+map.addControl(ctrl_nav);
+        //向地图中添加缩略图控件
+var ctrl_ove = new BMap.OverviewMapControl({anchor:BMAP_ANCHOR_BOTTOM_RIGHT,isOpen:1});
+map.addControl(ctrl_ove);
+        //向地图中添加比例尺控件
+var ctrl_sca = new BMap.ScaleControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT});
+map.addControl(ctrl_sca);
+    }
+    
+    //标注点数组
+    var markerArr = [{title:"剑桥科技",content:"齐来大厦21-22F",point:"121.411803|31.176566",isOpen:1,icon:{w:21,h:21,l:0,t:0,x:6,lb:5}}
+ ];
+    //创建marker
+    function addMarker(){
+        for(var i=0;i<markerArr.length;i++){
+            var json = markerArr[i];
+            var p0 = json.point.split("|")[0];
+            var p1 = json.point.split("|")[1];
+            var point = new BMap.Point(p0,p1);
+var iconImg = createIcon(json.icon);
+            var marker = new BMap.Marker(point,{icon:iconImg});
+var iw = createInfoWindow(i);
+var label = new BMap.Label(json.title,{"offset":new BMap.Size(json.icon.lb-json.icon.x+10,-20)});
+marker.setLabel(label);
+            map.addOverlay(marker);
+            label.setStyle({
+                        borderColor:"#808080",
+                        color:"#333",
+                        cursor:"pointer"
+            });
+
+(function(){
+var index = i;
+var _iw = createInfoWindow(i);
+var _marker = marker;
+_marker.addEventListener("click",function(){
+    this.openInfoWindow(_iw);
+    });
+    _iw.addEventListener("open",function(){
+    _marker.getLabel().hide();
+    })
+    _iw.addEventListener("close",function(){
+    _marker.getLabel().show();
+    })
+label.addEventListener("click",function(){
+    _marker.openInfoWindow(_iw);
+    })
+if(!!json.isOpen){
+label.hide();
+_marker.openInfoWindow(_iw);
+}
+})()
+        }
+    }
+    //创建InfoWindow
+    function createInfoWindow(i){
+        var json = markerArr[i];
+        var iw = new BMap.InfoWindow("<b class='iw_poi_title' title='" + json.title + "'>" + json.title + "</b><div class='iw_poi_content'>"+json.content+"</div>");
+        return iw;
+    }
+    //创建一个Icon
+    function createIcon(json){
+        var icon = new BMap.Icon("http://dev.baidu.com/wiki/static/map/API/img/ico-marker.gif", new BMap.Size(json.w,json.h),{imageOffset: new BMap.Size(-json.l,-json.t),infoWindowOffset:new BMap.Size(json.lb+5,1),offset:new BMap.Size(json.x,json.h)})
+        return icon;
+    }
+    
+    initMap();//创建和初始化地图
+</script>
+</html>

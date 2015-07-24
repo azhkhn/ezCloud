@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Start the ac server....
+#
+
+exe_dir=$(cd "$(dirname "$0")"; pwd)
+
+case "$1" in
+  start)
+	echo -e "---------Server Start---------\n"
+	chown wms:wms /opt/wms/firmware
+	echo "Starting web socket server..."
+	cd $exe_dir/wss/
+	/opt/wms/python/bin/python3.4 wss_main.py &
+	sleep 3
+	cd $exe_dir/web/
+	echo "Starting web service server..."
+	/opt/wms/python/bin/python3.4 web_main.py &
+	sleep 3
+	cd $exe_dir/sched/
+	echo "Starting sched worker..."
+	/opt/wms/python/bin/python3.4 sched_offline.py &
+	/opt/wms/python/bin/python3.4 sched_pm.py &
+	sleep 3
+	echo "Starting celery worker..."
+	cd $exe_dir
+	/opt/wms/python/bin/celery -A task.task worker --loglevel=info &
+	cd $exe_dir/
+	;;
+  stop)
+	echo -e "---------Server Stop---------\n"
+	kill -15 `ps -ef |grep "wss_main.py"| awk '{print $2}'`
+	kill -9 `ps -ef |grep "web_main.py"| awk '{print $2}'`
+	kill -15 `ps -ef |grep "sched_offline.py"| awk '{print $2}'`
+	kill -15 `ps -ef |grep "sched_pm.py"| awk '{print $2}'`
+	echo -n "Stopping celery worker..."
+	kill -9 `ps -ef |grep "celery"| awk '{print $2}'`
+	echo -e "Stop server success!"
+	;;
+  restart|reload)
+	"$0" stop
+	echo "Waiting for ac server start..."
+	sleep 5
+	"$0" start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

@@ -1,0 +1,250 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+	//<![CDATA[	  
+
+var cur_network_id = "";
+var nwlist = new Array();
+var clientlist = new Array();
+var devices_monitored = [];
+var updateInterval = 5000*6;  //30s
+$.ajaxSettings.async = false;
+
+cur_network_id = getURLMultiParam("network") ? getURLMultiParam("network") : "";
+		
+function webInit()
+{          	
+	$("#secondaryMenu1").show();
+	$("#tabs_1").addClass("current");
+	$("#secondaryMenu1Selection3").addClass("current secondarysectionSelected");
+}
+	
+function GetNetworkList()
+{
+	$.getJSON("networklist-get",function(data){
+		$.each(data,function(we, el){
+			nwlist.push(el);
+		});
+	});
+	if(!cur_network_id)
+	{
+		cur_network_id = nwlist[0].id;
+	}
+}
+
+function monitor_network_data(nid)
+{
+	cur_network_id = nid;
+	FreshNetworkListData();
+	FillNetworkSelectOption();
+	GetMonitorDeviceList()
+}
+
+function mainHight()
+{
+	if(($("#tabsv").height()+30)>386)
+	{
+		$("#main").height($("#tabsv").height()+30)
+	}
+}
+
+function FreshNetworkListData()
+{
+	var str='';
+	str += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px;margin-top:10px">';
+	$.each(nwlist,function(we, el){
+		if(cur_network_id == el.id)
+			str += '<li class="networkLi tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected">';
+		else
+			str += '<li class="networkLi tzui-state-default tzui-corner-left">';
+		str += '<a onclick=monitor_network_data('+ el.id + ') style="text-decoration:none;overflow: hidden; display: inline; height: 20px; width: 100px;">';
+		str += '<img class="shadow" src="static/images/network.png" style="float: left; padding-left: 6px; padding-top: 4px; margin-right: 0px;">';
+		str += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px">'+el.network_name+'</span>';
+		str += '<\/a><\/li>'
+	});
+	str += '<\/ul>\n';
+	$("#tabsv").html(str);
+}
+
+function FillNetworkSelectOption()
+{
+	var str = "";
+	$.each(nwlist,function(wid,wel){
+			str += '<option value="' + wel.id + '">' + wel.network_name +'</option>';
+	});
+	$("#network_sel").html(str);
+	if(cur_network_id == "" || cur_network_id == null)
+	{				
+		cur_network_id = nwlist[0].id;
+	}
+	$("#network_sel").val(cur_network_id);
+	GetClientList();
+	FreshClientList();
+	
+}
+
+function configure_select_network(nid)
+{
+	cur_network_id = nid;
+	FreshNetworkListData();
+	GetClientList();
+	FreshClientList();
+	GetMonitorDeviceList()
+}
+
+function GetClientList()
+{
+	clientlist = [];
+	var gkey = {"network_id": cur_network_id};
+	$.getJSON("specific-network-data-get", gkey, function(data){
+		if(data == null || data == "") return;							
+		$.each(data,function(idx, el){
+			clientlist.push(el);
+		});
+	});
+}
+	
+function FreshClientList()
+{
+	var str="";	
+	var cs = "";
+	var i = 0;
+	str +='<table id="clientstatstable" class="nicetable" cellpadding="0" cellspacing="2">';
+	str +='<thead>';
+	str +='<tr>';
+	str +='<th class="thhead">';
+	str +='<div class="big" style="cursor: pointer">'+WebMon_ClientString.Device+'</div>';
+	str +='<div class="big" style="cursor: pointer">SSID</div>';
+	str +='<div class="big" style="cursor: pointer">'+WebMon_ClientString.Mac+'</div>';
+	str +='<div class="small" style="cursor: pointer">'+WebMon_ClientString.Connected+'s</div>';
+	str +='<div class="small" style="cursor: pointer">'+WebMon_ClientString.Trans+'</div>';
+	str +='<div class="small" style="cursor: pointer">'+WebMon_ClientString.Rec+'</div>';
+	str +='<div class="small" style="cursor: pointer">'+WebMon_ClientString.Signal+'</div>';
+	str +='</th>';
+	str +='</tr><tr>';
+	str +='</tr></thead>';
+	str +='<tbody>';
+							
+	$.each(clientlist,function(idx, el){
+		var flag = 0
+		for( var j = 0; j < devices_monitored.length; j++)
+		{
+			if(el.dev_name == devices_monitored[j].dev_name && 1 == devices_monitored[j].dev_state)
+			{
+				flag = 1;
+				break;	
+			}
+		}
+		if(flag == 1)
+		{
+			cs = (i%2)?"even":"odd";
+			str +='<tr class="'+cs+'">';
+			str +='<td>';
+			str +='<div class="big">' + el.dev_name + '</div>';
+			str +='<div class="big">' + el.ssid_name + '</div>';
+			str +='<div class="big">' + el.sta_mac + '</div>';
+			str +='<div class="small">' + el.connected_time + '</div>';
+			str +='<div class="small">' + el.txbyte + '</div>';
+			str +='<div class="small">' + el.rxbyte + '</div>';
+			str +='<div class="small"><div style="width:95%;border:1px solid black;height:13px;text-align:center;position:relative">';
+			str +='<div class="signal" style="z-index:1;position:absolute;left:0px;top:0px;width:100%;height:13px">' + el.signal + '</div>';
+			str +='<div style="float:left;height:13px;width:79%;background-color:green;z-index:0;"></div>';
+			str +='<div class="cleared"></div></div></div><div class="cleared"></div>';
+			str +='</td>';
+			str +='</tr>';
+			i++;
+		}
+	});
+	str +='</tbody>';
+	str +='</table>';		        			
+	$("#clientstats").html(str);
+}
+
+function RealTimeClientsUpdate()
+{
+	GetClientList();
+	FreshClientList();
+	setTimeout(RealTimeClientsUpdate, updateInterval);
+}
+
+function GetMonitorDeviceList()
+{
+	devices_monitored=[]
+	var gkey = {"network_id": cur_network_id};
+	$.getJSON("monitored-devices-get",gkey,function(data){
+		if(data!=null)
+		{
+			$.each(data,function(we, el){
+				devices_monitored.push(el);
+			});
+		}
+	});
+	//alert("devices_monitored.length is "+devices_monitored.length);
+	if( 0 == devices_monitored.length)
+	{
+		$("#connected_client_stats").hide();
+		$("#no_device_monitored").show();
+	}
+	else
+	{
+		$("#connected_client_stats").show();
+		$("#no_device_monitored").hide();
+		RealTimeClientsUpdate()
+	}		
+}
+	
+$(document).ready(function(){ 
+	webInit();
+	GetNetworkList();
+	FreshNetworkListData();
+	FillNetworkSelectOption();
+	GetMonitorDeviceList();	
+	mainHight()		
+});  
+		          
+	//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+
+<div id="mainExt">
+	<div style="height: auto; min-height: 386px;" id="main">
+		<div style="opacity: 1; display: block;" id="menuLevel3" class="panes">
+			<div style="opacity: 1;" id="menuLevel3Inner"> 
+				<div id="title" style="color:#bf4803; font-family:Arial; font-weight:bold; font-size:22px; text-align:left; margin-left:10px;padding-top:10px">
+					<script>document.write(WebMon_ClientString.Networks)</script>
+					<div class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix" id="tabsv" style="overflow: hidden; position:absolute">
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="width: 740px; left: 190px;" id="content">
+			<div style="width: 740px; opacity: 1;" id="contentInner">
+				<div id="no_device_monitored" style="margin-top:40px; margin-left:60px">
+          <p style="text-align: justify">
+              <script>document.write(WebMon_NetString.No_device)</script>
+          </p>
+        </div>
+        <div id="connected_client_stats" style="display:none">
+					<h3 style=""> <script>document.write(WebMon_ClientString.Connected_Client_Stats)</script></h3>				
+					<div id="clientstats" style="width:100%;text-align: left;"></div> 
+				</div>        
+			</div>
+		</div>
+	</div>
+</div>
+	
+<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+
+<div id="footerExt">
+	<div id="footer">
+		<div id="copyright" style="text-align:center; margin-top:20px">
+			<span style="color: white; font-family: Arial; font-size: 11px"><script>document.write(WebString.Copyright)</script></span>
+		</div>               
+	</div>
+</div>
+ 
+        
+{% include "page-end.html" %} 

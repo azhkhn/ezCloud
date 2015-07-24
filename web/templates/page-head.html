@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<head>
+<title>ezCloud</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="Description" content="ezCloud is a WiFi Access Points management system offered through the cloud, that allows users to configure and monitor virtually any WiFi Access Point model.">
+<meta name="keywords" content="ezCloud,wifi,access,point,management,cloud,hotspot,monitor,configure,centralized,central,centrally">
+<link rel="image_src" type="image/png" href="static/images/logot.png">
+<link rel="shortcut icon" href="static/images/favicon.ico">
+
+
+<!-- JQuery and Jquery validate -->
+<script type="text/javascript" src="static/jquery/jquery-1.10.1.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/jquery/jquery-migrate-1.2.1.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/jquery/jquery.validate.1.9.0.min.js?v=2.8.6"></script>
+<!-- EZCLOUD frontend libs -->
+<script type="text/javascript" src="static/script/tanaza-overlay.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/tanaza-expose.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/tanaza-tooltip.js?v=2.8.6"></script>
+<!-- JSON Lib -->
+<script type="text/javascript" src="static/json/json.min.js?v=2.8.6"></script>
+<!-- JQuery Ui -->
+<link type="text/css" href="static/css/jquery-ui-refactored.css?v=2.8.6" rel="stylesheet">
+<!-- TABLESCROLL -->
+<script type="text/javascript" src="static/jquery-tablescroll/jquery.tablescroll.min.js?v=2.8.6"></script>
+<link type="text/css" rel="stylesheet" href="static/jquery-tablescroll/jquery.tablescroll.css?v=2.8.6">
+<!-- Diagrams -->
+<script src="static/dygraph/dygraph-full.min.js?v=2.8.6"></script>
+<!-- IP LIB -->
+<script type="text/javascript" src="static/script/iplib/Base.min.js?v=2.8.6"></script> 
+<script type="text/javascript" src="static/script/iplib/iplib.js?v=2.8.6"></script> 
+<!--EZCLOUD FRAMEWORK -->
+<script type="text/javascript" src="static/script/common.js"></script>
+<script type="text/javascript" src="static/script/menu.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/layout.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/transitions.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/framework.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/registration.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/hubspot.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/multipleadd.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/dashboard.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/monitor.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure_ssid.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure_internet.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/manage.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/configure_ssid_conflict.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/account.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/ajax/payment.js?v=2.8.6"></script> 
+<script type="text/javascript" src="static/script/ajax/search.js?v=2.8.6"></script> 
+<!-- EZCLOUD STYLES -->
+<link type="text/css" rel="stylesheet" href="static/css/all.css?v=2.8.6">
+<link type="text/css" rel="stylesheet" href="static/css/multipleAdd.css?v=2.8.6">
+<link type="text/css" rel="stylesheet" href="static/css/payment.css?v=2.8.6">
+
+<!-- BOOTSTRAP -->
+<link type="text/css" rel="stylesheet" href="static/bootstrap/css/bootstrap.css?v=2.8.6">
+<script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-progressbar.min.js?v=2.8.6"></script> 
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-inputmask.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-colorpalette.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-slider.js?v=2.8.6"></script>
+<link type="text/css" rel="stylesheet" href="static/bootstrap/css/bootstrap-slider.css?v=2.8.6">
+<script type="text/javascript" src="static/bootstrap/js/bootstrap-clockface.js?v=2.8.6"></script>
+<link type="text/css" rel="stylesheet" href="static/bootstrap/css/bootstrap-clockface.css?v=2.8.6">
+<link type="text/css" rel="stylesheet" href="static/css/fix.css?v=2.8.6">
+<script src="static/dataTables/jquery.dataTables.js"></script>
+<script src="static/dataTables/dataTables.bootstrap.js"></script>
+   
+<script src="static/bootstrap/x-editable/bootstrap-editable.js"></script>
+<link type="text/css" rel="stylesheet" href="static/bootstrap/x-editable/bootstrap-editable.css">
+
+<script src="static/script/d3.v3.min.js"></script>
+<script src="static/script/d3-timeline.js"></script>
+<script src="static/script/util.js"></script>
+<script type="text/javascript" src="static/script/jquery.circliful.min.js"></script>
+<!-- langeuage -->
+<script type="text/javascript">
+ var LG=getCookie("Language")
+	if(LG=="CN")
+	 	document.write("<script type=\"text/javascript\" src=\"static/script/lang_cn.js\"><\/script>");
+	 else
+	  	document.write("<script type=\"text/javascript\" src=\"static/script/lang_en.js\"><\/script>");
+</script>
+<script type="text/javascript">
+$.ajaxSettings.async = false;
+$.ajaxSettings.cache = false;
+</script>

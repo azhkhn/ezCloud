@@ -1,0 +1,1174 @@
+{% include "page-head.html" %} 
+
+<link type="text/css" rel="stylesheet" href="static/css/amap.css">
+
+
+<style>
+#map_save{
+			position:absolute;
+			top: 460px;
+			right:90px;
+			height:50px;		
+			line-height:50px;
+			padding-left:10px;
+			padding-right:10px;
+		}
+
+#save_bttn{
+			width:54px;
+			height:32px;
+			font-size:16px;
+			color:#FFFFFF; 
+			font-family:Arial; 
+			#font-weight:bold;
+			background-color:#66B3FF;
+		}
+		
+.btn-secondary {
+  color: #ffffff;
+  background-color: #87CECB;
+  border-color: #357ebd;
+}
+
+.btn-third {
+  color: #ffffff;
+  background-color: #FF9966;
+  border-color: #357ebd;
+}
+	
+.boxout{float:left; padding-right:10px;width: 920px;height:46px; border:#e5e5e5 solid 1px; background-color:#fafafa; margin-left:50px; margin-top:10px; font-size:12px}
+#pageclass_img{	 cursor:pointer; float:right;margin:15px 3px auto 0px;width:20px;}
+#pageclass_atext{float:right; cursor:pointer;  margin:13px auto;  width: 40px; text-align:right}
+#float_right {float:right; }
+#pageclass_ctext{float:right;cursor:pointer; margin:14px auto;  width: 70px; text-align:right}
+.split_mid{float:right; width:30px }
+#b_delele_device{float:right; cursor:pointer; width:90px;  padding:13px;  font-size:14px; height:21px}
+#b_dead_ssid{float:right;cursor:pointer;  width: auto; padding:13px 5px 13px 5px; width:190px; font-size:14px; height:21px}
+.checked_user{background-color:#e6934a;}
+.checked_user span{color:#ffffff}
+#showbox{ display:none}
+#float_ssid	{ display:none;width: auto;  padding:13px;  font-size:14px; height: auto; width:200px;position:absolute; background-color:#fafafa; border:#e5e5e5 1px solid; margin:46px auto auto 374px}
+.list_devic_check{width:20px;float:left;text-align:right; height:20px; margin-top:6px ; background:url(static/images/chekbox.png) no-repeat;}
+.list_devic_checked{width:20px;float:left;text-align:right; height:20px; margin-top:6px ; background:url(static/images/chekboxed.png) no-repeat;}
+.list_devic_check_empyt{width:20px;float:left;text-align:right; height:20px; margin-top:6px ;}
+.list_devic_discheck{width:20px;float:left;text-align:right; height:20px; margin-top:6px ; background:url(static/images/disablechekbox.png) no-repeat;}
+
+		
+</style>
+<script src="static/script/amap.js"></script>
+<script type="text/javascript">
+//<![CDATA[	  
+var ssid_list=[]		
+var nwdevices = []; 
+var Data_networks = []; 
+var Data_Search = []
+var cur_network = "";
+var start_from_number=1;//设置全局变量
+var number_space=20;
+var back_all_number=630;
+var cur_search=null;
+var G_qute_ssid=''
+var G_delete_device=''
+var G_Acuqute_ssid2=''
+var G_Acuqute_ssid5=''
+var G_Acudelete_device=''
+var nwmaps = [];
+var marker = [];
+
+document.title = "ezCloud AP Management | Configure - Device list";
+cur_network = getURLMultiParam("network");
+
+function configure_select_network(network)
+{
+	url = "configure-overview.html?network=" + network;
+	window.top.location.href = url;
+}
+
+function configure_accessPoint_settings(dev_name,i){
+	if(cur_search!=null)
+		url = "configure-device.html?network=" + cur_network + "&dev_name=" + dev_name+"&position="+ ((parseInt(i)+parseInt(start_from_number)-1))+"&search_name="+cur_search;
+	else
+		url = "configure-device.html?network=" + cur_network + "&dev_name=" + dev_name+"&position="+ ((parseInt(i)+parseInt(start_from_number)-1));
+
+	window.top.location.href = url;
+}
+
+
+function deviceMapSave()
+{
+	var url = "add-device-map?cur_network=" + cur_network;
+	$("#devMapForm").attr("action", url);	
+	$("#map_action").val("save");
+	//alert($("#device_id").val() + " Save:" + $("#longitude").val() + "," + $("#latitude").val());
+	$("#devMapForm").submit();
+}
+
+function onMarkerDragEnd()
+{
+	$("#longitude").val(this.getPosition().lng);
+	$("#latitude").val(this.getPosition().lat);
+	//alert($("#device_id").val() + " End:" + $("#longitude").val() + "," + $("#latitude").val());
+	//$("#map_save").show();
+	if( nwmaps[0].map_type == 1 && ($("#longitude").val() < nwmaps[0].longitude - 0.014748 ||
+	$("#longitude").val() > nwmaps[0].longitude + 0.014748 || 
+	$("#latitude").val() < nwmaps[0].latitude - 0.007046 || $("#latitude").val() > nwmaps[0].latitude + 0.007046) )
+		$("#map_save").hide();
+	else
+		$("#map_save").show();
+}
+
+
+function setDeviceMap(dev_name, dev_id)
+{ 
+  try 
+  { 
+	var marker = new AMap.Marker({
+		icon: new AMap.Icon({
+			size:new AMap.Size(32,32),  
+			image:"static/images/ap/curap.png"
+		}),
+		position:mapObj.getCenter(),
+		draggable:true, //点标记可拖拽
+		cursor:'move',  //鼠标悬停点标记时的鼠标样式
+		//raiseOnDrag:true//鼠标拖拽点标记时开启点标记离开地图的效果
+	});
+	marker.setMap(mapObj);
+	marker.setTitle(dev_name); 
+	$("#longitude").val(marker.getPosition().lng);
+	$("#latitude").val(marker.getPosition().lat);
+	$("#device_id").val(dev_id);
+	
+	AMap.event.addListener(marker,'dragend',onMarkerDragEnd);	
+  }
+  catch (e) 
+ { 
+ 	alert(WebString.network_disconnected)
+ }
+	
+}
+
+function deleteDeviceMap(dev_name, dev_id, idx)
+{
+	try
+	{
+		if (!confirm(WebString.remove_information))
+		{
+			return;
+		}	
+		marker[idx].setMap(null);
+		$("#device_id").val(dev_id);
+		$("#map_action").val("delete");
+	
+		var url = "add-device-map?cur_network=" + cur_network;
+		$("#devMapForm").attr("action", url);	
+		$("#devMapForm").submit();	
+	}
+	 catch (e) 
+	{ 
+ 		 	alert(WebString.network_disconnected)
+ 	}
+	
+}
+
+function moveDeviceMap(dev_name, dev_id, idx)
+{
+	try
+	{
+	$("#longitude").val(marker[idx].getPosition().lng);
+	$("#latitude").val(marker[idx].getPosition().lat);
+	//alert(dev_id + " Start:" + $("#longitude").val() + "," + $("#latitude").val());
+	
+	displaySelectDeviceMap(idx, "curap.png", dev_name);	
+	marker[idx].setDraggable(true);
+	marker[idx].setCursor('move');
+	$("#device_id").val(dev_id);
+	
+	AMap.event.addListener(marker[idx],'dragend',onMarkerDragEnd);
+	}
+	 catch (e) 
+	 {
+		  	alert(WebString.network_disconnected)
+	 }
+	
+}
+
+function monitor_showApStats(dev_name){
+	alert("monitor_showApStats" + dev_name);
+}
+
+function configure_add_accessPoint(){
+	url = "configure-adddevice.html?network=" + cur_network;
+	window.top.location.href = url;
+}
+
+function Search_name(){
+	space_page=number_space
+	nwdevices=[]
+	var device_name=$("#search_name_id").val();
+	if($("#search_name_id").val().length<1)
+	{
+		alert(WebString.search_input_device)
+		return 
+	}
+	cur_search=device_name
+	var param = {"network": cur_network, "search_info": device_name};
+	var url = "get-configure-overview-search";
+	$.getJSON(url, param,
+		function(data){ 
+			if(data == null || data == "")
+			 {
+				 $("#chan_multipageNumN").hide();
+				 $("#device_table").hide()
+				 alert(WebString.search_without)
+				 return;
+			 }
+			$.each(data,function(key,value){
+					nwdevices.push(value);
+			});
+			if(nwdevices.length==0)
+			{
+				$("#chan_multipageNumN").hide();
+			}
+			if(nwdevices.length>40&&back_all_number>40)
+			{
+				alert(WebString.search_too_wide);
+				return
+			}
+			$("#chan_multipageNumN").hide();
+			$("#device_table").hide()
+			doLoad();
+			$("#chan_multipageNumN_search").empty()
+			if(nwdevices.length>space_page)
+			{
+				$.each($("#device_table tr"), function(i){
+					  if(i >= space_page){
+						  	  this.style.display = 'none'; 
+							 }  
+						});
+				$("#chan_multipageNumN_search").show();
+				for(i=1;i<=Math.ceil(nwdevices.length/space_page);i++)
+				{
+					if(i==1)
+						string_page="<div class=\"page-int page_link\" id=\"page"+1+"\"  onclick=\"search_page("+1+")\">"+1+"</div>";	
+					else
+						string_page+="<div class=\"page-int\" id=\"page"+i+"\" onclick=\"search_page("+i+")\">"+i+"</div>"	;
+
+				}
+				$("#chan_multipageNumN_search").html(string_page);
+			}
+			$("#device_table").show()
+			
+		} 
+    );
+
+}
+
+function search_page(page)
+{
+	
+	space_page=number_space
+	var object=$("#device_table tr")
+	if(page*space_page>nwdevices.length)
+		var end = nwdevices.length
+	else
+		var end =page*space_page
+	$.each($("#device_table tr"), function(i){
+		if(parseInt((page*space_page-space_page))<=i && i<parseInt(end)){
+				this.style.display = '';
+				
+			}  
+		else
+			this.style.display = 'none'; 
+	});
+	for(i=1;i<=Math.ceil(nwdevices.length/space_page);i++)
+	{
+		if(i==page)
+		{
+			$("#page"+i).addClass("page_link")
+		}
+		else 
+			$("#page"+i).removeClass("page_link")
+	}
+}
+
+function FreshDeviceTable(network,option){
+	var all_page=0;
+	var present_page=0;
+	var TR = "";
+	TR += '<table style="width: 937px;margin:auto" class="networkTable bootstrap-scope" border="0" cellpadding="0" cellspacing="2">';
+	TR += '<tbody>';
+	if(nwdevices == null)
+	{
+		TR += '</tbody>';
+		TR += '</table>\n';
+		$("#device_table").html(TR);
+		return;
+	}
+	else
+	{
+		var i = 0, n = 0;
+		TR += '<tr style="cursor:pointer" class="row2"><td style="text-align: left">';
+		TR += '<div style="width:200px;float:left;padding-left:40px;">Device Name</div>';
+		TR += '<div style="width:120px;float:left;margin-left:40px;">Device Vendor</div>';
+		TR += '<div style="width:120px;float:left">Device SN</div>';
+		TR += '<div style="width:140px;float:left">Device MAC</div>';
+		TR += '<div style="width:100px;float:left">Floor ID</div>';
+		TR += '<div style="width:180px;float:left">Operation</div>';
+		TR += '</td></tr>';
+		$.each(nwdevices,function(wid,wel){
+			if(wel.total != "undefined" && wel.start != "undefined" && wel.offset != "undefined" && wel.data_type == "summary" )
+			{
+				back_all_number=wel.total;
+				start_from_number=wel.start;
+				number_space=wel.offset;
+				if(back_all_number==0|| Math.ceil(back_all_number/number_space)==1)
+				{
+					$("#chan_multipageNumN").hide()
+				}
+				else
+				{
+					$("#chan_multipageNumN").show()
+				}
+				//return;   // continue
+			}
+			var dev_name = "N/A";
+			var dev_vendor = "N/A";
+			var model_name = "N/A";
+			var dev_state = 0;
+		
+			if(wel.data_type != "undefined" && wel.data_type == "device")
+			{	
+				i++;
+				//if(wel.network_name != "undefined" && network == wel.network_name)
+				if(wel.network_name != "undefined")
+				{
+					if (wel.dev_name != "undefined")
+					{
+						dev_name = wel.dev_name;
+						if (wel.dev_vendor != "none"){
+							dev_vendor = wel.dev_vendor;
+						}
+						if (wel.dev_state != "none"){
+							dev_state = wel.dev_state;
+						}						
+						var cs = n%2 ? "row2":"row1"; 
+						TR += '<tr style="cursor:pointer" class=' + cs + '>';
+						TR += '<td style="text-align: left">';
+						TR += '<div style="width:40px;text-align:right;float:left" onClick="configure_accessPoint_settings(';
+						TR += "'"+ dev_name + "',"+i;
+						if( nwmaps.length != 0 && wel.floor_id != $("#floor_select").val() )
+							TR += ')">';
+						else
+							TR += ')" onmouseover=overDevice(' + n + ',' + '"' + wel.dev_name + '") onmouseout=outDevice(' + n + ',' + '"' + wel.dev_name + '")>';
+						if(dev_state == 1){
+							TR += '<img style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" class="shadow" src="static/images/status_ap_ok.png" alt="Access Point online" title="Access Point online">';
+						}
+						else
+						{
+							TR += '<img style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" class="shadow" src="static/images/status_ap_offline.png" alt="Access Point offline" title="Access Point offline">';
+						}
+						TR += '</div>';
+						TR += '<div style="float:left;width:160px;overflow: hidden; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px" title="';
+						TR += dev_name;
+						TR += '" onClick="configure_accessPoint_settings(';
+						TR += "'"+ dev_name + "'," + i;
+						if( nwmaps.length != 0 && wel.floor_id != $("#floor_select").val() )
+							TR += ')">';
+						else
+							TR += ')" onmouseover=overDevice(' + n + ',' + '"' + wel.dev_name + '") onmouseout=outDevice(' + n + ',' + '"' + wel.dev_name + '")>';
+						TR += dev_name;
+						TR += '</div>';
+						TR += '<div style="margin-left:40px; float:left;width:120px" onClick="configure_accessPoint_settings(';
+						TR += "'"+ dev_name + "',"+i;
+						TR += ')">';
+						TR += dev_vendor;
+						TR += '</div>';
+						TR += '<div style="float:left;width:120px" onClick="configure_accessPoint_settings(';
+						TR += "'" + dev_name + "',"+i;
+						TR += ')">';
+						TR += wel.dev_sn;
+						TR += '</div>';
+
+						TR += '<div style="float:left;width:140px" onClick="configure_accessPoint_settings(';
+						TR += "'"+ dev_name + "',"+i;
+						TR += ')">';
+						TR += wel.dev_mac;
+						TR += '</div>';
+						TR += '<div style="float:left;width:100px" onClick="configure_accessPoint_settings(';
+						TR += "'"+ dev_name + "',"+i;
+						TR += ')">';
+						TR += wel.floor_id + "th";
+						TR += '</div>';
+						TR += '<div style="float:left;width:180px;color:green">';
+						if( wel.map_marker == 1)    //device marked
+						{
+							if( nwmaps.length == 0 || (nwmaps.length != 0 && wel.floor_id == $("#floor_select").val()) )  
+							{
+								
+								try
+								{
+									marker[n] = new AMap.Marker({
+									icon: new AMap.Icon({
+										size:new AMap.Size(32,32),  
+										image:"static/images/ap/ap180.png"
+									}),
+									position:new AMap.LngLat(wel.longitude, wel.latitude)
+									});
+									marker[n].setMap(mapObj);
+									marker[n].setTitle(dev_name);
+									AMap.event.addListener(marker[n],'click',onClickMarker);	
+								}
+								catch (e) 
+								{
+								}
+							}
+							if( nwmaps.length != 0 && wel.floor_id != $("#floor_select").val() )
+								TR += '<button disabled id="map_bttn" class="btn btn-secondary btn-xs" type="button" onClick="javascript:{moveDeviceMap(';
+							else
+								TR += '<button id="map_bttn" class="btn btn-secondary btn-xs" type="button" onClick="javascript:{moveDeviceMap(';
+							TR += "'" + dev_name + "'," + wel.dev_id + "," + n;
+							TR += ')}">Move</button>';
+							if( nwmaps.length != 0 )
+							{
+								if( nwmaps[0].map_type == 0 || (  nwmaps[0].map_type == 1 && 
+									wel.floor_id == $("#floor_select").val()) )
+								{
+									TR += '<button id="map_bttn" class="btn btn-third btn-xs" type="button" onClick="javascript:{deleteDeviceMap(';
+									TR += "'" + dev_name + "'," + wel.dev_id + "," + n;
+									TR += ')}">';
+									TR += 'Remove</button>';
+								}
+							}							
+						}
+						else
+						{
+							TR += '<button id="map_bttn" class="btn btn-primary  btn-xs" type="button" onClick="javascript:{setDeviceMap(';
+							TR += "'" + dev_name + "'," + wel.dev_id;
+							TR += ')}">';
+							TR += 'Map</button>';
+						}
+						TR += '<button class="btn btn-warning btn-xs" type="button" onClick="javascript:{monitor_showApStats('
+						TR += "'" + dev_name + "'";
+						TR += ')}">';
+						TR += 'Stats</button>';
+						TR += '</div>';
+						if(option=="5g"||option=="2g")
+						{
+							if(wel.cap_5g_chain!="0"&&wel.cap_2g_chain!="0")
+							{
+								TR += '<div class="list_devic_check" onclick="Section2_5g(this,'+wel.dev_id+');"><\/div>';
+								G_Acuqute_ssid2+=wel.dev_id+','
+								G_Acuqute_ssid5+=wel.dev_id+','
+							}
+							else if (wel.cap_5g_chain!="0"&&wel.cap_2g_chain=="0"&&option=="5g")
+							{
+								TR += '<div class="list_devic_check" onclick="Section2_5g(this,'+wel.dev_id+');"><\/div>';
+								G_Acuqute_ssid5+=wel.dev_id+','
+							}
+							else if (wel.cap_5g_chain=="0"&&wel.cap_2g_chain!="0"&&option=="2g")
+							{
+								TR += '<div class="list_devic_check" onclick="Section2_5g(this,'+wel.dev_id+');"><\/div>'
+								G_Acuqute_ssid2+=wel.dev_id+','
+							}
+							else
+							{
+								TR += '<div class="list_devic_discheck"><\/div>'
+							}
+						}
+						else if(option=="delete_device")
+						{
+							TR += '<div class="list_devic_check" onclick="delete_device_f(this,'+wel.dev_id+');"><\/div>'
+							G_Acudelete_device+=wel.dev_id+','
+						}
+						else
+						{
+							TR += '<div class="list_devic_check_empyt"><\/div>'
+						}
+						TR += '</td>';
+						TR += '</tr>';
+						n++;
+					}//wel.dev_name
+				}//wel.network_name
+			}//wel.data_type
+		});
+		TR += '</tbody>';
+		TR += '</table>';
+		$("#device_table").empty();
+		//$("#device_table").replaceWith(TR);
+		$("#device_table").html(TR);
+		show_pagination(back_all_number,number_space)
+	}
+}
+
+function postpagenumber(present_page)
+{
+	start_from_number=(present_page-1)*number_space+1;
+	getDATA();
+
+}
+
+function FillNetworkSelectOption()
+{
+	var TR = "";
+	$.each(Data_networks,function(wid,wel){
+//		if(wel.data_type != "undefined" && wel.data_type == "network")
+	//	{
+			if(wel.network_name != "undefined")
+			{
+				TR += '<option value="' + wel.network_name + '">' + wel.network_name +'</option>';
+			}					
+	//	}
+	});
+	$("#network_sel").html(TR);
+
+	selectObj = document.getElementById("network_sel");
+	if(cur_network == "" || cur_network == "undefined" || cur_network == null)
+	{
+		selectObj.options[0].selected="selected";;
+		cur_network = selectObj.options[0].value;
+	}
+	else
+		$("#network_sel").val(cur_network);
+
+}
+
+function doLoad()
+{
+	var TR="";	
+	FreshDeviceTable(cur_network);
+	TR = WebString.Device_List + cur_network + '"';
+	$("#title").html(TR);
+}
+
+var mapObj;
+
+function webInit()
+{          	
+	$("#secondaryMenu2").show();
+	$("#search_id").css("visibility","visible")
+	$("#tabs_2").addClass("current");
+	$("#secondaryMenu2Selection0").addClass("current secondarysectionSelected");
+}
+
+function getDATA(tmp){
+	if(String(tmp)!="undefined")
+	{
+		number_space=tmp;
+		start_from_number=1
+	}
+	nwdevices=[]
+	var param = {"network": cur_network, "start": start_from_number,"offset": number_space};
+	var url = "get-configure-overview";
+	$.getJSON(url, param,
+		function(data){ 
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){
+				if(value.data_type != "undefined" && value.data_type == "ssid_list")
+				{
+					ssid_list.push(value);
+					
+				}
+				else
+					nwdevices.push(value);
+			});
+			doLoad();
+		} 
+    );
+} 
+function getDATA_network()
+{
+	var url = "get-network-name-list";
+	$.getJSON(url,
+		function(data){ 
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){
+					Data_networks.push(value);
+			});
+			FillNetworkSelectOption();
+			getDATA();
+			
+		} 
+    );	
+}
+
+function FloorIdSelect()
+{		
+	LoadFloorIdMap();
+	$("#map_save").hide();
+	FreshDeviceTable(cur_network);
+}
+
+function LoadNetworkDeviceMap()
+{
+	var high = nwmaps[0].storey_height;
+	if( high >= 1 )
+	{
+		$("#floor_id_div").show();
+		fillStoreySelect(high);	
+		$("#floor_select").val(nwmaps[0].floor_id);
+	}
+	FloorIdSelect();
+}
+
+function FreshNetworkMapInfo()
+{
+	
+	try 
+	{ 
+		$("#floor_select").empty();
+		$("#floor_select").append("<option value=1>1</option>");
+		$("#floor_id_div").hide();
+		
+		if( nwmaps.length > 0  )
+		{
+			var map_type = nwmaps[0].map_type;
+			if( 0 == map_type )
+			{
+	
+					initlng=nwmaps[0].longitude
+					initlat=nwmaps[0].latitude
+					initzoom=nwmaps[0].zoomlevel
+					MapInit()
+				
+				
+			}
+			else
+			{
+				LoadNetworkDeviceMap();	
+			}	
+		}
+	} 
+	catch (e) 
+	{ 
+		
+	}
+}
+
+
+
+function MapInit()
+{
+	mapObj = new AMap.Map("mapContainer", {
+		resizeEnable: true,
+		scrollWhell: true,
+		doubleClickZoom: true,
+		view: new AMap.View2D({
+			resizeEnable: true,
+			center:new AMap.LngLat(initlng, initlat),//地图中心点
+			zoom:initzoom//地图显示的缩放级别
+		}),
+		keyboardEnable:false
+	});
+//	doLoad();
+	
+}
+
+function Tmpmapint()
+{
+	MapInit()
+	doLoad();
+	FreshNetworkMapInfo();
+}
+
+function GetNetworkMapInfo()
+{
+	var param = "";
+	var cur_network_id = 1;
+	for(var j = 0; j < Data_networks.length; j++)
+	{
+		if( Data_networks[j].network_name == cur_network)
+		{
+			cur_network_id = Data_networks[j].network_id;
+			break;
+		}
+	}
+	
+	param = {"network_id": cur_network_id};
+	$.getJSON("get-network-map",param, function(data){
+		if(data == null || data == "")
+		{
+			nwmaps = [];
+			return;
+		}
+		$.each(data,function(key,value){
+			 nwmaps.push(value);
+		});			
+	});	
+	
+		
+}
+
+
+function loadScript() {
+	initlng = 116.327911;
+	initlat = 39.939229;
+	initzoom = 16;
+  var script = document.createElement("script");
+  	script.type = "text/javascript";
+	script.src ="http://webapi.amap.com/maps?v=1.3&key=9ce441d7b1fe68999fc41be3d60c7acb&&callback=Tmpmapint";
+	document.body.appendChild(script);
+}
+
+$(document).ready(function(){
+	webInit();
+	if(cur_network==null)
+	{
+		cur_network="{{back_network_name}}";
+	}
+	if("{{add_back_info}}"=="None")
+	{
+		alert(WebString.Device_exsit);
+	}
+	getDATA_network();	
+	GetNetworkMapInfo();
+	getmenu();
+	dispalySSIDList()
+	$("#save_ssid").val(WebString.save)
+	loadScript()
+	//MapInit(initlng, initlat, initzoom);
+	
+});
+function dispalySSIDList()
+{	
+	$("#title_ssid").html(cur_network)		
+	for(var i =0; i < ssid_list.length; i++)
+	{
+		$("#ssid_tp").append('<option value="'+ssid_list[i].ssid_id+'">'+ssid_list[i].ssid_name+'</option>');     	
+	}
+	return;
+}
+
+function changstatus_cupage(object)
+{
+	if($(object).attr("src")=="static/images/chekbox.png")
+	{
+		$(object).attr("src","static/images/chekboxed.png")
+		$(".list_devic_check").addClass("list_devic_checked").removeClass("list_devic_check")
+		$("#allpage").attr("src","static/images/chekbox.png")
+		if($("#b_delele_device").attr("class")=="checked_user")
+		{
+			G_delete_device=G_Acudelete_device
+		}
+		else
+		{
+			if($("#Radio").val()==5)
+			{
+				G_qute_ssid=G_Acuqute_ssid5
+			}
+			else
+				G_qute_ssid=G_Acuqute_ssid2
+		}
+	}
+	else
+	{
+		$(object).attr("src","static/images/chekbox.png")
+		$(".list_devic_checked").addClass("list_devic_check").removeClass("list_devic_checked")
+		
+	}
+}
+
+function changstatus_allpage(object)
+{
+	if($(object).attr("src")=="static/images/chekbox.png")
+	{
+		$(object).attr("src","static/images/chekboxed.png")
+		$(".list_devic_check").addClass("list_devic_checked").removeClass("list_devic_check")
+		if($("#b_delele_device").attr("class")=="checked_user")
+		{
+			G_delete_device=G_Acudelete_device
+		}
+		else
+		{
+			if($("#Radio").val()==5)
+			{
+				G_qute_ssid=G_Acuqute_ssid5
+			}
+			else
+				G_qute_ssid=G_Acuqute_ssid2
+		}
+		
+		$("#cupage").attr("src","static/images/chekbox.png")
+	}
+	else
+	{
+		$(object).attr("src","static/images/chekbox.png")
+		$(".list_devic_checked").addClass("list_devic_check").removeClass("list_devic_checked")
+		
+	}
+}
+var userselectflasg=false;
+function cancel_all()
+{
+	$("#b_dead_ssid").removeClass("checked_user")
+	$("#b_delele_device").removeClass("checked_user")
+	$("#float_ssid").hide()
+	$("#showbox").hide()
+	$(".list_devic_check").hide()
+	$(".list_devic_checked").hide()
+	$(".list_devic_discheck").hide()
+}
+function userselect(object)
+{
+	G_qute_ssid=''
+	G_delete_device=''
+	$("#cupage").attr("src","static/images/chekbox.png")
+	$("#allpage").attr("src","static/images/chekbox.png")
+	$("#b_dead_ssid").removeClass("checked_user")
+	$("#b_delele_device").removeClass("checked_user")
+	$(object).addClass("checked_user")
+	$("#showbox").show()
+	if($(object).attr("id")=="b_dead_ssid")
+	{
+		$("#float_ssid").animate({hight: '400px', opacity: 'show'}, 300,function(){ $('#float_ssid').show();})
+	}
+	else if($(object).attr("id")=="b_delele_device")
+	{
+		$("#float_ssid").animate({hight: '400px', opacity: 'hide'}, 300,function(){ $('#float_ssid').hide();})
+		FreshDeviceTable(cur_network,"delete_device")
+		
+	}
+	
+	
+	
+}
+function save_ssid_check()
+{
+	if($('#ssid_tp option').length==0)
+	{
+		alert(WebString.add_SSID_Template)	
+		return
+	}
+	
+	if($("#ssid_status").val()==1)
+	{
+		if($("#ssid_vlan").val()>4089 || $("#ssid_vlan").val()<1)
+		{
+			alert(WebString.SSID_VLAN)
+			return
+		}
+	}
+	
+	
+	$("#float_ssid").animate({hight: '400px', opacity: 'hide'}, 300,function(){ $('#float_ssid').hide();})
+	
+	if($("#Radio").val()==2)
+	{
+		FreshDeviceTable(cur_network,"2g")
+	}
+	else
+	{
+		FreshDeviceTable(cur_network,"5g")
+	}
+	
+}
+function delete_device_f(object,id)
+{
+	if($(object).attr("class")=="list_devic_checked")
+	{
+		$(object).removeClass("list_devic_checked")
+		$(object).addClass("list_devic_check")
+		var tmp=String(id)+','
+		G_delete_device=G_delete_device.replace(tmp,"")
+	}
+	else
+	{
+		$(object).removeClass("list_devic_check")
+		$(object).addClass("list_devic_checked")
+		G_delete_device+=id+','
+	}
+
+	$("#cupage").attr("src","static/images/chekbox.png")
+	$("#allpage").attr("src","static/images/chekbox.png")
+}
+function Section2_5g(object,id)
+{
+	if($(object).attr("class")=="list_devic_checked")
+	{
+		$(object).removeClass("list_devic_checked")
+		$(object).addClass("list_devic_check")
+		var tmp=id+','
+		G_qute_ssid=G_qute_ssid.replace(tmp,"")
+	}
+	else
+	{
+		$(object).removeClass("list_devic_check")
+		$(object).addClass("list_devic_checked")
+		G_qute_ssid+=id+','
+	}
+	$("#cupage").attr("src","static/images/chekbox.png")
+	$("#allpage").attr("src","static/images/chekbox.png")
+}
+
+function saveselect()
+{
+	if($("#b_delele_device").attr("class")=="checked_user")
+	{
+		if($("#cupage").attr("src")=="static/images/chekboxed.png")
+		{
+				$("#delete_device_id").val(G_Acudelete_device)
+		}
+		else if($("#allpage").attr("src")=="static/images/chekboxed.png")
+		{
+			if(!confirm(WebString.device_delete_all))
+			{
+				return
+			}
+			$("#all_delete_device_id").val(1)
+		}
+		else
+		{
+			if(G_delete_device=='')
+			{
+				alert(WebString.choose_device)
+				return
+			}
+			$("#delete_device_id").val(G_delete_device)
+			
+		}
+		
+		url = "del-device-batch?network=" + cur_network;
+		$("#batch_operate").attr("action", url);
+		$("#batch_operate").submit();
+		
+	}
+	if($("#b_dead_ssid").attr("class")=="checked_user")
+	{
+		
+		if($("#float_ssid").is(":visible")==true)
+		{
+			alert(WebString.click_save)
+			return
+		}
+		if($("#Radio").val()==5)
+		{
+
+			if($("#cupage").attr("src")=="static/images/chekboxed.png")
+			{
+					$("#qute_ssid_id").val(G_Acuqute_ssid5)
+			}
+			else if($("#allpage").attr("src")=="static/images/chekboxed.png")
+			{
+				if(!confirm(WebString.device_quote_all))
+				{
+					return
+				}
+				$("#all_qute_ssid_id").val(1)
+			}
+			else
+			{
+				if(G_qute_ssid=='')
+				{
+					alert(WebString.choose_device)
+					return
+				}
+				$("#qute_ssid_id").val(G_qute_ssid)
+				
+			}
+		}
+		else
+		{
+			
+			if($("#cupage").attr("src")=="static/images/chekboxed.png")
+			{
+					$("#qute_ssid_id").val(G_Acuqute_ssid2)
+			}
+			else if($("#allpage").attr("src")=="static/images/chekboxed.png")
+			{
+				if(!confirm(WebString.device_quote_all))
+				{
+					return
+				}
+				$("#all_qute_ssid_id").val(1)
+			}
+			else
+			{
+				if(G_qute_ssid=='')
+				{
+					alert(WebString.choose_device)
+					return
+				}
+				$("#qute_ssid_id").val(G_qute_ssid)
+				
+			}
+			
+		}
+		url = "set-device-ssid-batch?network=" + cur_network;
+		$("#batch_operate").attr("action", url);
+		$("#batch_operate").submit();
+
+	}
+}
+function change_ssid()
+{
+	G_qute_ssid=''
+	if($("#ssid_status").val()==0)
+	{
+		$("#Radio,#ssid_vlan").attr("disabled",true)
+		$("#Radio_t,#VLAN_ID").hide()
+		
+	}
+	else
+	{
+		$("#Radio,#ssid_tp,#ssid_vlan").attr("disabled",false)
+		$("#Radio_t,#VLAN_ID").show()
+	}
+}
+		  
+		          
+//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden"  id="page_title" value="configure-overview" />
+
+<div id="mainExt">
+	<div style="height: auto; min-height: 614px;" id="main">
+		<div style="width: 930px; opacity: 1;" id="contentInner">			
+			<div style="width:927px; float:left">
+				<form id="devMapForm" method="post" action="/add-device-map">
+					<input type="hidden" id="device_id" name="device_id">
+					<input type="hidden" id="longitude" name="longitude">
+					<input type="hidden" id="latitude" name="latitude">
+					<input type="hidden" id="map_action" name="map_action" value="save">
+					<div id="title" style="color:#bf4803; font-family:Arial; font-weight:bold; font-size:20px; text-align:left; margin-left:50px; float:left; width:400px;">
+					</div>			
+					<div id="floor_id_div" style="margin-left:60px;">
+						<label>Floor Id:</label>&nbsp;&nbsp;<select id="floor_select" name="floor_select" style="width:100px;" onchange="FloorIdSelect()"></select>
+					</div>
+					<div class="cleared"></div>
+					<div style="width:930px; height:480px;border:#ccc solid 1px;margin-left:50px;" id="mapContainer"></div>        
+					<div id="map_save" style=" display:none">
+						<input id="save_bttn" type="button" value="save" onclick="deviceMapSave()" />
+					</div>			
+				</form>
+
+            
+           <form  method="post" name="batch_operate" id="batch_operate" action="">
+           <input type="hidden" value="" name="delete_device_id" id="delete_device_id"/>
+           <input type="hidden" value="" name="qute_ssid_id" id="qute_ssid_id" />
+           <input type="hidden" value="0" name="all_delete_device_id" id="all_delete_device_id" />
+           <input type="hidden" value="0" name="all_qute_ssid_id" id="all_qute_ssid_id"  />
+
+            <div class="boxout"> 
+            	<div style="float:left"><img src="static/images/load.png" width="4" height="44" /></div>
+                <div style="float:left; margin-top:10px; margin-left:10px; font-size:16px" id="title_ssid"></div>
+                <div id="showbox">
+                    <div  id="pageclass_img"><img id="allpage" onclick="changstatus_allpage(this)" src="static/images/chekbox.png"  /></div>
+                    <div  id="pageclass_atext" ><script>document.write(Xconfigure_overviewString[0])</script></div>
+                    <div id="pageclass_img"><img id="cupage" onclick="changstatus_cupage(this)" src="static/images/chekbox.png"  /></div>
+                    
+                    <div  id="pageclass_ctext"><script>document.write(Xconfigure_overviewString[1])</script></div>
+                    <div  class="split_mid"><img src="static/images/split.png"  /></div>
+                </div>
+                
+                <div  id="b_delele_device" onclick="userselect(this)" ><span ><script>document.write(Xconfigure_overviewString[2])</script></span></div>
+                <div  class="split_mid"  ><img src="static/images/split.png"  /></div>
+                <div  id="b_dead_ssid"  onclick="userselect(this)"><span ><script>document.write(Xconfigure_overviewString[3])</script> </span></div>
+                <div  id="float_ssid">
+                         <table width="200"  height="140" style="font-size:12px; text-align:left" border="0">
+                          <tr>
+                            <td><script>document.write(Xconfigure_overviewString[4])</script>/
+							<script>document.write(Xconfigure_overviewString[5])</script></td>
+                            <td><select id="ssid_status" name="ssid_status" align="left"  onchange="change_ssid()"
+                             style="width:100px">
+													<option value = "1" selected = "selected" ><script>document.write(Xconfigure_overviewString[4])</script></option>
+													<option value = "0" ><script>document.write(Xconfigure_overviewString[5])</script></option>
+													</select></td>
+                          </tr>
+                           <tr id="Radio_t">
+                            <td>Radio</td>
+                            <td><select id="Radio" name="Radio"   align="left" style="width:100px" >                      						    												<option value = "2" selected = "selected" >2.4G</option>
+													<option value = "5" >5G</option>
+													</select></td>
+                          </tr>
+                          <tr>
+                            <td><script>document.write(Xconfigure_overviewString[6])</script></td>
+                            <td>		<select id="ssid_tp" name="ssid_tp" align="left" style="width:100px">                        
+													</select></td>
+                          </tr>
+                          <tr id="VLAN_ID">
+                            <td>VLAN ID</td>
+                            <td ><input maxlength="4" style="width:40px"   name="ssid_vlan" id="ssid_vlan" type="text" onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"> [1-4089]</td>
+                          </tr>
+                         <tr height="50px" align="right" >
+                            <td></td>
+                            <td><input  type="button" value="save" id="save_ssid" onclick="save_ssid_check()"/></td>
+                          </tr>
+                        </table>
+				</div>
+                <div class="split_mid" style="display:none"><img src="static/images/split.png"  /></div>
+            </div>
+               
+             </form>
+  
+        
+			<div id="device_table" style=" margin-left:48px; margin-top:2px; float:left;">
+					</div>
+                    
+					<div id="add_divice" style="margin-right:10px; float:right; margin-top:10px;">
+							<div class="bttn bttn_red">
+								<a id="addDeviceButton" href="javascript:{configure_add_accessPoint()}" rel="#expose">
+									<div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>
+									&nbsp; <script>document.write(WebString.Add_Device);</script>&nbsp; 
+								</a>
+							</div>
+					</div>
+                                
+                    <div id="cancel_bttn_div" style="margin-right:10px; float:right; margin-top:10px;">
+                            <div id="cancel_bttn" class="bttn bttn_black">
+                                <a id="cancelLanButton" href="javascript:{cancel_all();}">
+                               <div class="bnt_image"><img src="static/images/button/refuse_img.png"></div>&nbsp;<script>document.write(WebString.Cancel);</script></a><span></span>
+                            </div>
+                    </div>
+                    
+                    <div id="apply_bttn_div" style="margin-right:10px; float:right; margin-top:10px;">
+                        <div id="apply_bttn" class="bttn bttn_red">
+                                <a id="saveLanButton" href="javascript:{saveselect();}" onClick = "">
+                         	<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Apply);</script></a><span></span>
+                        </div>
+                    </div>
+                    
+                    
+                    
+
+				</form>
+			
+	     <!-- add by mouxiaohuan 2015-4-13 -start-->             
+				<div style="display: none; width:800px; float:left; text-align:center;height:25px; margin:0px auto 30px 160px;" id="chan_multipageNumN">
+					<div id="index_page_fourt_page"></div>
+					<div id="page_number"></div>
+					<div id="next_page_end_page"></div>
+					<div class="page-int" id="show20" onclick="getDATA(20)" ><script>document.write(WebString.page_20)</script></div>
+					<div class="page-int" id="show50" onclick="getDATA(50)" ><script>document.write(WebString.page_50)</script></div>
+				</div> 	
+				<div style="display: none; width:800px; float:left; text-align:center;height:25px; margin:0px auto 30px 400px;" id="chan_multipageNumN_search">			
+				</div>          
+	     <!-- add by mouxiaohuan 2015-4-13   -end-->      
+				
+				<div style="float:right;margin-right:40px;margin-top: 10px"></div>
+			</div>
+			<div class="cleared"></div>
+		</div>
+	</div>
+</div>
+<div class="cleared"></div>
+</div>
+<!---------------------To be completed------------------------>
+
+
+	
+	<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+	
+	<div id="footerExt">
+		<div id="footer">
+			<div id="copyright" style="text-align:center; margin-top:20px">
+				<span style="color: white; font-family: Arial; font-size: 11px">        <script>document.write(WebString.Copyright)</script></span>
+			</div>               
+		</div>
+	</div>
+        
+{% include "page-end.html" %}

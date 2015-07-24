@@ -1,0 +1,577 @@
+/* 
+    Document   : payment.css
+    Created on : Oct 8, 2013, 12:27:19 PM
+    Author     : danabel
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+            .tablescroll {
+                font: 12px normal Tahoma, Geneva, \"Helvetica Neue\", Helvetica, Arial, sans-serif;
+                text-align: left;
+            }
+            .tablescroll thead td { color: #999 !important; }
+            
+            .tablescroll td,
+            .tablescroll_wrapper,
+            .tablescroll_head,
+            .tablescroll_foot {
+                border:1px solid #ccc ;
+            }
+
+            .tablescroll td {
+                padding:3px 5px;
+                border-bottom:0;
+                border-right:0;
+                
+            }
+
+            .tablescroll_wrapper {
+                background-color:#fff;
+               /* border-left:0; */
+            }
+
+            .tablescroll_head,
+            .tablescroll_foot {
+                background-color:#eee;
+                border-left:0 !important;
+                border-top:0 !important;
+                font-size:11px;
+                font-weight:bold;
+            }
+
+            .tablescroll_head {
+                margin-bottom:3px;
+            }
+
+            .tablescroll_foot {
+                margin-top:3px;
+            }
+
+            .tablescroll tbody tr:first-child td {
+                border-top:0 !important;
+            }
+            
+
+.base,.base ul, .base ul li { 
+    width: 100%;  
+    text-align: left; 
+    list-style-type: none;
+}            
+.base ul li {    
+    display: inline-block; 
+    padding: 0px;
+    margin: 0px;
+    font-size:12px;
+}
+.base ul li .fld-title {
+    text-align: left;
+    width: 30%;
+}
+
+.base ul li .fld-data {
+    width: 70%;
+}
+
+ .fld-data input, .fld-data select {
+    width: 100%;
+}
+
+.scol2 ul .title {
+    display: inherit ;
+}
+.base ul li .fld-data, .base ul li .fld-title {
+    display: inline-block; 
+}
+
+.sub-block-col1 {
+width: 70% !important; 
+float: left;
+margin-left: 30px;
+}
+.sub-block-col1 li {
+padding: 3px 0px !important;
+}
+
+.sub-block-col1 li .fld-data { width: 65% !important; }
+.sub-block-col1 li .fld-title{ width: 35% !important;}
+.sub-block {
+width: 40% !important;
+float: left;
+}
+
+.highlight{
+    border: 2px solid #ff0000 !important;
+    
+}
+
+.required {
+    border: 2px solid #E1E2E2;
+    background: none repeat scroll 0 0 white;
+}
+
+.credittype{
+    float: right;
+    height: 25px;
+    padding: 0 5px;
+    width: 75px;
+}
+.credittype input {
+ vertical-align: top;
+}
+
+#ContactZForm {
+    
+    text-align: left;
+    background: none repeat scroll 0 0 white;
+ /*   border: 1px solid #CCCCCC;
+    box-shadow: 1px 1px 12px #CCCCCC; */
+   margin: -13px 0px 0px -38px;
+    padding: 10px 15px;
+    position: absolute;
+}
+
+
+#ContactZForm ul li span{
+    text-align: left;
+}
+.SoldContactZForm {
+    background: none repeat scroll 0 0 white;
+  /*  border: 1px solid #CCCCCC;
+    box-shadow: 1px 1px 12px #CCCCCC;*/
+    margin: -97px 364px;
+    padding: 10px 15px;
+    position: absolute;
+}
+/*
+.close {
+    float: right;
+    padding: 2px 6px;
+    border: 1px solid white;
+}
+
+.close:hover {
+    border: 1px solid #CCCCCC;
+}
+*/
+
+
+.methodPayment {
+    padding: 10px;
+    margin : 20px 10px;
+}
+.methodPayment ul li {
+    padding: 4px 0px;
+    
+}
+
+
+
+
+
+   ul {
+        list-style: none; 
+    }
+
+    ul li {
+    font-size: 12px;
+    }
+
+    .fld-data ,.fld-title{
+        float: left;
+    }
+    .fld-title{
+            width: 50%;
+    }
+    .fld-data {
+        width: 50%; 
+    }
+
+.credittype{
+    float: right;
+    height: 25px;
+    padding: 10px 5px 15px 5px;
+    width: 75px;
+}
+.credittype input {
+ vertical-align: top;
+}
+
+
+.stepp {
+background: #ff0000;
+}
+.stepp h2 {
+
+    background: #feccb1; /* Old browsers */
+    background: -moz-linear-gradient(-45deg,  #feccb1 0%, #f17432 50%, #ea5507 51%, #fb955e 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#feccb1), color-stop(50%,#f17432), color-stop(51%,#ea5507), color-stop(100%,#fb955e)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(-45deg,  #feccb1 0%,#f17432 50%,#ea5507 51%,#fb955e 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(-45deg,  #feccb1 0%,#f17432 50%,#ea5507 51%,#fb955e 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(-45deg,  #feccb1 0%,#f17432 50%,#ea5507 51%,#fb955e 100%); /* IE10+ */
+    background: linear-gradient(135deg,  #feccb1 0%,#f17432 50%,#ea5507 51%,#fb955e 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#feccb1', endColorstr='#fb955e',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+
+    border-radius: 0px 17px 17px 17px;
+    color: white;
+    float: right;
+    margin: -42px 410px;
+    padding: 10px 10px 10px 20px;
+    position: absolute;
+    width: 70px;
+
+
+}
+.space-top-sm {
+        padding-top: 15px;
+    }    
+.space-top-md {
+        padding-top: 30px;
+    }    
+ .space-top-lg {
+        padding-top: 45px;
+    }    
+      
+ .space-bottom-sm {
+        padding-bottom: 15px;
+    }
+ .space-bottom-lg {
+        padding-bottom: 45px;
+    }
+       
+    .space-bottom-md {
+        padding-bottom: 30px;
+    }
+    .activeStep{ display: inherit !important; }
+    .suspendStep{display: none !important; }
+    .highlight{
+        border: 2px solid #ff0000 !important;
+
+    }
+    #subcribeForm input, #ContactZForm input, .required {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 4px;
+    margin: 4px;
+    border-radius: 2px;
+    }
+    .required {
+        background: none repeat scroll 0 0 white;
+    }
+
+.base .close {
+    float: right;
+    border: 1px solid #fff;
+    padding: 0px 5px;
+    text-decoration: none;
+}
+
+.base .close:hover {
+    border: 1px solid #CCCCCC;
+}
+
+.sub-block-col1 {
+width: 70% !important; 
+float: left;
+margin-left: 30px;
+}
+.sub-block-col1 li {
+padding: 3px 0px !important;
+text-align: left;
+}
+
+.sub-block-col1 li .fld-data { width: 65% !important; }
+.sub-block-col1 li .fld-title{ width: 35% !important; }
+.sub-block {
+width: 40% !important;
+float: left;
+}
+
+#subscriptionBase1 {
+  /*  float: left;
+    height: 365px;
+    margin-left: 43px;
+    margin-top: 26px;
+    text-align: left;
+    width: 100%; */
+}
+
+#subscriptionBaseStep1 h1,#subscriptionBaseStep1 h2,#subscriptionBaseStep1 h3,#subscriptionBaseStep1 h4 {
+    text-align: left !important;
+}
+.PaymentMethodZForm ul li {
+ margin-bottom: 0px !important;
+ margin-top: 0px !important;
+}
+.Cards {
+ float: right;
+ margin-top: -10px;
+}
+.credit-img {
+    background-image: url("../images/credit-card-logos.png");
+    transition: all 0.2s ease 0s;
+    height: 43px; 
+    width: 53px;
+
+}
+.footer-credit-card{
+  /* background: url("../images/credit-card-logos.png") no-repeat center -2px;  */
+}
+.Visa {
+    background-position: 0 43px;
+}
+
+.MasterCard {
+    background-position: 166px 43px;
+}
+.AmericanExpress {
+    background-position: 112px 43px;
+}
+.Discover {
+    background-position: 57px 43px;
+}
+
+ .Visa.active {
+    background-position: 0 0px;
+}
+
+ .MasterCard.active {
+    background-position: 166px 0px;
+}
+ .AmericanExpress.active {
+    background-position: 112px 0px;
+}
+ .Discover.active {
+    background-position: 57px 0px;
+}
+
+#subscriptionBaseStep1 .form-group label,#subscriptionBaseStep2 .form-group label {
+ 
+   font-size: 0.90em;
+   font-weight: normal !important;
+
+}
+.card-number .col-lg-2 {
+width: 9.5% !important;
+padding-left: 6px !important;
+padding-right: 6px !important;
+}
+.card-number .col-lg-2:first-of-type {
+    width: 11.8% !important;
+    padding-left: 15px !important;
+}
+#subscriptionBaseStep2 .form-group .Cards input[type="radio"] {
+    float: left;
+    margin: 39px 0px 0px 23px;
+}
+
+.scol1 {
+    float: left;
+    padding-right: 31px;
+    width: 38%;
+}
+.scol2 {
+    float: left;
+    width: 329px;
+}
+.catalog {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 3px 3px 3px 3px;
+    float: left;
+    padding: 0;
+    width: 87%;
+}
+.catalog .title {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.1);
+    font-size: medium;
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding: 10px;
+    width: auto !important;
+    display: inherit !important;
+}
+
+.catalog .summary {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.03);
+    border-radius: 3px 3px 3px 3px;
+    color: gray;
+    margin: 5px !important;
+    padding: 5px !important;
+    text-align: left;
+    width: auto !important;
+    display: inherit !important;
+}
+.detail .sub-block-col1 {
+    float: left;
+    margin: 0;
+    padding: 0 0 0 10px;
+    width: 100% !important;
+}
+
+.detail .prices-summary li span {
+    width: 30%;
+    padding: 3px 5px;
+}
+.prices-summary {
+    margin: 0;
+    padding: 15px 0 0 0;
+    width: 80%;
+}
+
+.prices-summary th {
+    font-weight: bold;
+}
+.prices-summary td, .prices-summary th {
+    text-align: right !important;
+}
+
+.prices-summary td {
+    
+}
+
+.PaymentMethodZForm{
+    box-shadow: 2px 2px 9px rgba(0,0,0,0.5);   
+    position: absolute;
+    background: white;
+    margin : 10px;
+
+}
+
+.txt-left {
+  text-align: left ;  
+}
+
+.txt-right {
+  text-align: right !important;  
+}
+
+.txt-center {
+  text-align: center;  
+}
+.no-padding{
+    padding: 0px;
+}
+
+.txt-black {
+    color: rgba(0,0,0,0.7);
+}
+.txt-green {
+    color: rgba(0,0,0,0.7);
+}
+.txt-red {
+    color: rgba(0,0,0,0.7);
+}
+
+.bg-white{
+  background-color: white !important;  
+}
+.no-border {
+    border: none !important;
+}
+.txt-white{
+    color: white;
+}
+.txt-middle{
+    line-height: 2em;
+}
+
+/* Catalog Product */
+
+.pricing {
+    padding: 10px !important;
+}
+
+.pricing .title-row {
+    background: none repeat scroll 0 0 #EE7F00;
+    color: #FFFFFF;
+    font-size: 1.2em;
+    padding: 10px;
+    text-transform: uppercase;
+}
+
+.pricing-row .price strong {
+    color: #505050;
+    font-size: 28px;
+    position: relative;
+ 	top: -30px;
+}
+
+.pricing li {
+    text-align: center;
+}
+
+.pricing-row .price em.exact_price, .pricing-row .price strong, .pricing-row .price sup { 
+    font-family: verdana;	
+}
+
+.pricing-row .price em.exact_price, .pricing-row .price sup { 
+    color: #EE7F00;
+}
+.pricing-row .price em.exact_price {
+    display: inline;
+    font-size: 65px;
+    font-style: normal;
+    font-weight: bold;
+    letter-spacing: -3px;
+}
+
+.pricing-row .price sup {
+    font-size: 23px;
+    font-weight: bold;
+    position: relative;
+    top: -25px;
+}
+
+.pricing-row .price em.time {
+    color: #888888;
+    font-size: 26px;
+    margin-left: -25px;
+    position: relative;
+    top: -2px;
+}
+
+.footer-row, .normal-row, .pricing-row {
+ 	border: 1px solid #EEEEEE;
+    border-top: none;
+    font-size: 17px;
+    padding: 15px 0;
+}
+
+.normal-row {
+    background: none repeat scroll 0 0 #FFFFFF;
+}
+
+.pricing li .orange {
+    color: #EE7F00;
+    font-weight: bold !important;
+}
+
+.footer-row a.btn span.glyphicon {
+    border: 1px solid #FFFFFF;
+    border-radius: 50%;
+  /*  margin: 2px 10px 2px 5px;  */
+    padding: 8px;
+    color: #ffffff;
+}
+
+.btn.btn-lg.buy {
+    background: none repeat scroll 0 0 #EE7F00;
+    border: 1px solid #EE7F00;
+    box-shadow: 1px 1px 2px #888888;
+    color: #FFFFFF;
+}
+
+.btn.btn-lg.buy:hover {
+    background: none repeat scroll 0 0 #FFA500;
+    border: 1px solid #FFA500;
+}    
+
+.btn-choose:hover span {
+    color: #EE7F00;
+}
+
+.totalGeneral{
+    border-top: 2px solid #000;
+    font-weight: bold;
+    font-size: 17px;
+}

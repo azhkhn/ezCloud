@@ -1,0 +1,1888 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+//<![CDATA[
+
+var cur_ssidname = "";
+var Encryption = "" ;	
+var ap_num = "" ;
+var counter = 0;
+var ap_enable_list = [];
+var domain_list = [];
+var filtergroup_list = [];
+var filter_id_list = [];
+var vlanid_id_list = [];	
+var egress_rate_list = [];	
+var dm_string = [];
+var cur_network = "";
+var Data = new Array();
+var nwlist = new Array();
+
+var ft_string = "";
+var vlan_string =  "";
+var egress_rate_string = "";	
+var cur_nextflag="";
+var cur_position="";
+var start_from_number=160;
+var number_space=12;
+var back_all_number=600;
+var menu_show_flag=""
+var cur_menu_show_flag=""
+cur_network = getURLMultiParam("network");
+cur_ssidname = getURLMultiParam("ssidname");
+cur_position=getURLMultiParam("position");
+cur_nextflag=getURLMultiParam("nextflag");
+cur_menu_show_flag=getURLMultiParam("menu_show_flag");
+cur_search=getURLMultiParam("search_name");
+
+function remember_show_flag(show_string)
+{
+	cur_menu_show_flag="";
+	cur_menu_show_flag=show_string;
+}
+var used_ssid_name="";
+function FillNetworkSelectOption()
+{
+	var str = "";
+	$.each(nwlist,function(wid,wel){
+		str += '<option value="' + wel.network_name + '">' + wel.network_name +'</option>';
+	});
+	$("#network_sel").html(str);
+	$("#network_sel").val(cur_network);
+}
+	
+function configure_select_network(network)
+{
+	url = "configure-ssid.html?network=" + network;
+	window.top.location.href = url;
+}
+
+
+	
+function webInit()
+{          	
+	$("#secondaryMenu2").show();
+	$("#tabs_2").addClass("current");
+	$("#search_id").css("visibility","visible")
+	$("#secondaryMenu2Selection3").addClass("current secondarysectionSelected");
+	$("#curr_ssid_name").val(cur_ssidname);
+	$("#curr_ssid_name").hide();
+	$("#ssid_name").val($("#curr_ssid_name").val());	
+	var TR = "SSID: " + cur_ssidname;
+	$("#ssid_name_title").html(TR);
+	display_btn(false);
+	
+	ssidLimitValueSet();
+	displaySecurityPasswordFields();		
+}
+
+function configure_ssid_setting(ssidname,position)
+{
+	if(cur_search!=null)
+		url = "configure-ssidsummary.html?ssidname=" + ssidname + "&network=" + cur_network + "&position="+ (position+1)+"&search_name="+cur_search;
+	else{
+		cur_position=(parseInt(position)+ parseInt(start_from_number))
+		url = "configure-ssidsummary.html?ssidname=" + ssidname + "&network=" + cur_network + "&position="+ (parseInt(position)+ parseInt(start_from_number));
+	}
+	window.top.location.href = url;
+}
+
+
+function FreshSSIDList()
+{
+	var str= ""
+	str += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px;">';
+	var i=0
+	$.each(Data,function(we, el)
+	{				
+		if(el.total != "undefined" && el.start != "undefined" && el.offset != "undefined" && el.data_type == "summary" )
+		{
+			back_all_number=el.total;
+			start_from_number=el.start;
+			number_space=el.offset;
+		}
+				
+		if(undefined != el.ssid_name)
+		{
+			if(cur_nextflag =="turnpage")
+			{
+				cur_ssidname = el.ssid_name;
+				var title = "SSID: " + cur_ssidname;
+				$("#ssid_name_title").empty()
+				$("#ssid_name_title").html(title);
+				cur_nextflag="";
+				GetSsidTemplateData();
+
+			}
+			if(cur_ssidname == el.ssid_name)
+				str += '<li class="first tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected">';
+			else				
+				str += '<li class="first tzui-state-default tzui-corner-left">';
+				str += '<a onclick=configure_ssid_setting("'+ el.ssid_name + '",'+i+') style="text-decoration:none;overflow: hidden; cursor:pointer; display: inline; height: 20px; width: 100px;">';
+				str += '<img alt="Loading Configuration .. please wait" style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" id="ssid_img" class="shadow" src="static/images/ssid.png">';
+				str += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap" title="Employees">'+ el.ssid_name + '</span>';
+				str += '<\/a><\/li>'			
+				i++;	
+		}	        
+	});				
+	str += '<\/ul>\n';
+	$("#tabsv").empty();
+	$("#tabsv").html(str);	
+	if(back_all_number==0|| Math.ceil(back_all_number/number_space)==1)
+	{
+		$("#page_show").hide()
+	}
+	else 
+	{	
+		$("#page_show").show()
+		Calculation_page(start_from_number,number_space,back_all_number)
+	}		
+
+}
+			
+function GetSsidListData()
+{
+	Data=[]
+	if(cur_search!=null&&cur_menu_show_flag!="1.wireless_basic")
+	{
+		$("#search_name_id").val(cur_search)
+		Search_name()
+		return;
+	}	
+	var str="";
+	var name = {"ssidname":cur_ssidname,"network":cur_network,"start": start_from_number,"offset": number_space};
+	$.getJSON("get-ssid--summary",name,function(data){
+		$.each(data,function(key,value){ 					
+			Data.push(value);                     
+		});
+		FreshSSIDList()	
+	});
+}
+
+function postpagenumber(present_page)
+{
+	start_from_number=(present_page-1)*number_space+1;
+	url = 	url = "configure-ssidsummary.html?ssidname=" + cur_ssidname + "&network=" + cur_network + "&position="+ ((present_page-1)*number_space+1)+ "&nextflag=turnpage"
+	window.top.location.href = url;
+}
+
+var garden_list = [] ;
+function GetSsidTemplateData()
+{
+	var wallgarden = [];
+	var str="";
+	var name = {"ssidname":cur_ssidname,"network":cur_network};
+	var broadcast_enable;
+	var APListData = new Array();
+	var rate_lmt_enable ;
+	var us_rate_lmt;
+	var ds_rate_lmt;
+	var ssid_isolate;
+	var ssid_wds;
+	var wep_key;
+	var wepdefult = "";
+	var wpa2defult = "";
+	var portalname = "";
+	var rsp_time;
+	var network_name;
+	$("#curr_ssid_name").val(cur_ssidname);
+	$("#ssid_name").val($("#curr_ssid_name").val());
+	$.getJSON("get-ssidtemplateinfo",name,function(data){
+		$.each(data,function(index){ 
+			if(data[index].data_type=="ssid_usering_name")
+			{
+				used_ssid_name+=data[index].ssid_name_by_device+"|";
+				return;
+			}
+			var block = data[index].block ;     
+
+			if(block=="basic")
+			{
+				if(data[index].ssid_name!= undefined)
+				{
+					broadcast_enable = data[index].ssid_broadcast;
+					if(broadcast_enable == 1)
+					{
+						hidden_ssid = 0;
+						$("#hidden_ssid").attr("checked",false);
+						SSIDHiddenEnable();	
+					}
+					else
+					{
+						hidden_ssid = 1;
+						$("#hidden_ssid").attr("checked",true);
+						SSIDHiddenEnable();								
+					}
+					if(data[index].station_number == null||data[index].station_number == 0)
+					{
+						$("#station_number").val(128);						
+					}
+					else
+					{
+						$("#station_number").val(data[index].station_number);						
+					}
+
+					
+					ssid_isolate = data[index].ssid_isolate;						
+					SSIDIsolateEnable();	
+					if(ssid_isolate)
+					{
+						$("#isolation_enable").attr("checked",true);						
+					}
+					else
+					{
+						$("#isolation_enable").attr("checked",false);						
+					}
+						
+					ssid_isolate = data[index].ssid_isolate;						
+					SSIDIsolateEnable();	
+					if(ssid_isolate)
+					{
+						$("#isolation_enable").attr("checked",true);						
+					}
+					else
+					{
+						$("#isolation_enable").attr("checked",false);						
+					}	
+						
+					ssid_wds = data[index].ssid_wds;
+					if(ssid_wds)
+					{
+						$("#wds_enable").attr("checked",true);
+						ssid_wds_enable();							
+					}
+					else
+					{
+						$("#wds_enable").attr("checked",false);
+						ssid_wds_enable();							
+					}						
+					rate_lmt_enable = data[index].rate_limit_enable;
+					us_rate_lmt = data[index].us_rate_limit;
+					ds_rate_lmt = data[index].ds_rate_limit;
+
+					$("#us_rate_limit").val(us_rate_lmt).val();
+					$("#ds_rate_limit").val(ds_rate_lmt).val();							
+					if(rate_lmt_enable)
+					{	
+						$("#bw_control_enabled").attr("checked",true);	
+					}
+					else
+					{
+						$("#bw_control_enabled").attr("checked",false);					
+					}
+					ssidLimitValueSet();	
+						
+				}
+			}
+				
+			if(block=="security")
+			{
+				if(data[index].security_type!= undefined)
+				{					
+					Encryption = data[index].security_type;
+					$("#security_mode").html(Encryption);
+						
+					if(Encryption=="open")
+					{
+						$("#ssid-security-1").attr("checked",true);							
+					}
+					else if(Encryption=="wpa2-psk")
+					{
+						$("#ssid-security-4").attr("checked",true);		
+						wpa2defult = data[index].wpa_psk;
+						$("#wpa2psk").val(wpa2defult);									
+					}
+					else if(Encryption=="wep")
+					{
+						$("#ssid-security-6").attr("checked",true);		
+						wepdefult = data[index].wep_key;
+						$("#wep").val(wepdefult);		
+					}	
+					else if(Encryption=="wpa2_eap")
+					{
+						$("#ssid-security-8").attr("checked",true);								
+					}						
+					else if(Encryption=="portal")
+					{
+						$("#ssid-security-10_2").attr("checked",true);	
+					}	
+					displaySecurityPasswordFields();
+						
+				}				
+			}
+			if(block=="portal")
+			{
+				portalname = data[index].portal_name;	
+				if(portalname!=undefined)
+				{
+					$("#portal_name").val(portalname);
+					$("#portal_url").val(data[index].portal_url);		
+					$("#uam_secret").val(data[index].uam_secret);							
+				}							
+			}
+			if(block=="radius")
+			{
+				rsp_time = data[index].rsp_time;	
+				if(rsp_time!=undefined)
+				{
+					$("#rsp_time").val(rsp_time);
+					$("#retry_time").val(data[index].retry_time);		
+					$("#main_auth_ip").val(data[index].main_auth_ip);		
+					$("#main_acct_ip").val(data[index].main_acct_ip);				
+					$("#main_auth_port").val(data[index].main_auth_port);		
+					$("#main_acct_port").val(data[index].main_acct_port);		
+					$("#main_auth_secret").val(data[index].main_auth_secret);	
+					$("#main_acct_secret").val(data[index].main_acct_secret);		
+					$("#backup_auth_ip").val(data[index].backup_auth_ip);		
+					$("#backup_acct_ip").val(data[index].backup_acct_ip);	
+					data[index].backup_auth_port==0?$("#backup_auth_port").val(""):$("#backup_auth_port").val(data[index].backup_auth_port)			
+					//$("#backup_auth_port").val(data[index].backup_auth_port);
+					data[index].backup_acct_port==0?$("#backup_acct_port").val(""):$("#backup_acct_port").val(data[index].backup_auth_port)				
+					//$("#backup_acct_port").val(data[index].backup_acct_port);		
+					$("#backup_auth_secret").val(data[index].backup_auth_secret);	
+					$("#backup_acct_secret").val(data[index].backup_acct_secret);													
+				}							
+			}				
+			if(block=="wallgarden")
+			{					
+				if(data[index].url != undefined)
+				{
+					var tmp = new Object();
+					tmp.domain = data[index].url;
+					domain_list.push(tmp); 						
+				}
+			}
+			if(block=="group")
+				
+			{
+				if(data[index].group_num != undefined&&data[index].group_num>=0)
+				{
+					var tmp = new Object();
+					tmp.filter_id = data[index].filter_id;
+					tmp.vlan_id = data[index].vlan_id;
+					tmp.egress_rate = data[index].egress_rate;
+					filtergroup_list.push(tmp); 
+				}
+			}
+			if(block=="aplist")
+			{
+				if(data[index].ap_num!= undefined)
+				{								
+					ap_num = data[index].ap_num;
+					$("#ap_num").html(ap_num);
+				}
+				APListData.push(data[index]); 												
+			}
+			if(block=="network")
+			{
+				if(data[index].network_name!= undefined)
+				{								
+					network_name = data[index].network_name;	
+					$("#network_name").html(network_name);	
+				}										
+				$("#SSID_name_show").html(cur_ssidname);	
+			}
+
+		});
+												
+		$.each(APListData,function(we, el)
+		{
+			if(el.dev_name!=undefined)
+			{
+				str += '<table id="table_alternate" style="border:1px solid #CCCCCC;width:100%" cellpadding="0" cellspacing="0">';
+				str += '<tr class="first">';
+				str += '<td style="width:30px;text-align: center;padding:0px;border-right:none">';
+				str += '<img id="status_ap" class="shadow" src="static/images/status_ap_ok.png" alt="Access Point online" title="Access Point online">';
+				str += '</td>';
+				str += '<td style="width:46px;text-align: center">';
+				//str += '<img title="Ubiquiti - AirRouter" src="static/images/ap/tanaza/32x32/32_airrouter.png" onerror="this.src='static/images/ap/noapImg_400.png'" style="vertical-align: middle" width="32">';
+				str += '</td>';
+				str += '<td style="color:black" align="left">'		;		
+				str += ''+ el.dev_name + '</td>';
+			}
+			if(el.dev_vendor!=undefined)
+			{
+				str += '<td style="color:black" align="left">';
+				str += ''+ el.dev_vendor + '</td>';
+			}
+			if(el.model_name!=undefined)
+			{
+				str += '<td style="color:black" align="left">'	;			
+				str += ''+ el.model_name + '</td>';
+			}
+			str += '<td style="width:30px">';
+			//str += '<img style="cursor:pointer" title="Click to configure this ap" src="static/images/configurationblack.png" onclick="javascript:{configure_accessPoint_settings('8273359')}">'	;			
+			str += '</td></tr> </table>';
+			$("#list2").html(str);	
+		}
+		)
+			
+	})
+}
+function displaySecurityPasswordFields()
+{
+	$("#subsection4").hide();
+	$("#subsection5").hide();
+	$("#subsection6").hide();
+		if($("#ssid-security-1").attr("checked")=="checked")
+		{
+			$("#security_type").val("open");
+		}
+	if($("#ssid-security-4").attr("checked")=="checked"){
+		$("#wpa2pskContainer").show();
+		$("#security_type").val("wpa2-psk");
+	}else{
+	  $("#wpa2pskContainer").hide();
+	}
+	if($("#ssid-security-6").attr("checked")=="checked"){
+	  $("#wepContainer").show();
+	  $("#security_type").val("wep");
+	}else{
+	  $("#wepContainer").hide();
+	}
+	if($("#ssid-security-8").attr("checked")=="checked"){
+		$("#subsection4").show();
+		$("#subsection5").show();
+		$("#security_type").val("wpa2_eap");    
+	  $("#wpa2eapContainer").show();
+	}    
+	if($("#ssid-security-10_2").attr("checked")=="checked"){
+		$("#subsection4").show();    	
+		$("#subsection5").show();
+		$("#subsection6").show();
+	  $("#radius_ws_10_2").show();
+	  $("#captiveContainer").show();
+	  $("#security_type").val("portal");            
+	}
+	else{
+	  $("#captiveContainer").hide();
+	  $("#radius_ws_10_2").show();
+	}
+}
+	
+function ssidLimitValueSet()
+{
+	if($("#bw_control_enabled").attr("checked")=="checked"){
+		//$("#limit_value_set_ds").show();
+		//$("#limit_value_set_us").show();			
+		$("#rate_limit_enable").val(1);			
+	}	
+	else{
+		//$("#limit_value_set_ds").hide();
+		//$("#limit_value_set_us").hide();			
+		$("#rate_limit_enable").val(0);
+	}
+}
+	
+function SSIDHiddenEnable()
+{
+	if($("#hidden_ssid").attr("checked")=="checked"){
+		$("#ssid_broadcast").val(0);			
+	}	
+	else{
+		$("#ssid_broadcast").val(1);
+	}
+}
+	
+function SSIDIsolateEnable()
+{
+	if($("#isolation_enable").attr("checked")=="checked"){
+		$("#ssid_isolate").val(1);			
+	}	
+	else{
+		$("#ssid_isolate").val(0);
+	}
+}
+	
+function ssid_wds_enable()
+{
+	if($("#wds_enable").attr("checked")=="checked"){
+		$("#ssid_wds").val(1);			
+	}	
+	else{
+		$("#ssid_wds").val(0);
+	}
+}
+	
+function SSIDIsolateEnable()
+{
+	if($("#isolation_enable").attr("checked")=="checked"){
+		$("#ssid_isolate").val(1);			
+	}	
+	else{
+		$("#ssid_isolate").val(0);
+	}
+}
+
+function ssid_wds_enable()
+{
+	if($("#wds_enable").attr("checked")=="checked"){
+		$("#ssid_wds").val(1);			
+	}	
+	else{
+		$("#ssid_wds").val(0);
+	}
+}
+	
+function GetNetworkList()
+{			
+	$.getJSON("networklist-get",function(data){
+		$.each(data,function(we, el){
+	nwlist.push(el);  
+		});	
+	});	
+}
+
+function deleteDomainList(idx)
+{		
+	domain_list.splice(parseInt(idx),1); 
+	FreshDomainList();
+}	
+	
+
+function FreshDomainList()
+{	
+	var str = '';	
+	str += '<tr>';
+	str += '<th><div class="big" style="cursor: pointer">'+WebString.Domain_IP+' </div></th>';
+	str += '<th><div class="big" style="cursor: pointer">'+WebString.Delete+'</div></th>';
+	str += '</tr>';
+	var dm_string=''
+	for( var i = 0; i < domain_list.length; i++ )
+	{
+		str += '<tr>';
+		str += '<td>';
+		str += '<div class="big" style="cursor: pointer">'+ domain_list[i].domain  +'</div>';
+		str += '</td>';
+		str += '<td>';
+		str += '<div class="big" onclick="deleteDomainList(' + i + ');"><img class="deleteNetwork"  src="static/images/delete.gif"></div>';			str += '<\/td>'
+		str += '<\/tr>';	
+
+		dm_string += '/';	
+		dm_string += domain_list[i].domain;	
+			
+	}
+	$("#domain_all").val(dm_string);	
+	$("#domaintable").html(str);
+}
+	
+			
+	
+function AddDomain()
+{
+	var str = '';	
+	str += '<tr>';
+	str += '<th><div class="big" style="cursor: pointer">'+WebString.Domain_IP+'</div></th>';
+	str += '<th><div class="big" style="cursor: pointer">'+WebString.Delete+'</div></th>';
+	str += '</tr>';
+	var tmp = new Object();
+	tmp.domain = $("#domain").val();
+	domain_list.push(tmp);
+	
+	if(domain_list.length>16)
+	{
+		alert(Webconfigure_ssidsummaryString.Max16)
+		return false
+	}
+	
+	
+	var dm_string=''	
+	for( var i = 0; i < domain_list.length; i++ )
+	{
+		str += '<tr>';
+		str += '<td>';
+		str += '<div class="big" style="cursor: pointer">'+ domain_list[i].domain  +'</div>';
+		str += '</td>';
+		str += '<td>';
+		str += '<div class="big" onclick="deleteDomainList(' + i + ');"><img class="deleteNetwork"  src="static/images/delete.gif"></div>';	
+		str += '<\/td>'
+		str += '<\/tr>';	
+			
+		dm_string += '/';	
+		dm_string += domain_list[i].domain;				
+	}	
+	$("#domain_all").val(dm_string);	
+	$("#domaintable").html(str);	
+}	
+function deleteFilterGroup(idx)
+{	
+	filtergroup_list.splice(parseInt(idx),1); 	
+	FreshGroupIdList();
+}
+
+function FreshGroupIdList()
+{	
+	str = '<tr>';
+	str += '<td >Group ID</td>';
+	str += '<td >VLAN ID</td>';
+	str += '<td >'+Xconfigure_ssidsummaryString[35]+'</td>';		
+	str += '<td >'+WebString.Delete+'</td>';			
+	str += '</tr>';
+	var ft_string=""
+	var vlan_string=""
+	var egress_rate_string=""
+	for( var i = 0; i < filtergroup_list.length; i++ )
+	{
+		if(filtergroup_list[i].vlan_id!=null&&filtergroup_list[i].egress_rate!=null&&filtergroup_list[i].filter_id!=null)
+		{	str += '<tr>';
+			str += '<td >'+ filtergroup_list[i].filter_id  +'</td>';
+			str += '<td >'+ filtergroup_list[i].vlan_id  +'</td>';
+			str += '<td  >'+ filtergroup_list[i].egress_rate  +'</td>';		
+			str += '<td  onclick="deleteFilterGroup(' + i + ');"><img class="deleteNetwork"  src="static/images/delete.gif"></td>';				
+			str += '</tr>';
+				
+			ft_string += '/';	
+			ft_string += filtergroup_list[i].filter_id;	
+				
+			vlan_string += '/';
+			vlan_string += filtergroup_list[i].vlan_id;	
+				
+			egress_rate_string += '/';
+			egress_rate_string += filtergroup_list[i].egress_rate;	
+		}			
+	}			
+	$("#filter_id_all").val(ft_string);		
+	$("#vlan_id_all").val(vlan_string);		
+	$("#egress_rate_all").val(egress_rate_string);			
+	$("#GroupIdList_tbody").html(str);
+}
+
+	
+function AddGroupId()
+{
+	
+	if(doCheckValue_Group()==false)
+		return
+	if(filtergroup_list.length>=32)
+	{
+		alert(Webconfigure_ssidsummaryString.Max32)
+		return false
+	}
+	var flag=false
+	$.each(filtergroup_list,function(wid,wel){
+			if($("#filter_id").val() == wel.filter_id)
+			{
+				alert(Webconfigure_ssidsummaryString.Group_ID_used)
+				flag=true
+				return false//break
+			}
+			else if($("#filter_id").val().length==0)	
+			{
+				alert("Group ID Cannot Be NULL!")
+				flag=true
+				return false
+			}
+	})
+	if(flag)
+		return false
+	var str ='';
+	var tmp = new Object();
+	tmp.filter_id = $("#filter_id").val();
+	tmp.vlan_id = $("#vlan_id").val();
+	tmp.egress_rate = $("#egress_rate").val();
+	filtergroup_list.push(tmp);	
+	str += '<tr>';
+	str += '<td >Group ID</td>';
+	str += '<td >VLAN ID</td>';
+	str += '<td >'+Xconfigure_ssidsummaryString[35]+'</td>';		
+	str += '<td >'+WebString.Delete+'</td>';				
+	str += '</tr>';
+	var ft_string=""
+	var vlan_string=""
+	var egress_rate_string=""
+	for( var i = 0; i < filtergroup_list.length; i++ )
+	{
+		
+		str += '<tr>';
+		str += '<td >'+ filtergroup_list[i].filter_id  +'</td>';
+		str += '<td >'+ filtergroup_list[i].vlan_id  +'</td>';
+		str += '<td  >'+ filtergroup_list[i].egress_rate  +'</td>';		
+		str += '<td  onclick="deleteFilterGroup(' + i + ');"><img class="deleteNetwork"  src="static/images/delete.gif"></td>';				
+		str += '</tr>';
+			
+		ft_string += '/';	
+		ft_string += filtergroup_list[i].filter_id;	
+		
+		vlan_string += '/';
+		vlan_string += filtergroup_list[i].vlan_id;	
+			
+		egress_rate_string += '/';
+		egress_rate_string += filtergroup_list[i].egress_rate;					
+	}
+
+	$("#filter_id_all").val(ft_string);
+	$("#vlan_id_all").val(vlan_string);	
+	$("#egress_rate_all").val(egress_rate_string);			
+	$("#GroupIdList_tbody").html(str);
+
+}
+
+
+function doCheckValue_Group()
+{
+	if($("#filter_id").val().length==0&&$("#vlan_id").val().length==0&&$("#egress_rate").val().length==0)
+	{
+			alert(Webconfigure_ssidsummaryString.All_value);
+			$("#filter_id").focus();
+			return false;
+	}
+	
+	if($("#filter_id").val().length > 1)
+	{ 
+		if( $("#filter_id").val().length > 64)
+		{		
+			alert(Webconfigure_ssidsummaryString.Group_ID_length);
+			$("#filter_id").focus();
+			return false;
+		}
+		else if($("#filter_id").val().length == 64)
+		{
+			if(!isValidHexKey($("#filter_id").attr("value"),64))
+			{
+				alert(Webconfigure_ssidsummaryString.Group_ID);
+				$("#filter_id").focus();
+				return false;
+			}
+		}
+	
+		if ($("#vlan_id").val().length<1||$("#vlan_id").attr("value") <1 || $("#vlan_id").attr("value") > 4089)
+		{
+			alert(Webconfigure_ssidsummaryString.VLAN_ID);
+			$("#vlan_id").focus();
+			return false;
+		}
+	
+		if( $("#egress_rate").val().length<1||$("#egress_rate").val()<0 ||$("#egress_rate").attr("value") > 100000)
+		{
+			alert(Webconfigure_ssidsummaryString.Egress_Rate);
+			$("#egress_rate").focus();
+			return false;
+		}
+	}
+	
+}
+function doCheckValue_portal() 
+{
+    var s_proname = $("#portal_name").val();
+    if(s_proname.length == 0)
+    {
+        alert(Webconfigure_ssidsummaryString.profile_name);
+        $("#portal_name").focus();
+        return false;
+    }
+/*
+    for(var i = 0; i < portal_list.length; i++)
+    {
+        if(($("#portal_action").val() == 1) && ($("#profile_ref_mask").val() > 0) 
+        	&& ($("#portal_index").val() == portal_list[i].portal_index) && ($("#profile_name").val() != portal_list[i].profile_name))
+        {
+            alert(WebString.profile_inuse);
+            $("#profile_name").focus();
+            return false;
+        }
+
+        if(($("#portal_action").val() == 0) && ($("#profile_name").val() == portal_list[i].profile_name))
+        {
+            alert(WebString.profile_name_same);
+            $("#profile_name").focus();
+            return false;
+        }
+    }            
+ */   
+    var srvurl = $("#portal_url").val();
+    if(srvurl.length == 0)
+    {
+        alert(Webconfigure_ssidsummaryString.server_url);
+        $("#portal_url").focus();
+        return false;
+    }
+    
+    var urlStart0 = srvurl.indexOf("http://");
+    var urlStart1 = srvurl.indexOf("https://");
+    if(urlStart0 != 0 && urlStart1 != 0)
+    {
+        alert(Webconfigure_ssidsummaryString.server_url_valid);
+        $("#portal_url").focus();
+        return false;
+    }
+    if((urlStart0 == 0 && srvurl.length == 7) || (urlStart1 == 0 && srvurl.length == 8))
+    {
+        alert(Webconfigure_ssidsummaryString.server_url_valid);
+        $("#portal_url").focus();
+        return false;
+    } 
+    
+    //to be completed
+    return true;
+}
+function HaveSameWallGardenEntry(domain)
+{
+    for (var i = 0; i < domain_list.length; i++ )
+    {
+        if(domain_list[i].domain == domain)
+        return true;
+    }
+
+    return false;
+}
+
+function addWallGardenEntry()
+{
+    domain = $("#domain").val();
+    if(domain_list.length >= 16)
+    {
+        alert(Webconfigure_ssidsummaryString.wall_garden16);
+        return false;
+    }
+  
+    if (domain == '')
+    {
+        alert(Webconfigure_ssidsummaryString.valid_domain_ip);
+        return false;
+    }
+
+    if(HaveSameWallGardenEntry(domain))
+    {
+        alert(Webconfigure_ssidsummaryString.valid_domain_ip_exsit);
+        return false;
+    }
+}
+function doCheckValue_Basic() 
+{
+	var useing_name=used_ssid_name.split("|");
+		for(var i=0;i<useing_name.length;i++)
+		{
+			if(useing_name[i]==$("#curr_ssid_name").val())
+			{
+				var ssid_by_device_usering=true
+			}
+		}
+		if(ssid_by_device_usering)
+		{
+			if($("#curr_ssid_name").val()!= $("#ssid_name").val())
+			{
+				alert(Webconfigure_ssidsummaryString.ssid_profile_use)
+				$("#curr_ssid_name").focus();
+				return false;
+				
+			}
+				
+		}
+		if($("#ssid_name").val().length < 1)
+		{
+			alert(Webconfigure_ssidsummaryString.SSID_Name_invalid);
+			$("#ssid_name").focus();
+			return false;	
+		}
+		if ($("#station_number").attr("value") > 128 || $("#station_number").attr("value") < 1)
+		{
+			alert(Webconfigure_ssidsummaryString.Maximum_User);
+			$("#station_number").focus();
+			return false;
+		}
+		$("#network").val(cur_network);
+		if($("#ssid_name").val()!=cur_ssidname)
+		{
+			cur_ssidname=$("#ssid_name").val();
+		}
+		
+		
+}
+function doCheckValue_Radius() 
+{
+	if($("#security_type").val()=="wpa2_eap"||$("#security_type").val()=="portal")
+	{
+		if ($("#rsp_time").attr("value") > 60 || $("#rsp_time").attr("value") < 3)
+		{
+			alert(Webconfigure_ssidsummaryString.Response_timeout);
+			$("#rsp_time").focus();
+			return false;
+		}
+	
+		//old retry times is 128, change to 3
+		if ($("#retry_time").attr("value") > 3 || $("#retry_time").attr("value") < 1)
+		{
+			alert(Webconfigure_ssidsummaryString.Retry_times);
+			$("#retry_time").focus();
+			return false;
+		}
+	
+		
+		if(false == isValidIpAddress($("#main_auth_ip").attr("value")))
+		{
+			alert(Webconfigure_ssidsummaryString.Main_radius);
+			$("#main_auth_ip").focus();
+			return false;
+		}
+	
+		if(0 == $("#main_auth_port").val().length || 1>parseInt($("#main_auth_port").attr("value"))|| 65535 < parseInt($("#main_auth_port").attr("value")))
+		{
+			alert(Webconfigure_ssidsummaryString.m_radiu_port);
+			$("#main_auth_port").focus();
+			return false;
+		}
+	
+		if($("#main_auth_secret").val().length < 1 || $("#main_auth_secret").val().length > 64)
+		{		
+			alert(Webconfigure_ssidsummaryString.m_radiu_secret_len);
+			$("#main_auth_secret").focus();
+			return false;
+		}
+		else if($("#main_auth_secret").val().length == 64)
+		{
+			if(!isValidHexKey($("#main_auth_secret").attr("value"),64))
+			{
+				alert(Webconfigure_ssidsummaryString.m_radiu_secret );
+				$("#main_auth_secret").focus();
+				return false;
+			}
+		}
+	
+		if(false == isValidIpAddress($("#main_acct_ip").attr("value")))
+		{
+			alert(Webconfigure_ssidsummaryString.m_acct_ip);
+			$("#main_acct_ip").focus();
+			return false;
+		}
+	
+		if(0 == $("#main_acct_port").val().length || 1 > parseInt($("#main_acct_port").attr("value"))|| 65535<parseInt($("#main_acct_port").attr("value")))
+		{
+			alert(Webconfigure_ssidsummaryString.m_acct_port );
+			$("#main_acct_port").focus();
+			return false;
+		}
+	
+		if($("#main_acct_secret").val().length < 1 || $("#main_acct_secret").val().length > 64)
+		{		
+			alert(Webconfigure_ssidsummaryString.m_acct_secret_len);
+			$("#main_acct_secret").focus();
+			return false;
+		}
+		else if($("#main_acct_secret").val().length == 64)
+		{
+			if(!isValidHexKey($("#main_acct_secret").attr("value"),64))
+			{
+				alert(Webconfigure_ssidsummaryString.m_acct_secret);
+				$("#main_acct_secret").focus();
+				return false;
+			}
+		}
+	
+		if($("#backup_auth_ip").val().length > 0 && $("#backup_auth_ip").val() != "0.0.0.0")
+		{
+			if(false == isValidIpAddress($("#backup_auth_ip").attr("value")))
+			{
+				alert(Webconfigure_ssidsummaryString.b_radiu_ip);
+				$("#backup_auth_ip").focus();
+				return false;
+			}
+		
+			if(0 == $("#backup_auth_port").val().length || 1> parseInt($("#backup_auth_port").attr("value"))|| 65535< parseInt($("#backup_auth_port").attr("value")))
+			{
+				alert(Webconfigure_ssidsummaryString.b_radiu_port);
+				$("#backup_auth_port").focus();
+				return false;
+			}
+		
+			if($("#backup_auth_secret").val().length < 1 || $("#backup_auth_secret").val().length > 64)
+			{		
+				alert(Webconfigure_ssidsummaryString.b_radiu_secret_len);
+				$("#backup_auth_secret").focus();
+				return false;
+			}
+			else if($("#backup_auth_secret").val().length == 64)
+			{
+				if(!isValidHexKey($("#backup_auth_secret").attr("value"),64))
+				{
+					alert(Webconfigure_ssidsummaryString.b_radiu_secret);
+					$("#backup_auth_secret").focus();
+					return false;
+				}
+			}
+		}	//end  if backupauth_ip length>0
+		else
+		{
+				$("#backup_auth_port").val("");
+				$("#backup_auth_secret").val("");
+		}
+	
+		if($("#backup_acct_ip").val().length > 0 && $("#backup_acct_ip").val() != "0.0.0.0")
+		{
+			if(false == isValidIpAddress($("#backup_acct_ip").attr("value")))
+			{
+				alert(Webconfigure_ssidsummaryString.b_acct_ip);
+				$("#backup_acct_ip").focus();
+				return false;
+			}
+		
+			if(0 == $("#backup_acct_port").val().length ||1> parseInt($("#backup_acct_port").attr("value"))||65535< parseInt($("#backup_acct_port").attr("value")))
+			{
+				alert(Webconfigure_ssidsummaryString.b_acct_port );
+				$("#backup_acct_port").focus();
+				return false;
+			}
+		
+			
+			if($("#backup_acct_secret").val().length < 1 || $("#backup_acct_secret").val().length > 64)
+			{		
+				alert(Webconfigure_ssidsummaryString.b_acct_secret_len);
+				$("#backup_acct_secret").focus();
+				return false;
+			}
+			else if($("#backup_acct_secret").val().length == 64)
+			{
+				if(!isValidHexKey($("#backup_acct_secret").attr("value"),64))
+				{
+					alert(Webconfigure_ssidsummaryString.b_acct_secret);
+					$("#backup_acct_secret").focus();
+					return false;
+				}
+			}
+		}	//end  if backupauth_ip length>0
+		else
+		{
+			$("#backup_acct_port").val("");
+			$("#backup_acct_secret").val("");
+		}
+	}
+	
+	 
+}
+$(document).ready(function(){
+	webInit();
+	if(Math.floor(cur_position/number_space) == Math.ceil(cur_position/number_space))
+	{
+		start_from_number=(Math.floor(cur_position/number_space))*number_space-number_space+1
+	}
+	else
+	{
+		start_from_number=Math.floor(cur_position/number_space)*number_space+1;
+	}
+	
+	GetNetworkList();
+	GetSsidListData();
+	FillNetworkSelectOption();
+	if(cur_nextflag!="turnpage")
+	{
+		GetSsidTemplateData();
+	}
+	FreshGroupIdList();
+	FreshDomainList();
+	$("#add_groupid").on('click',function(){
+		AddGroupId();		
+	});
+	$("#domain_add").on('click',function(){
+		if(addWallGardenEntry()==false)
+			return false
+		AddDomain();		
+	});
+
+	$("#ssid_delete_bttn").on('click',function(){
+		var useing_name=used_ssid_name.split("|");
+		for(var i=0;i<useing_name.length;i++)
+		{
+			if(useing_name[i]==cur_ssidname)
+			{
+				alert(Webconfigure_ssidsummaryString.ssid_profile_use)
+				return false;
+			}
+		}
+		if(confirm(Webconfigure_ssidsummaryString.sure_want_delete + cur_ssidname))
+		{
+			
+			$("#ssid_action").val("delete");
+			$("#network").val(cur_network);	
+			$("#ssidname").val(cur_ssidname);				
+			$("#SSIDInfo_form_Summary").attr("action", "set-ssid-Summary-info");
+			$("#SSIDInfo_form_Summary").submit();
+			return;
+		}
+	});
+	getmenu()	
+	if(cur_menu_show_flag!=null)
+	{
+		var strs= new Array();
+		strs=cur_menu_show_flag.split(".");
+		select_menu(strs[1])
+		showSubSection(strs[0],strs[1]);
+	}
+
+	WebLoadString("configure_ssidsummary")	
+	$("#domain_add").val(Xconfigure_overviewString[4])
+	$("#add_groupid").val(Xconfigure_overviewString[4])
+	if("{{add_back_info}}"== 4)
+	{
+		alert(Webconfigure_ssidsummaryString.portalssid_templates)
+	}	
+});
+function select_menu(menu_id)
+{
+	 switch(menu_id)
+	 {
+		 
+		case "summary" :
+			display_btn(false)
+			$("#which_form").val("Summary");
+			break;
+		case "wireless_basic":
+			$("#which_form").val("Basic");
+			display_btn(true)
+			break;
+		case"wireless_security": 
+			$("#which_form").val("Security");
+			display_btn(true)
+			break;
+		case "tanaza_bandwidth": 
+			$("#which_form").val("Bandwidth");
+			display_btn(true)
+			break;
+		case "radius_config": 
+			$("#which_form").val("Radius");
+			display_btn(true)
+			break;
+		case "group_id": 
+			$("#which_form").val("Group");
+			display_btn(true)
+			break;
+		case "portal": 
+			$("#which_form").val("Portal");
+			display_btn(true)
+			break;
+	 }
+}
+
+
+
+function ssid_forms_submit(){
+	var form_id = $("#which_form").val();
+	var url,urltemp;
+	var forms_temp;
+
+	if(cur_search!=null)
+		urltemp = "?ssidname=" + cur_ssidname + "&network=" + cur_network+"&position="+cur_position +"&menu_show_flag="+ cur_menu_show_flag+"&search_name="+cur_search;
+	else
+		urltemp = "?ssidname=" + cur_ssidname + "&network=" + cur_network+"&position="+cur_position +"&menu_show_flag="+ cur_menu_show_flag;
+		
+	if(form_id == "Summary")
+	{	
+		url="set-ssid-Summary-info"+urltemp
+		forms_temp="SSIDInfo_form_Summary"
+	}		
+	else if(form_id == "Basic")
+	{
+
+		if(doCheckValue_Basic()==false) 
+			return 
+		url="set-ssid-Basic-info"+urltemp
+		forms_temp="SSIDInfo_form_Basic"
+	}
+	else if(form_id == "Security")
+	{
+		togglePwd('wep')
+		togglePwd('wpa2psk')
+		if($("#ssid-security-4").attr("checked")=="checked"&&($("#wpa2psk").val().length<8||$("#wpa2psk").val().length>63))
+		{
+			alert(Webconfigure_ssidsummaryString.WPA2_PSKpassword)
+				return 
+		
+		}
+		if($("#ssid-security-6").attr("checked")=="checked"&&$("#wep").val().length!=5){
+			
+			alert(Webconfigure_ssidsummaryString.Weppassword)
+			return 
+		}
+	
+		url="set-ssid-Security-info"+urltemp
+		forms_temp="SSIDInfo_form_Security"
+	}		
+	else if(form_id == "Radius")
+	{
+		if(doCheckValue_Radius()==false) 
+			return 
+		
+		url="set-ssid-Radius-info"+urltemp
+		forms_temp="SSIDInfo_form_Radius"
+	}	
+	else if(form_id == "Group")
+	{
+		url="set-ssid-Group-info"+urltemp
+		forms_temp="SSIDInfo_form_Group"
+	}
+	else if(form_id == "Portal")
+	{
+		if(doCheckValue_portal()==false) 
+			return 
+		url="set-ssid-Portal-info"+urltemp
+		forms_temp="SSIDInfo_form_Portal"
+	}
+	$('#saveLanButton').attr('href','javascript:{void(0)}')
+	$("#"+forms_temp).attr("action", url);
+	$("#"+forms_temp).submit();			
+}
+function display_btn(enable)
+{
+	if(enable)
+	{
+		$("#apply_btn_div").show();
+	}
+	else
+	{
+		$("#apply_btn_div").hide();
+	}
+}
+function Search_name(Search){
+	space_page=number_space
+	Data=[]
+	var device_name=$("#search_name_id").val();
+	if($("#search_name_id").val().length<1)
+	{
+		alert(WebString.search_input_ssid)
+		return 
+	}
+	cur_search=device_name
+	var param = {"network": cur_network, "search_info": cur_search};
+	var url = "get-ssid-list-search";
+	$.getJSON(url, param,
+		function(data){ 
+			if(data == null || data == "")
+			 {
+				 $("#page_show").hide();
+				 $("#tabsv").hide()
+				 $("#contentInner").hide()
+				 $("#ssid_name_title").hide()
+				 $("#chan_multipageNumN_search").empty()
+				 alert(WebString.search_without)
+				 return;
+			 }
+			$("#contentInner").show()
+			$("#ssid_name_title").show()
+			$.each(data,function(key,value){
+					Data.push(value);
+			});
+			if(Search!=null)
+			{
+				cur_position=1
+				cur_ssidname = Data[0].ssid_name;
+				var title = "SSID: " + cur_ssidname;
+				$("#ssid_name_title").empty()
+				$("#ssid_name_title").html(title);
+				GetSsidTemplateData();
+
+			}
+			if(Data.length==0)
+			{
+				$("#page_show").hide();
+			}
+			if(Data.length>40&&back_all_number>40)
+			{
+				alert(WebString.search_too_wide);
+				return
+			}
+			$("#page_show").hide();
+			$("#tabsv").hide()
+			
+			FreshSSIDList();
+			$("#page_show").hide();
+			$("#chan_multipageNumN_search").empty()
+			if(Data.length>space_page)
+			{
+				$.each($("#tabsv li"), function(i){
+					  if(i >= space_page){
+						  	  this.style.display = 'none'; 
+							 }  
+						});
+				$("#chan_multipageNumN_search").show();
+				for(i=1;i<=Math.ceil(Data.length/space_page);i++)
+				{
+					if(i==1)
+						string_page="<div class=\"page-int-device\" id=\"page"+1+"\"  onclick=\"search_page("+1+")\">"+1+"</div>";	
+					else
+						string_page+="<div class=\"page-int-device\" id=\"page"+i+"\" onclick=\"search_page("+i+")\">"+i+"</div>"	;
+
+				}
+				$("#chan_multipageNumN_search").html(string_page);
+				if(flage=1)
+				{
+					search_page(Math.ceil(cur_position/number_space))
+					flage=2
+				}
+			}
+			
+			$("#tabsv").show()
+		});
+
+}
+
+function search_page(page)
+{
+	space_page=number_space
+	var object=$("#tabsv li")
+	if(page*space_page>Data.length)
+		var end = Data.length
+	else
+		var end =page*space_page
+	$.each($("#tabsv li"), function(i){
+		if(parseInt((page*space_page-space_page))<=i && i<parseInt(end)){
+				this.style.display = '';
+				
+			}  
+		else
+			this.style.display = 'none'; 
+	});
+	for(i=1;i<=Math.ceil(Data.length/space_page);i++)
+	{
+		if(i==page)
+		{
+			$("#page"+i).addClass("page_link_device")
+		}
+		else 
+			$("#page"+i).removeClass("page_link_device")
+	}
+}
+          
+//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden"  id="page_title" value="configure-ssidsummary" />
+
+<div id="mainExt">
+<input type="hidden" id="which_form" name="which_form" value="sys_basic_form">
+	<div style="height: auto; min-height: 650px;" id="main">		
+		<div style="opacity: 1; display: block;" id="menuLevel3" class="panes">
+			<div style="opacity: 1;" id="menuLevel3Inner">    	
+				<div id="box" style="margin-top:15px;">
+					<div style="font-size:12px;">
+						<div id="title_leftmenu">
+							<script>document.write(WebString.SSID_List_of)</script>
+							<div id="tabsv" class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix"></div>
+                            
+                            
+                            <DIV id="page_show" style="height:200PX; width:200PX;  overflow:hidden;">
+                               <div id="chan_multipageNumN" style="float:left; width:200px; height:auto">     
+                                    <div id="page_number" style="float:left; text-align:center;">
+                                    </div> 
+                                </div>
+                                
+                                 
+                                <div style="float:left;width:200px; height:auto">
+                                    <div style="float:left; margin:5px">
+                                <input type="text"  id="input_number"value="" name="page"  style="width:40px; height:20px"  />
+                                    </div> 
+                                    <div class="page-int-device page_link_device" onclick="gotopage()">
+                                    <script>document.write(WebString.Goto)</script>                           	
+                                    </div> 
+                                                   
+                                    <div id="Total" class="page-int-device ">      
+                       	
+                                    </div> 
+                                </div>
+                         </DIV>
+                         <div style="height:200PX; width:200PX; display:none;overflow:hidden;" id="chan_multipageNumN_search"> </div>
+                            
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="width: 930px; left: 0px;" >
+			<div style="width: 740px; opacity: 1; margin-left:260px;" id="contentInner">	
+				<div>
+					<div style="margin-left:20px; width:696px; margin-top:16px; margin-bottom:16px">
+					<span id = "ssid_name_title" style="font-size:22px; font-weight:bold; font-family:Arial; color:#373737">
+					  </span>
+					</div>
+							<table id="ssid_table" cellpadding="2px" cellspacing="0px" width="">
+								<tr>
+								  <td>
+								    <div id="subsection0" class="subsection tabclick" onclick="showSubSection('0','summary');remember_show_flag('0.summary');select_menu('summary')">
+								      <a id="tabs_ap0" href="javascript:{}" class="ap0"><script>document.write(WebString.Summary)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection1" class="subsection tabdefault" onclick="showSubSection('1','wireless_basic');remember_show_flag('1.wireless_basic');select_menu('wireless_basic')">
+								      <a id="tabs_ap1" href="javascript:{}" class="ap1"><script>document.write(WebString.Basic)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection2" class="subsection tabdefault" onclick="showSubSection('2','wireless_security');remember_show_flag('2.wireless_security');select_menu('wireless_security')">
+								      <a id="tabs_ap2" href="javascript:{}" class="ap2">
+                                      <script>document.write(WebString.Wireless_Security)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>								  
+								  <td>
+								    <div id="subsection4" style="display:none" class="subsection tabdefault" onclick="showSubSection('4','radius_config');remember_show_flag('4.radius_config');select_menu('radius_config')">
+								      <a id="tabs_ap4" href="javascript:{}" class="ap4">Radius
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection5" style="display:none" class="subsection tabdefault" onclick="showSubSection('5','group_id');remember_show_flag('5.group_id');select_menu('group_id')">
+								      <a id="tabs_ap5" href="javascript:{}" class="ap5">Group ID
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection6" style="display:none" class="subsection tabdefault" onclick="showSubSection('6','portal');remember_show_flag('6.portal');select_menu('portal')">
+								      <a id="tabs_ap6" href="javascript:{}" class="ap6">Portal
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								</tr>
+							</table>
+					<form id="SSIDInfo_form_Summary" method="post" action="">	
+							<input type="hidden" id="ssid_action" name="ssid_action">	
+							<input type="hidden" id="network" name="network">	
+							<input type="hidden" id="ssidname" name="ssidname">								
+							<div id="summary" class="ap_content" style="height: auto;min-height: 400px">
+								<table style="width:100%">
+									<tr>
+										<td style="vertical-align: top; ">
+											<table class="table_content" style="margin-left:20px; margin-top:20px;width:90%; ">
+											  <tr>
+											  	<td width="100%">
+											      <table class="ssidtable" cellspacing="0" width="100%">
+											        <tr>
+											          <td rowspan="6" style="width:150px" valign="top">
+											            <img src="static/images/ssid-wpa.png">
+											          </td>
+											          <td align="left" width="200px" id="XS0">Wireless Network name</td>
+													  <td><label id="network_name"></label></td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS1">SSID name</td>
+											          <td><label id="SSID_name_show"></label></td>													  
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS2">Active on APs</td>
+											          <td><label id="ap_num"></label></td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS3">Encryption</td>
+													  <td><label id="security_mode"></label></td>
+													  <!--td><script type="text/javascript">document.write(Encryption);</script></td-->
+											        </tr>
+											        <tr>
+											          <td colspan="2" style="text-align: right">
+											            <div id="ssid_delete_bttn" class="bttn bttn_red">
+											                <a href="javascript:{void(0)}">
+											                    <div class="bnt_image"><img src="static/images/button/delete_img.png"></div>&nbsp;<script>document.write(WebString.Delete)</script>
+											                </a><span></span>
+											            </div>
+											          </td>
+											        </tr>
+											      </table>
+													</td>
+												</tr>
+											</table>                            
+										</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: top">
+                            <h5 style="text-align: left;margin-left:25px;margin-top:0px;margin-bottom:10px"><script>document.write(Webconfigure_ssidsummaryString.Enabled_APs)</script></h5>
+                            <table class="table_content" style="margin-left:20px; margin-top:0px;width:650px">
+                            <tbody><tr>
+                                <td>
+                                    <div id="list2" class="tablescroll">
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody></table>
+                        </td>
+									</tr>
+								</table>
+							</div>
+                            </form>
+                            <form id="SSIDInfo_form_Basic" method="post" action="">									
+							<div id="wireless_basic" class="ap_content tabs_hide" style="height: auto;min-height: 200px">
+								<table class="table_content ssidtable" style="margin-top:20px; margin-left:30px;width:93%;">		         	
+									<tr height="38px" valign="bottom">
+										<td width="150" id="XS4">SSID Name</td>
+										<td><input type="text" id="ssid_name"  maxlength="32" value="" class="active_input  idleField" name="ssid_name"
+		   onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)" ><span  class="red">*</span></td>										
+										<td><input type="text" id="curr_ssid_name" value="" class="active_input  idleField" name="curr_ssid_name"></td>	
+									</tr>	
+									<tr height="38px" valign="bottom">
+										<td width="150" id="XS5">Maximum User[1- 128]</td>					
+									    <td><input type="text" id="station_number" name="station_number" class="active_input  idleField" value="128"
+onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"
+
+               /> 
+								     <span  class="red">*</span></td>
+									</tr>										
+								  <tr>
+								  	<td width="150" id="XS6">Hidden SSID</td>
+								    <td><input type="checkbox" id="hidden_ssid" name="hidden_ssid" onclick="SSIDHiddenEnable()">Enable</td>
+								    <input type="hidden" id="ssid_broadcast" name="ssid_broadcast" value="0">
+								  </tr>
+								  <tr>
+								  	<td width="150" id="XS7">Isolate Clients</td>
+								    <td><input type="checkbox" id="isolation_enable" name="isolation_enable" onclick="SSIDIsolateEnable()">Enable</td>
+								    <input type="hidden" id="ssid_isolate" name="ssid_isolate" value="0">
+								  </tr>
+								  <tr>
+								  	<td width="150" >WDS</td>
+								    <td><input type="checkbox" id="wds_enable" name="wds_enable" onclick="ssid_wds_enable()">Enable</td>
+								    <input type="hidden" id="ssid_wds" name="ssid_wds" value="0">
+								  </tr>
+								<tr>
+								  <td  id="XS8" >Bandwidth limit</td>
+								  <td><input type="checkbox" onclick="ssidLimitValueSet()" class="checkbox" id="bw_control_enabled">Enable</td>
+									<input id="rate_limit_enable" name="rate_limit_enable" type="hidden" value="0" />
+								</tr>
+								<tr id="limit_value_set_us" style="display:none">
+								  <td  id="XS9" >Upload rate limit</td>
+								  <td><input type="text" id="us_rate_limit" name="us_rate_limit" value="0" class="active_input  idleField" /></td>
+								</tr>
+								<tr id="limit_value_set_ds" style="display:none">
+								  <td  id="XS10">Download rate limit</td>
+								  <td><input type="text" id="ds_rate_limit" name="ds_rate_limit" value="0" class="active_input  idleField" /></td>
+								</tr>									  
+								</table>		        
+							</div>
+                            </form>
+                            <form id="SSIDInfo_form_Security" method="post" action="">
+							<div id="wireless_security" class="ap_content tabs_hide" style="height: auto;min-height: 320px">
+								<input type="hidden" id="security_type" name="security_type" value="open">
+								<table class="table_content"  style="margin-top:20px; margin-left:20px; " width="100%"  height="210px">
+									<tr>
+										<td style="width:30px"><input name="radio_ws" id="ssid-security-1" onclick="displaySecurityPasswordFields();" value="1" type="radio"></td>
+										<td class="small" colspan="2" align="left" id="XS11">Open (no encryption) Any user can associate</td>
+										<input name="openType" id="openType"  type="hidden">
+									</tr>
+									<tr>
+										<td><input name="radio_ws" id="ssid-security-6" onclick="displaySecurityPasswordFields()" value="6" type="radio"></td>
+										<td class="small" colspan="2" align="left" id="XS12">WEP (shared network key) Users must enter this key to associate (5 characters)</td>
+									</tr>
+									<tr id="wepContainer" align="left">
+										<td>&nbsp;</td>
+										<td>
+											
+														<input name="wepType" id="wepType" value="password" type="hidden">
+														<input name="wep" id="wep" maxlength="5" class="active_input  idleField" value=12345 onkeyup="updateValidationWepKey(event,this)" onkeydown="avoidSubmit(event);" type="password">
+														<input name="wepText" id="wepText" maxlength="5" class="active_input  idleField" value="" style="display:none" onkeyup="updateValidationWepKey(event,this)" onkeydown="avoidSubmit(event);" type="text">
+													
+														<img type="image" src="static/images/button/key.png" alt="Show Key" title="Show Key" style="vertical-align:middle" onclick="togglePwd('wep');">&nbsp;&nbsp;<img class="tooltipElement" style="vertical-align:middle" src="static/images/help.png" alt="Help">
+													
+										</td>
+									</tr>
+									<tr>
+										<td><input name="radio_ws" id="ssid-security-4" onclick="displaySecurityPasswordFields()" value="4" type="radio" checked=checked></td>
+										<td class="small" colspan="2" align="left" id="XS13">WPA2-PSK (shared network key) Users must enter this key to associate</td>
+									</tr>
+									<tr id="wpa2pskContainer" align="left">
+										<td>&nbsp;</td>
+										<td>
+											
+														<input name="wpa2pskType" id="wpa2pskType" value="password" type="hidden">
+														<input name="wpa2psk" maxlength="63" id="wpa2psk" class="active_input  idleField" value=12345678 onkeydown="avoidSubmit(event);" onkeyup="updateValidationWpapsk2Key(event,this)" type="password">
+														<input name="wpa2pskText" maxlength="63" id="wpa2pskText" class="active_input  idleField" value="" style="display:none" onkeydown="avoidSubmit(event);" onkeyup="updateValidationWpapsk2Key(event,this)" type="text">
+													
+														<img src="static/images/button/key.png" alt="Show Key" style="vertical-align:middle" title="Show Key" onclick="togglePwd('wpa2psk');">&nbsp;&nbsp;<img class="tooltipElement" style="vertical-align:middle" src="static/images/help.png" alt="Help">
+												
+										</td>
+									</tr>
+							
+									<tr>
+										<td><input name="radio_ws" id="ssid-security-8" onclick="displaySecurityPasswordFields()" value="8" type="radio"></td>
+										<td class="small" colspan="2" align="left" id="XS14"> WPA2-EAP (with radius)</td>
+									</tr>
+									<tr id="radius_ws_10_2">
+										<td>
+											<input name="radio_ws" id="ssid-security-10_2" onclick="displaySecurityPasswordFields()" value="10" type="radio">
+										</td>
+										<td class="small" colspan="2" align="left" id="XS15">External Splash Page with Radius</td>
+									</tr>
+								</table>   					  
+							</div> 
+                            </form> 
+                            <form id="SSIDInfo_form_Radius" method="post" action="">						
+							<div id="radius_config" class="ap_content tabs_hide" style="height: auto; min-height:210px">
+								<table class="table_content" style="margin-top:30px; margin-left: 30px;width:93%; text-align:left;"  id="radius_config_table" >
+									<tr class="radiusDetail">
+									  <td style="width:250px" id="XS16">
+									      - Response Timeout
+							          [3-60s]</td>
+									  <td><input type="text" id="rsp_time" value="10" class="active_input  idleField" name="rsp_time" maxlength="2"
+           onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)" >
+								      <span class="red">*</span></td>
+									</tr> 
+									<tr class="radiusDetail">
+									  <td style="width:200px" id="XS17">
+									    - Retry Times
+								      [1-3]</td>
+									  <td><input type="text" id="retry_time" value="2" class="active_input  idleField" name="retry_time"  maxlength="1"    
+            onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"/>
+								      <span class="red">*</span></td>
+									</tr>
+									<tr>
+										<td colspan="2" id="XS18"> - Main Radius</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS19">
+								        Auth server IP
+								    </td>
+								    <td><input type="text" id="main_auth_ip" value="" class="active_input  idleField" name="main_auth_ip" maxlength="15" onkeypress="return OnKeyPress(event, X_INPUT_IP);">
+								      <span class="red">*</span> </td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS20">
+								        Auth server port
+								    </td>
+								    <td><input type="text" id="main_auth_port" value="1812" class="active_input  idleField" maxlength="15" name="main_auth_port"
+           onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"/>
+								      <span class="red">*</span> </td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px"  id="XS21">
+								        Auth Secret
+								    </td>
+								    <td><input type="text" id="main_auth_secret" value="" class="active_input  idleField" name="main_auth_secret" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)">
+								      <span class="red">*</span>  </td>
+									</tr>
+									<tr>
+										<td colspan="2"  id="XS22"> - Main Billing</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS23">
+								        Billing server IP
+								    </td>
+								    <td><input type="text" id="main_acct_ip" value="" class="active_input  idleField" name="main_acct_ip" onkeypress="return OnKeyPress(event, X_INPUT_IP);"/>
+								     <span class="red">*</span>  </td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS24">
+								        Billing server port
+								    </td>
+								    <td><input type="text" id="main_acct_port" value="1813" class="active_input  idleField" name="main_acct_port"
+          onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"/>
+								      <span class="red">*</span>  </td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS25">
+								        Billing Secret
+								    </td>
+								    <td><input type="text" id="main_acct_secret" value="" class="active_input  idleField" name="main_acct_secret" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"/>
+								      <span class="red">*</span>  </td>
+									</tr>
+									<tr>
+										<td colspan="2" id="XS26"> - Backup Radius</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS27">
+								        Auth server IP
+								    </td>
+								    <td><input type="text" id="backup_auth_ip" value="" class="active_input  idleField" name="backup_auth_ip" onkeypress="return OnKeyPress(event, X_INPUT_IP);"/></td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS28">
+								        Auth server port
+								    </td>
+								    <td><input type="text" id="backup_auth_port" value="1812" class="active_input  idleField" name="backup_auth_port"
+          onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"></td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS29">
+								        Auth Secret
+								    </td>
+								    <td><input type="text" id="backup_auth_secret" value="" class="active_input  idleField" name="backup_auth_secret" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)" ></td>
+									</tr>
+									<tr>
+										<td colspan="2" id="XS30"> - Backup Billing</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS31">
+								        Billing server IP
+								    </td>
+								    <td><input type="text" id="backup_acct_ip" value="" class="active_input  idleField" name="backup_acct_ip" onkeypress="return OnKeyPress(event, X_INPUT_IP);"/></td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS32">
+								        Billing server port
+								    </td>
+								    <td><input type="text" id="backup_acct_port" value="1813" class="active_input  idleField" name="backup_acct_port"
+          onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"/></td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 40px" id="XS33">
+								        Billing Secret
+								    </td>
+								    <td><input type="text" id="backup_acct_secret" value="" class="active_input  idleField" name="backup_acct_secret" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"></td>
+									</tr>													
+								</table>
+								<br>
+							</div>
+                            </form>
+                            <form id="SSIDInfo_form_Group" method="post" action="">													 
+							<div id="group_id" class="ap_content tabs_hide" style="height: auto; min-height:320px">
+								<table class="table_content" style="margin-top:30px;margin-left: 30px;width:93%;text-align:left;">
+									<tr>
+									  <td colspan="2" style="line-height:30px" valign="top" id="XS34">
+									      Group ID Profile
+									  </td>
+									</tr>
+									<tr>
+								    <td style="vertical-align: middle;text-align: left;padding-left: 20px">Group ID</td>																							
+								    <td>
+								       <input id="filter_id" name="filter_id" class="active_input idleField" style="width: 240px"  maxlength="32" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"/>
+									   <input id="filter_id_all" name="filter_id_all" class="active_input idleField" type="hidden" style="width: 240px">
+								    </td>
+									</tr>
+									<tr>
+								    <td style="vertical-align: middle;text-align: left;padding-left: 20px">VLAN ID</td>																							
+								    <td>
+								       <input id="vlan_id" maxlength="4" name="vlan_id" class="active_input idleField" style="width:120px" onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)">
+									   <input id="vlan_id_all" name="vlan_id_all" class="active_input idleField" type="hidden" style="width: 240px">
+									   [1-4089]</td>
+									</tr>
+									<tr>
+								    <td style="vertical-align: middle;text-align: left;padding-left: 20px" id="XS35">Egress Rate</td>																							
+								    <td>
+								       <input id="egress_rate" name="egress_rate" class="active_input idleField" style="width: 120px" onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)">kbps (0<script> document.write(Webconfigure_ssidsummaryString.means_limit)</script>) [0-100000]
+									   <input id="egress_rate_all" name="egress_rate_all" class="active_input idleField" type="hidden" style="width: 240px">									   
+								    </td>
+									</tr>
+									<tr>
+								    <td style="vertical-align: middle;text-align: left;padding-left: 20px"></td>																							
+								    <td style="text-align:center;">
+								       <input type="button" id="add_groupid" name="add_groupid" value="Add">
+								    </td>
+									</tr>								
+								</table>
+                               
+								<div>
+                                <p style="text-align:left; margin-left: 30px; margin-top:30px"><b>Group ID <script> document.write(Webconfigure_ssidsummaryString.Lists)</script></b>				
+							<table id="GroupIdList_tbody"  class="table_content" align="center"  width="600px"cellpadding="0" cellspacing="0" style="margin-left:30px; text-align:center;">
+								
+							</table>
+                            </div>
+							</div>
+                             </form>
+                              <form id="SSIDInfo_form_Portal" method="post" action="">
+							<div id="portal" class="ap_content tabs_hide" style="height: auto; min-height:210px">
+								<table class="table_content" style="margin-top:30px;margin-left: 30px;width:93%; text-align:left">					
+									<tr>
+										<td style="width:180px" id="XS36">Portal Name</td>
+										<td>
+											<input name="portal_name" id="portal_name" maxlength="32" class="active_input  idleField"  type="text"   onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"><span class="red">*</span> 
+										</td>
+									</tr>  												
+									<tr>
+										<td style="width:180px" id="XS37">Server URL</td>
+										<td>
+											<input onkeyup="fixUrlValue(this)" name="portal_url" id="portal_url" maxlength="64" class="active_input  idleField" value="http://" onkeydown="avoidSubmit(event);" onkeypress="return OnKeyPress(event, X_INPUT_URL);"  type="text"> <span class="red">*</span>
+										</td>
+									</tr>
+									<tr>
+										<td style="width:180px" id="XS38">UAM secret</td>
+										<td>
+											<input name="uam_secret" id="uam_secret" maxlength="64" class="active_input  idleField"  type="text"  onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"> 
+										</td>
+									</tr>  
+									<tr>
+									  <td colspan="2" style="line-height:30px" valign="top" id="XS39">
+									      Walled garden Profile
+									  </td>
+									</tr>
+									<tr>
+										<td style="vertical-align: middle;text-align: left;padding-left: 20px" id="XS40">
+											Add custom domain/ip
+										</td>
+										<td>    
+											<input name="domain" id="domain" maxlength="64" class="active_input  idleField"  type="text"
+                                             
+autocomplete="value=value.replace(/[^\w\.:\/]/ig,'')"
+ onkeyup="value=value.replace(/[^\w\.:\/]/ig,'')"
+ onselect="value=value.replace(/[^\w\.:\/]/ig,'')"> 													
+											<input type="button" id="domain_add" name="domain_add" value="Add">
+											<input id="domain_all" name="domain_all" class="active_input idleField" type="hidden" style="width: 240px">														
+										</td>
+								  </tr>
+								 </table>
+									<table id="domaintable" class="nicetable" cellpadding="0" cellspacing="2" style="margin-left:30px;">
+									</table>
+							</div>						                                                            
+
+						<div id = "apply_btn_div" style="position:relative;width:240px; margin-left:518px; margin-top:5px;height:80px;"> 
+							<table id = "ssid_apply_id"  >
+								<tr>
+									<td>
+										<div id="ssid_cancel_bttn" class="bttn bttn_black">
+											<a id="cancelLanButton" href="javascript:{void(0)}">
+											<div class="bnt_image"><img src="static/images/button/refuse_img.png"></div>&nbsp;<script>document.write(WebString.Cancel)</script></a><span></span>
+										</div>
+									</td>
+									<td width="0px">&nbsp;</td>
+									<td>
+										<div id="ssid_apply_bttn" class="bttn bttn_red">
+											<a id="saveLanButton" href="javascript:{ssid_forms_submit()}">
+											<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Apply)</script></a><span></span>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</form>
+				</div>
+			</div>
+        	<div class="cleared"></div>
+		</div>
+	</div>
+</div>
+               
+<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+<div id="footerExt">
+	<div id="copyright" style="text-align:center; margin-top:20px">
+    <span style="color: white; font-family: Arial; font-size: 11px">
+        <script>document.write(WebString.Copyright)</script>
+    </span>
+	</div>                
+</div>
+                
+        
+{% include "page-end.html" %} 

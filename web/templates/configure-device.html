@@ -1,0 +1,2424 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+//<![CDATA[
+
+var cur_dev = "";
+var cur_dev_id = 0;
+var cur_network = "";
+var start_from_number=160;
+var number_space=12;
+var back_all_number=600;
+var cur_country_code = "";
+var flage=1
+var device_online=0
+
+document.title = "ezCloud AP Management | Configure - Device"
+cur_dev = getURLMultiParam("dev_name");
+cur_network = getURLMultiParam("network");
+cur_position=getURLMultiParam("position");
+cur_nextflag=getURLMultiParam("nextflag");
+cur_show_device_id=getURLMultiParam("show_id");
+cur_search=getURLMultiParam("search_name");
+
+
+var timeZones = new Array();
+timeZones[0] = XntpString[0];
+timeZones[1] = XntpString[1];
+timeZones[2] = XntpString[2];
+timeZones[3] = XntpString[3];
+timeZones[4] = XntpString[4];
+timeZones[5] = XntpString[5];
+timeZones[6] = XntpString[6];
+timeZones[7] = XntpString[7];
+timeZones[8] = XntpString[8];
+timeZones[9] = XntpString[9];
+timeZones[10] = XntpString[10];
+timeZones[11] = XntpString[11];
+timeZones[12] = XntpString[12];
+timeZones[13] = XntpString[13];
+timeZones[14] = XntpString[14];
+timeZones[15] = XntpString[15];
+timeZones[16] = XntpString[16];
+timeZones[17] = XntpString[17];
+timeZones[18] = XntpString[18];
+timeZones[19] = XntpString[19];
+timeZones[20] = XntpString[20];
+timeZones[21] = XntpString[21];
+timeZones[22] = XntpString[22];
+timeZones[23] = XntpString[23];
+timeZones[24] = XntpString[24];
+
+var channel_list = new Array();
+var power_list = new Array();
+var Data_network = new Array();
+var Data = new Array();
+var ssid_list = new Array();
+var ssidCfgData = new Array();
+var channel_2g_list;
+var channel_5g_list;
+var max_2g_ssid = 0;
+var max_5g_ssid = 0;
+	
+function webInit()
+{          	
+	$("#secondaryMenu2").show();
+	$("#tabs_2").addClass("current");
+	$("#search_id").css("visibility","visible")
+	$("#secondaryMenu2Selection0").addClass("current secondarysectionSelected");
+
+	display_btn(false);
+	
+	if("{{add_back_info}}"=="add_ssid_fail")
+	{
+		alert(Webconfigure_deviceString.SSID_failed)
+	}
+	if("{{add_back_info}}"=="add_ssid_portal_fail")
+	{
+		alert(Webconfigure_deviceString.PortalSupport4)
+	}	
+	else if("{{add_back_info}}"=="exceed_max_2g_ssid")
+	{
+		alert(Webconfigure_deviceString.Exceed2)
+	}
+	else if("{{add_back_info}}"=="exceed_max_5g_ssid")
+	{
+		alert(Webconfigure_deviceString.Exceed5)
+	}
+	else if("{{add_back_info}}"=="exsit")
+	{
+		
+		cur_dev = getURLMultiParam("olddev_name");
+		alert(Webconfigure_deviceString.Device_name_exsit)
+	}
+	var TR = Webconfigure_deviceString.Device + cur_dev;
+	$("#dev_name_title").html(TR);
+
+}
+
+function configure_select_network(network)
+{
+	url = "configure-overview.html?network=" + network;
+	window.top.location.href = url;
+}
+
+function monitor_showApStats(dev_name){
+	alert("monitor_showApStats" + dev_name);
+}
+
+function getTimeZoneOffset(idx)
+{
+	ret = idx - 12;
+	return ret;
+}
+
+function writeTimeZoneList(timezone)
+{
+	var str = "";
+	for( var i = 0; i < timeZones.length; i++ ) 
+	{
+		str += "<option value=" + getTimeZoneOffset(i) + ">" + timeZones[i] + "</option>";
+		
+	}
+	$("#time_Zone").html(str);
+	var TR = "#time_Zone " + "option[value='" + timezone + "']";
+	$(TR).attr("selected","selected");
+}
+
+function displayCountry(country_list, country_code)
+{			
+	for(var i =0; i < country_list.length && country_list[i] != ""; i++)
+	{ 
+		
+		$("#radio_country").append('<option value="'+country_list[i]+'">'+country_list[i]+'</option>');     	
+	}
+	
+	$("#radio_country").val(country_code);
+	cur_country_code = country_code;
+
+	return;
+}
+
+function display2gRole(role_list, role_value)
+{			
+	for(var i =0; i < role_list.length; i++)
+	{ 
+		$("#2g_radio_role").append('<option value="'+role_list[i]+'">'+role_list[i]+'</option>');     	
+	}
+	
+	$("#2g_radio_role").val(role_value);
+
+	return;
+}
+
+function display5gRole(role_list, role_value)
+{			
+	for(var i =0; i < role_list.length; i++)
+	{ 
+		$("#5g_radio_role").append('<option value="'+role_list[i]+'">'+role_list[i]+'</option>');     	
+	}
+	
+	$("#5g_radio_role").val(role_value);
+
+	return;
+}
+
+function display2gMode(mode_list, mode_value)
+{			
+	for(var i =0; i < mode_list.length; i++)
+	{ 
+		$("#2g_radio_mode").append('<option value="'+mode_list[i]+'">'+mode_list[i]+'</option>');     	
+	}
+	
+	$("#2g_radio_mode").val(mode_value);
+
+	return;
+}
+
+function display5gMode(mode_list, mode_value)
+{			
+	for(var i =0; i < mode_list.length; i++)
+	{ 
+		$("#5g_radio_mode").append('<option value="'+mode_list[i]+'">'+mode_list[i]+'</option>');     	
+	}
+	
+	$("#5g_radio_mode").val(mode_value);
+
+	return;
+}
+
+function display2gChannel(channel_list, channel_value)
+{			
+	for(var i =0; i < channel_list.length; i++)
+	{
+		if(0 == channel_list[i])
+			$("#2g_radio_channel").append('<option value="'+channel_list[i]+'">'+"Auto"+'</option>');     
+		else	  
+			$("#2g_radio_channel").append('<option value="'+channel_list[i]+'">'+channel_list[i]+'</option>');     	
+	}
+	
+	$("#2g_radio_channel").val(channel_value);
+	display2gHT();
+	return;
+}
+
+function display5gChannel(channel_list, channel_value)
+{			
+	for(var i =0; i < channel_list.length; i++)
+	{
+		if(0 == channel_list[i])
+			$("#5g_radio_channel").append('<option value="'+channel_list[i]+'">'+"Auto"+'</option>');     
+		else	  
+			$("#5g_radio_channel").append('<option value="'+channel_list[i]+'">'+channel_list[i]+'</option>');     	
+	}
+	
+	$("#5g_radio_channel").val(channel_value);
+	display5gHT();
+	return;
+}
+
+function display2gPower(min, max, tx_power)
+{
+	
+	for(var i = min; i <= max; i++)
+	{
+		$("#2g_radio_power").append('<option value="'+ i +'">'+ i +'</option>');     	
+	}
+	
+	$("#2g_radio_power").val(tx_power);
+	return;
+}
+
+function display5gPower(min, max, tx_power)
+{
+	for(var i = min; i <= max; i++)
+	{
+		$("#5g_radio_power").append('<option value="'+ i +'">'+ i +'</option>');     	
+	}
+	
+	$("#5g_radio_power").val(tx_power);
+	return;
+}
+
+function hide2gHT()
+{
+	var radio_code = $("#2g_radio_mode").val();
+	
+	if(radio_code != "802.11n")
+	{
+		$("#2g_cw20").hide();	
+		$("#2g_cw40").hide();	
+		$("#2g_cw40plus").hide();	
+		$("#2g_cw40minus").hide();
+		$("#2g_band").hide();
+		return true;		
+	}
+}
+
+function get2gHT(channel_bandwidth)
+{
+	$("#2g_channel_bandwidth").val(channel_bandwidth);
+
+	switch(channel_bandwidth)
+	{
+		case 20:
+		{
+			$("#2g_ht20").get(0).checked = true;
+			$("#2g_ht40").get(0).checked = false;
+			$("#2g_ht40plus").get(0).checked = false;
+			$("#2g_ht40minus").get(0).checked = false;
+			break;
+		}
+		
+		case 39:
+		{
+			$("#2g_ht20").get(0).checked = false;
+			$("#2g_ht40").get(0).checked = false;
+			$("#2g_ht40plus").get(0).checked = false;
+			$("#2g_ht40minus").get(0).checked = true;
+			break;		
+		}
+		
+		case 41:
+		{
+			$("#2g_ht20").get(0).checked = false;
+			$("#2g_ht40").get(0).checked = false;
+			$("#2g_ht40plus").get(0).checked = true;
+			$("#2g_ht40minus").get(0).checked = false;
+			break;		
+		}
+		
+		case 40:
+		{
+			$("#2g_ht20").get(0).checked = false;
+			$("#2g_ht40").get(0).checked = true;
+			$("#2g_ht40plus").get(0).checked = false;
+			$("#2g_ht40minus").get(0).checked = false;
+			break;
+		}
+	}
+	
+	display2gHT();
+	hide2gHT();
+}
+
+function display2gHT()
+{
+	var channel_code = $("#2g_radio_channel").val();
+	
+	$("#2g_band").show();
+	$("#2g_cw20").show();
+	$("#2g_cw40").hide();	
+ 	if((channel_code >= 1) && (channel_code <= 7))
+	{
+		if((channel_code >= 1) && (channel_code <= 4))
+		{
+			$("#2g_cw40minus").hide();		
+		}
+		
+		else
+		{
+			$("#2g_cw40minus").show();				
+		}
+		
+		$("#2g_cw40plus").show();	
+	}
+	
+	if((channel_code >= 10) && (channel_code <= 13))
+	{
+		$("#2g_cw40plus").hide();	
+		$("#2g_cw40minus").show();		
+	}
+
+	if(channel_2g_list.length > 12)
+	{
+		if((channel_code == 8) || (channel_code == 9))
+		{
+			$("#2g_cw40plus").show();	
+			$("#2g_cw40minus").show();		
+		}
+	
+	}
+	else
+	{
+		if((channel_code == 8) || (channel_code == 9))
+		{
+			$("#2g_cw40plus").hide();	
+			$("#2g_cw40minus").show();		
+		}	
+	}
+	
+	if(channel_code == 0)
+	{
+		$("#2g_cw40").show();	
+		$("#2g_cw40plus").hide();	
+		$("#2g_cw40minus").hide();		
+	}	
+	
+	return true;
+}
+
+function hide5gHT()
+{
+	var radio_code = $("#5g_radio_mode").val();
+	
+	if(radio_code != "802.11n" && radio_code != "802.11ac")
+	{
+		if(radio_code == "802.11a")
+		{
+			$("#5g_band").hide();
+			$("#5g_cw20").hide();	
+			$("#5g_cw40").hide();
+		}	
+		$("#5g_cw40plus").hide();	
+		$("#5g_cw40minus").hide();	
+		return true;		
+	}
+}
+
+function get5gHT(channel_bandwidth)
+{	
+	$("#channel_bandwidth").val(channel_bandwidth);
+
+	switch(channel_bandwidth)
+	{
+		case 20:
+		{
+			$("#5g_ht20").get(0).checked = true;
+			$("#5g_ht40").get(0).checked = false;
+			$("#5g_ht40plus").get(0).checked = false;
+			$("#5g_ht40minus").get(0).checked = false;
+			$("#5g_ht80").get(0).checked = false;
+			break;
+		}
+		
+		case 39:
+		{
+			$("#5g_ht20").get(0).checked = false;
+			$("#5g_ht40").get(0).checked = false;
+			$("#5g_ht40plus").get(0).checked = false;
+			$("#5g_ht40minus").get(0).checked = true;
+			$("#5g_ht80").get(0).checked = false;
+			break;		
+		}
+		
+		case 41:
+		{
+			$("#5g_ht20").get(0).checked = false;
+			$("#5g_ht40").get(0).checked = false;
+			$("#5g_ht40plus").get(0).checked = true;
+			$("#5g_ht40minus").get(0).checked = false;
+			$("#5g_ht80").get(0).checked = false;
+			break;		
+		}
+		
+		case 40:
+		{
+			$("#5g_ht20").get(0).checked = false;
+			$("#5g_ht40").get(0).checked = true;
+			$("#5g_ht40plus").get(0).checked = false;
+			$("#5g_ht40minus").get(0).checked = false;
+			$("#5g_ht80").get(0).checked = false;
+			break;
+		}
+
+		case 80:
+		{
+            $("#5g_ht20").get(0).checked = false;
+			$("#5g_ht40").get(0).checked = false;
+			$("#5g_ht40plus").get(0).checked = false;
+			$("#5g_ht40minus").get(0).checked = false;
+			$("#5g_ht80").get(0).checked = true;
+			break;
+		}
+	}
+	
+	display5gHT();
+	hide5gHT();
+}
+
+
+function display5gHT()
+{
+	var channel_code = $("#5g_radio_channel").val();
+	
+	$("#5g_band").show();
+	$("#5g_cw20").show();	
+	$("#5g_cw40").hide();
+ 	if(channel_code == 0)
+	{
+		$("#5g_cw40").show();	
+		$("#5g_cw40plus").hide();	
+		$("#5g_cw40minus").hide();		
+	}	
+
+	if((channel_code >= 36) && (channel_code <= 64))
+	{
+		if(channel_code == 36)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();	
+		}
+		else if(channel_code == 40)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();				
+		}
+		else if(channel_code == 44)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();				
+		}
+		else if(channel_code == 48)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();				
+		}
+		else if(channel_code == 52)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();				
+		}
+		else if(channel_code == 56)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();				
+		}
+		else if(channel_code == 60)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();				
+		}
+		else if(channel_code == 64)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();				
+		}		
+	}
+	else if((channel_code >= 100) && (channel_code <= 140))
+	{
+		if(channel_code == 100)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+		
+		else if(channel_code == 104)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+		
+		else if(channel_code == 108)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+		
+		else if(channel_code == 112)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+
+		else if(channel_code == 116)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+		
+		else if(channel_code == 120)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+
+		else if(channel_code == 124)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+		
+		else if(channel_code == 128)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+			
+		else if(channel_code == 132)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+
+		else if(channel_code == 136)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+		
+		else if(channel_code == 140)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").hide();		
+		}			
+	}
+	
+	else if((channel_code >= 149) && (channel_code <= 165))
+	{
+		if(channel_code == 149)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+		
+		else if(channel_code == 153)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+		
+		else if(channel_code == 157)
+		{
+			$("#5g_cw40plus").show();	
+			$("#5g_cw40minus").hide();		
+		}
+		
+		else if(channel_code == 161)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").show();		
+		}
+		
+		else if(channel_code == 165)
+		{
+			$("#5g_cw40plus").hide();	
+			$("#5g_cw40minus").hide();		
+		}
+	}
+
+	if(((channel_code == 0) ||(channel_code >= 36 && channel_code <= 128) || (channel_code >= 149 && channel_code <= 161)) && $("#5g_radio_mode").val() == "802.11ac")
+	{
+		$("#5g_cw80").show();	
+	}
+	else
+	{
+		$("#5g_cw80").hide();	
+	}
+
+	return true;
+}
+
+function configure_device_setting(devname,position)
+{
+	
+	if(cur_search!=null)
+		url = "configure-device.html?network=" + cur_network + "&dev_name=" + devname + "&position="+ (position+1)+"&search_name="+cur_search;
+	else{
+		cur_position=(parseInt(position)+ parseInt(start_from_number))
+		url = "configure-device.html?network=" + cur_network + "&dev_name=" + devname + "&position="+ (parseInt(position)+ parseInt(start_from_number));
+	}
+	window.top.location.href = url;
+}
+
+function display_btn(enable)
+{
+	if(enable)
+	{
+		$("#apply_btn_div").show();
+	}
+	else
+	{
+		$("#apply_btn_div").hide();
+	}
+}
+
+function select_menu(menu_id)
+{
+	if(menu_id == "device_summary")
+	{
+		display_btn(false);
+	}
+    else if(menu_id == "device_basic")
+	{
+		$("#which_form").val("dev_basic_form");
+		display_btn(true);
+	}
+	else if(menu_id == "device_radio")
+	{
+		$("#which_form").val("dev_radio_form");
+		display_btn(true);
+	}
+	else if(menu_id == "device_ssids")
+	{
+		$("#which_form").val("dev_ssid_form");
+		display_btn(false);
+	}
+	else if(menu_id == "device_wanport")
+	{
+		$("#which_form").val("dev_wanport_form");
+		display_btn(false);
+	}
+	else if(menu_id == "device_upgrade")
+	{
+		$("#which_form").val("dev_upgrade_form");
+		display_btn(true);
+	}
+	else if(menu_id == "device_advanced")
+	{
+		$("#which_form").val("dev_advance_form");
+		display_btn(true);
+	}
+}
+
+function FreshDeviceSummary(dev_summary)
+{
+	if(dev_summary.dev_name != undefined)
+	{
+		$("#dev_name").html(cur_dev);
+	}
+	else
+	{
+		$("#dev_name").html("N/A");
+	}
+	if(dev_summary.dev_vendor != undefined)
+	{
+		$("#dev_vendor").html(dev_summary.dev_vendor);
+	}
+	else
+	{
+		$("#dev_vendor").html("N/A");
+	}
+	if(dev_summary.dev_sn != undefined)
+	{
+		$("#dev_sn").html(dev_summary.dev_sn);
+	}
+	else
+	{
+		$("#dev_sn").html("N/A");
+	}
+	if(dev_summary.model_name != undefined)
+	{
+		$("#dev_model").html(dev_summary.model_name);
+	}
+	else
+	{
+		$("#dev_model").html("N/A");
+	}
+	if(dev_summary.dev_sw_ver != undefined)
+	{
+		$("#dev_fw").html(dev_summary.dev_sw_ver);
+	}
+	else
+	{
+		$("#dev_fw").html("N/A");
+	}
+	if(dev_summary.dev_mac != undefined)
+	{
+		$("#dev_mac").html(dev_summary.dev_mac);
+	}
+	else
+	{
+		$("#dev_mac").html("00:00:00:00:00:00");
+	}
+	if(dev_summary.dev_ip != undefined)
+	{
+		$("#dev_ip").html(dev_summary.dev_ip);
+	}
+	else
+	{
+		$("#dev_ip").html("0.0.0.0");
+	}
+}
+
+function FreshDeviceBasic(dev_basic)
+{
+	//country_code
+	country_code = dev_basic.country_code;
+	var country_list = string_to_list(dev_basic.country_list);
+	displayCountry(country_list, country_code);
+	
+	if(dev_basic.dev_name != undefined)
+	{
+		$("#dev_name_input").val(cur_dev);
+	}
+	else
+	{
+		$("#dev_name_input").val("N/A");
+	}
+
+	if(dev_basic.timezone != undefined)
+	{
+		writeTimeZoneList(dev_basic.timezone);
+	}
+	else
+	{
+		writeTimeZoneList(0);
+	}
+}
+
+function string_to_list(string)
+{
+	var list = string.split(",");
+	return list;
+}
+
+function generate_role_list(cap_service_mode)
+{
+	var role_list = new Array();
+	
+	for(var i = 0; i < 3; i++)
+	{
+		if((cap_service_mode >> i) & 1)
+		{
+			if(i==0)
+			{
+				role_list.push("AP");
+			}
+			else if(i==1)
+			{
+				role_list.push("Station");
+			}
+			/*we donot support wds mode
+			else if(i==2)
+			{
+				role_list.push("WDS");
+			}
+			*/
+		}
+	}
+	
+	return role_list;
+}
+
+function generate_mode_list(cap_80211_mode)
+{
+	var mode_list = new Array();
+	
+	for(var i = 0; i < 5; i++)
+	{
+		if((cap_80211_mode >> i) & 1)
+		{
+			if(i==0)
+			{
+				mode_list.push("802.11a");
+			}
+			else if(i==1)
+			{
+				mode_list.push("802.11b");
+			}
+			else if(i==2)
+			{
+				mode_list.push("802.11g");
+			}
+			else if(i==3)
+			{
+				mode_list.push("802.11n");
+			}
+			else if(i==4)
+			{
+				mode_list.push("802.11ac");
+			}
+		}
+	}
+	
+	return mode_list;
+}
+
+function FreshDeviceRadio(dev_radio)
+{	
+	if(dev_radio.support_2g != 0)//supported 2.4g
+	{
+		$("#support_2g").val("1");
+		//2.4g role
+		var cap_2g_service_mode = parseInt(dev_radio.cap_2g_mode);
+		var role_2g_list = generate_role_list(cap_2g_service_mode);
+		display2gRole(role_2g_list, dev_radio.dev_2g_radio_role);
+		
+		//2.4g 802.11 mode
+		var cap_2g_80211_mode = parseInt(dev_radio.cap_2g_80211_mode);
+		var mode_2g_list = generate_mode_list(cap_2g_80211_mode);
+		display2gMode(mode_2g_list, dev_radio.dev_2g_80211_mode);
+		
+		//2.4g channel list
+		channel_2g_list = string_to_list(dev_radio.channel_2g_list);
+		display2gChannel(channel_2g_list, dev_radio.dev_2g_chan);
+		
+		//2.4g bandwidth
+		get2gHT(dev_radio.dev_2g_band);
+		
+		//2.4g tx power
+		var min_2g = parseInt(dev_radio.tx_2g_pwr_min);
+		var max_2g = parseInt(dev_radio.tx_2g_pwr_max);
+		display2gPower(min_2g, max_2g, dev_radio.dev_2g_txpwr);	
+	}
+	else
+	{
+		$("#support_2g").val("0");
+		$("#table_2g").hide();
+	}
+	
+	if(dev_radio.support_5g != 0)//supported 5.8g
+	{
+		$("#support_5g").val("1");
+		//5g role
+		var cap_5g_service_mode = parseInt(dev_radio.cap_5g_mode);
+		var role_5g_list = generate_role_list(cap_5g_service_mode);
+		display5gRole(role_5g_list, dev_radio.dev_5g_radio_role);
+	
+		//5g 802.11 mode
+		var cap_5g_80211_mode = parseInt(dev_radio.cap_5g_80211_mode);
+		var mode_5g_list = generate_mode_list(cap_5g_80211_mode);
+		display5gMode(mode_5g_list, dev_radio.dev_5g_80211_mode);
+		
+		//5g channel list
+		channel_5g_list = string_to_list(dev_radio.channel_5g_list);
+		display5gChannel(channel_5g_list, dev_radio.dev_5g_chan);
+		
+		//5g bandwidth
+		get5gHT(dev_radio.dev_5g_band);	
+		
+		//5g tx power
+		var min_5g = parseInt(dev_radio.tx_5g_pwr_min)
+		var max_5g = parseInt(dev_radio.tx_5g_pwr_max)
+		display5gPower(min_5g, max_5g, dev_radio.dev_5g_txpwr);
+	}
+	else
+	{
+		$("#support_5g").val("0");
+		$("#table_5g").hide();
+	}
+}
+
+function FreshDeviceTCPIP(dev_ip)
+{
+	if(dev_ip.ip_vlan != undefined)
+	{
+		$("#dev_vlan").val(dev_ip.ip_vlan);
+	}
+	
+	if(dev_ip.ip_detag == 1)
+	{
+		$("#dev_tx_tag").attr("checked", false);
+		$("#vlan_detag").val(1);
+	}
+	else
+	{
+		$("#dev_tx_tag").attr("checked", true);
+		$("#vlan_detag").val(0);
+	}
+	
+	
+	if(dev_ip.ip_mode == 0)//static
+	{
+		$("#dev_ip_mode").val(0);
+		if(dev_ip.ip_addr != undefined)
+		{
+			$("#dev_ipaddr").val(dev_ip.ip_addr);
+		}
+		if(dev_ip.ip_mask != undefined)
+		{
+			$("#dev_netmask").val(dev_ip.ip_mask);
+		}
+		if(dev_ip.ip_gw != undefined)
+		{
+			$("#dev_gw").val(dev_ip.ip_gw);
+		}
+		if(dev_ip.ip_dns1 != undefined)
+		{
+			$("#dev_dns1").val(dev_ip.ip_dns1);
+		}
+		if(dev_ip.ip_dns2 != undefined)
+		{
+			$("#dev_dns2").val(dev_ip.ip_dns2);
+		}
+	}
+	else
+	{
+		$("#dev_ip_mode").val(1);
+	}
+	
+	displayStaticIP();
+}
+
+function FreshDeviceAdvance(dev_advance)
+{
+	if(dev_advance.mgmt_syslog != undefined && dev_advance.mgmt_syslog == "1")
+	{
+		updateSyslogEnable();
+	}
+	else
+	{
+		updateSyslogDisable();
+	}
+	
+	if(dev_advance.mgmt_syslog_server != undefined)
+	{
+		$("#f_remote_syslog_ip").val(dev_advance.mgmt_syslog_server);
+	}
+	else
+	{
+		$("#f_remote_syslog_ip").val("");
+	}
+	
+	if(dev_advance.mgmt_ssh != undefined && dev_advance.mgmt_ssh == "1")
+	{	
+		updateSshEnable();
+	}
+	else
+	{
+		updateSshDisable();
+	}
+	
+	if(dev_advance.mgmt_telnet != undefined && dev_advance.mgmt_telnet == "1")
+	{	
+		updateTelnetEnable();
+	}
+	else
+	{
+		updateTelnetDisable();
+	}
+	
+	if(dev_advance.mgmt_http != undefined && dev_advance.mgmt_http == "1")
+	{	
+		updateHttpEnable();
+	}
+	else
+	{
+		updateHttpDisable();
+	}
+	
+	if(dev_advance.mgmt_https != undefined && dev_advance.mgmt_https == "1")
+	{	
+		updateHttpsEnable();
+	}
+	else
+	{
+		updateHttpsDisable();
+	}
+	device_online=dev_advance.dev_state
+	//alert(device_online)
+	$("#XS34_mode").html(Xconfigure_deviceString[34]+':')
+	var newlist=dev_advance.firmware_list.split('|')
+	for(var i=0;i<newlist.length-1;i++)
+	{
+		$("#firmware_list").append('<option value="'+newlist[i]+'">'+newlist[i]+'</option>');
+
+	}
+	if(dev_advance.plan_version!=null)
+	{
+		
+		$('#firmware_list').val(dev_advance.plan_version);
+	}
+	if(dev_advance.auto_upgrade != undefined && dev_advance.auto_upgrade == "1")
+	{	
+		updateAutoUpEnable();
+		$("#Device_Firmware").hide()
+	}
+	else
+	{
+		updateAutoUpDisable();
+		$("#Device_Firmware").show()
+		
+	}
+	
+}
+
+function dispalySSIDList()
+{			
+	for(var i =0; i < ssid_list.length; i++)
+	{
+		$("#ssid_tp").append('<option value="'+ssid_list[i].ssid_id+'">'+ssid_list[i].ssid_name+'</option>');     	
+	}
+	return;
+}
+
+function dispalyRadioList()
+{
+	var i,j;
+	if(max_2g_ssid > 0)
+	{
+		$("#radio_type").append('<option value="2.4g">2.4g</option>');
+	}
+	if(max_5g_ssid > 0)
+	{ 
+		$("#radio_type").append('<option value="5g">5g</option>');     	
+	}
+	return;
+}
+
+function displayStaticIP()
+{
+	var ip_mode = $("#dev_ip_mode").val();
+	if(ip_mode == 0)//static
+	{
+		$("#dev_ip_tr").show();
+		$("#dev_netmask_tr").show();
+		$("#dev_gw_tr").show();
+		$("#dev_dns1_tr").show();
+		$("#dev_dns2_tr").show();
+	}
+	else
+	{
+		$("#dev_ip_tr").hide();
+		$("#dev_netmask_tr").hide();
+		$("#dev_gw_tr").hide();
+		$("#dev_dns1_tr").hide();
+		$("#dev_dns2_tr").hide();
+	}
+}
+
+function FreshDeviceSSID()
+{
+	
+	var TR = "";
+	var max_ssid = max_2g_ssid + max_5g_ssid;
+	TR += "<tbody>";
+	TR += '<tr><td align="center">'+Webconfigure_deviceString.index+'</td><td align="center">Radio</td><td align="center">'+Xconfigure_deviceString[21]+'</td><td align="center">VLAN ID</td><td align="center">'+WebString.Delete+'</td></tr>';
+	for(var i = 1; i <=max_ssid; i++)
+	{
+		
+		$.each(ssidCfgData,function(wid, wel){
+			if(wel.ssid_index != undefined && i == wel.ssid_index)
+			{
+				TR += '<tr><td align="center">';
+				TR += i;
+				TR += '</td>';
+				TR += '<td align="center">';
+				TR += wel.radio_type;
+				TR += '</td>';
+				TR += '<td class="bootstrap-scope" align="center">';
+				TR += wel.ssid_name;
+				TR += '</td>';
+				TR += '<td align="center">';
+				TR += wel.ssid_vlan;
+				TR += '</td>';
+				TR += '<td align="center">';
+				TR +='<div class="delete_purview" style="cursor:pointer;" onclick="funchange_ssid_delete(\''+wel.radio_type+'|'+wel.ssid_name+'|'+wel.ssid_vlan+'\')"><img src="static/images/delete.gif"></div>'
+				TR += '</td></tr>';
+			}
+		});	
+	}
+	TR += "</tbody>";
+	$("#ssid_cfg_info").empty()
+	$("#ssid_cfg_info").html(TR);
+	
+}
+	
+
+function funchange_ssid_delete(delete_string)
+{
+	var delete_string_value=delete_string.split('|');
+	$("#radio_type option[value='" + delete_string_value[0] + "']").attr("selected", "selected"); 
+	$("#ssid_on option[value='0']").attr("selected", "selected");
+	var x = "";
+	$("#ssid_tp option").each(function() {
+		if($(this).text() == delete_string_value[1]) {
+			x = $(this).attr("selected","selected");
+		}
+	})
+
+	apply_device_configure();
+	
+}
+	
+function FreshDeviceList()
+{
+	var  TR="";
+	TR += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px; ">';
+	var i=0
+	$.each(Data,function(wid, wel){
+		if(wel.total != "undefined" && wel.start != "undefined" && wel.offset != "undefined" && wel.data_type == "summary" )
+		{
+				back_all_number=wel.total;
+				start_from_number=wel.start;
+				number_space=wel.offset;
+		}			
+		if(wel.data_type == "dev_list")
+		{
+			if(cur_nextflag=="turnpage")
+			{
+				cur_dev = wel.dev_name;
+				var title = Webconfigure_deviceString.Device + cur_dev;
+				$("#dev_name_title").empty()
+				$("#dev_name_title").html(title);
+				cur_nextflag="";
+				getDevCfgDATA();
+				getSSIDCfgDATA();
+
+			}
+			if(cur_dev == wel.dev_name)
+			{
+				cur_dev_id = wel.dev_id;
+				TR += '<li class="accessPointLi tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected" style="width: 210px;">';
+			}
+			else
+			{
+				TR += '<li class="accessPointLi tzui-state-default tzui-corner-left" style="width: 210px;">';
+			}
+			TR += '<a onclick=configure_device_setting("'+ wel.dev_name + '",'+ i+') style="text-decoration:none;overflow: hidden; display: inline; cursor:pointer; height: 20px; width: 100px;">';
+			TR += '<img alt="Loading Configuration .. please wait" style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" id="ssid_img" class="shadow" src="static/images/ssid.png">';
+			TR += '<span style=" width:167px; text-align:left;display: block; float: left; overflow: hidden;text-overflow: ellipsis;white-space:nowrap" title="">'+ wel.dev_name + '</span>';
+			TR += '<\/a><\/li>'
+			i++
+		}
+	});				
+	TR += '<\/ul>\n';
+	$("#tabsv").empty();
+	$("#tabsv").html(TR);
+	if(back_all_number==0|| Math.ceil(back_all_number/number_space)==1)
+	{
+		$("#page_show").hide()
+	}
+	else 
+	{	
+		$("#page_show").show()
+		Calculation_page(start_from_number,number_space,back_all_number)
+	}
+
+}
+
+function postpagenumber(present_page)
+{
+	start_from_number=(present_page-1)*number_space+1;//设置全局变量
+	url = "configure-device.html?network=" + cur_network + "&dev_name=" + cur_dev + "&position="+ ((present_page-1)*number_space+1)+ "&nextflag=turnpage"
+	window.top.location.href = url;
+}
+
+function FreshDeviceCfg(devCfgData)
+{
+	$.each(devCfgData,function(wid, wel){
+		if(wel.data_type != undefined && wel.data_type == "config")
+		{
+			if(cur_dev == wel.dev_name)
+			{
+				FreshDeviceSummary(wel);
+				FreshDeviceBasic(wel);
+				FreshDeviceRadio(wel);
+				FreshDeviceTCPIP(wel);
+				FreshDeviceAdvance(wel);
+			}
+		}	
+	});
+}
+	
+function getDevCfgDATA()
+{
+	var param = {"network": cur_network, "device": cur_dev };
+	var url = "get-configure-device";
+	var devCfgData = new Array();
+	$.getJSON(url,param,
+		function(data){
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){ 					
+				devCfgData.push(value);                     
+			});
+			FreshDeviceCfg(devCfgData);			
+		}
+	);
+}
+
+function FillNetworkSelectOption()
+{
+	var TR = "";
+	$.each(Data_network,function(wid,wel){
+		//if(wel.data_type != "undefined" && wel.data_type == "network")
+	//	{	
+			if(wel.network_name != "undefined")
+			{
+				TR += '<option value="' + wel.network_name + '">' + wel.network_name +'</option>';
+			}					
+		//}
+	});
+	$("#network_sel").html(TR);
+	
+	$("#network_sel").val(cur_network);
+	//$("#network_sel").attr("disabled","disabled");
+}
+
+function getDATA_network()
+{
+	var url = "get-network-name-list";
+	$.getJSON(url,
+		function(data){ 
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){
+					Data_network.push(value);
+			});
+			FillNetworkSelectOption();
+			getDATA_Device_List();
+			
+		} 
+    );	
+}
+
+function getDATA_Device_List(tmp){
+	if(String(tmp)!="undefined")
+	{
+		number_space=tmp;
+		start_from_number=1
+	}
+	if(cur_search!=null&&cur_show_device_id!="1.device_basic")
+	{
+		$("#search_name_id").val(cur_search)
+		Search_name()
+		return;
+	}
+	Data=[]
+	var param = {"network": cur_network, "start": start_from_number,"offset": number_space};
+	var url = "get-device-list";
+	$.getJSON(url, param,
+		function(data){ 
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){
+					Data.push(value);
+			});
+			FreshDeviceList();
+		} 
+    );
+} 
+
+function getSSIDCfgDATA()
+{
+	var param = {"network": cur_network, "device": cur_dev};
+	var url = "get-radio2ssid-list";
+
+	$.getJSON(url,param,
+		function(data){
+			var TR = '"' + cur_dev + '"';
+			$("#ssid_dev_name").html(TR);
+			TR = '"' + cur_network + '"';
+			$("#ssid_network_name").html(TR);
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){
+				if(value.data_type != "undefined" && value.data_type == "ssid_list")
+				{
+					ssid_list.push(value);
+				}
+				if(value.data_type != "undefined" && value.data_type == "radio2ssid")
+				{
+					ssidCfgData.push(value);
+				}
+				if(value.data_type != "undefined" && value.data_type == "ssid_num")
+				{
+					max_2g_ssid = parseInt(value.cap_2g_ssids);
+					max_5g_ssid = parseInt(value.cap_5g_ssids);
+				}				
+			});
+			dispalyRadioList();
+			dispalySSIDList();
+			FreshDeviceSSID();			
+		}
+	);
+}
+
+function configure_tx_tag()
+{
+	if($("#dev_tx_tag").attr("checked") == "checked")
+	{
+		$("#vlan_detag").val(0);
+	}
+	else
+	{
+		$("#vlan_detag").val(1);
+	}
+}
+
+function configure_delete_device(devname)
+{
+	var url;
+	
+	if(confirm(Webconfigure_deviceString.delete_Device + devname))
+	{
+		if(cur_search!=null)
+			url = "operate-device?network=" + cur_network + "&dev_name=" + devname+"&action=delete";
+		else
+			url = "operate-device?network=" + cur_network + "&dev_name=" + devname+"&action=delete";
+		$("#dev_summary_form").attr("action", url);
+		$("#dev_summary_form").submit();
+	}
+}
+
+function configure_reboot_device(devname)
+{
+	var url;
+	
+	if(confirm(Webconfigure_deviceString.reboot_Device + devname))
+	{
+		if(cur_search!=null)
+			 url = "operate-device?network=" + cur_network + "&dev_name=" + devname+"&position="+cur_position+"&action=reboot"+"&search_name="+cur_search;
+		else
+			url = "operate-device?network=" + cur_network + "&dev_name=" + devname+"&position="+cur_position+"&action=reboot";
+		$("#dev_summary_form").attr("action", url);
+		$("#dev_summary_form").submit();
+	}
+}
+
+function check_ssid_used()
+{
+	var cur_ssid_tp = $("#ssid_tp").find("option:selected").text();
+	var cur_radio_type = $("#radio_type").find("option:selected").text();
+	var cur_ssid_on = $("#ssid_on").find("option:selected").text();
+
+	for(var i=0; i < ssidCfgData.length; i++)
+	{
+		if(cur_ssid_on == "On" && ssidCfgData[i].ssid_name == cur_ssid_tp && ssidCfgData[i].radio_type == cur_radio_type)
+		{
+			alert(Webconfigure_deviceString.Template + cur_ssid_tp + Webconfigure_deviceString.Template_already + ssidCfgData[i].radio_type + "'");
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+function apply_device_configure()
+{
+	var form_id = $("#which_form").val();
+	var url;
+	
+	if(form_id == "dev_basic_form")
+	{
+		/*if($("#dev_name_input").val()!=cur_dev)
+		{
+			cur_dev=$("#dev_name_input").val();
+		}*/
+		if($("#dev_name_input").val().length ==0)
+		{
+			alert(Webconfigure_deviceString.Decice_name_invalid);
+			return;
+		}
+		
+		if($("#radio_country").val()!=cur_country_code)
+		{
+			if(!confirm(Webconfigure_deviceString.change_conutry_code))
+			{
+				return 
+			}
+		}
+		if(cur_search!=null)
+			 url = "set-device-basic?network=" + cur_network + "&olddev_name=" + cur_dev  + "&dev_name=" + $("#dev_name_input").val() + "&dev_id=" + cur_dev_id + "&position="+cur_position+"&show_id=1.device_basic"+"&search_name="+cur_search;
+		else
+			 url = "set-device-basic?network=" + cur_network + "&olddev_name=" + cur_dev  + "&dev_name=" + $("#dev_name_input").val() + "&dev_id=" + cur_dev_id + "&position="+cur_position+"&show_id=1.device_basic";
+		$("#dev_basic_form").attr("action", url);
+		$("#dev_basic_form").submit();
+	}
+	else if(form_id == "dev_radio_form")
+	{
+		if(cur_search!=null)
+			url = "set-device-radio?network=" + cur_network + "&dev_name=" + cur_dev +"&position="+cur_position+"&show_id=2.device_radio"+"&search_name="+cur_search;
+		else
+			url = "set-device-radio?network=" + cur_network + "&dev_name=" + cur_dev +"&position="+cur_position+"&show_id=2.device_radio";
+		$("#dev_radio_form").attr("action", url);
+		$("#dev_radio_form").submit();
+	}
+	else if(form_id == "dev_ssid_form")
+	{	
+	
+		if($("#ssid_tp option").length <1)
+		{
+			alert(Webconfigure_deviceString.add_SSID);
+			return;
+		}
+		if($("#ssid_on").val() == 1 && isValidVLAN($("#ssid_vlan").val()) == false)
+		{
+			alert(Webconfigure_deviceString.VLAN_ID_invalid);
+			return;
+		}
+		if(check_ssid_used() == true)
+		{
+			if(cur_search!=null)
+				url = "set-device-ssid?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id + "&position="+cur_position+"&show_id=3.device_ssids"+"&search_name="+cur_search;
+			else
+				url = "set-device-ssid?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id + "&position="+cur_position+"&show_id=3.device_ssids";
+			$("#dev_ssid_form").attr("action", url);
+			$("#dev_ssid_form").submit();
+		}
+	}
+	else if(form_id == "dev_wanport_form")
+	{
+		
+		
+		var ip_mode = $("#dev_ip_mode").val();
+		if(isValidVLAN($("#dev_vlan").val()) == false)
+		{
+			alert(Webconfigure_deviceString.VLAN_ID_invalid);
+			return
+		}
+		if(ip_mode == 0 && isValidIpAddress($("#dev_ipaddr").val()) == false)
+		{
+			alert(Webconfigure_deviceString.IP_Address_invalid);
+			return
+		}
+		if(ip_mode == 0 && isValidSubnetMask($("#dev_netmask").val()) == false)
+		{
+			alert(Webconfigure_deviceString.Subnet_Mask_invalid);
+			return
+		}
+		if(ip_mode == 0 && isValidIpAddress($("#dev_gw").val()) == false)
+		{
+			alert(Webconfigure_deviceString.Gateway_address_invalid);
+			return
+		}
+		var dns1 = $("#dev_dns1").val();
+		if(ip_mode == 0 && dns1 != "" && dns1 != "0.0.0.0" && isValidIpAddress(dns1) == false)
+		{
+			alert(Webconfigure_deviceString.Primary_DNS_invalid);
+			return
+		}
+		var dns2 = $("#dev_dns2").val();
+		if(ip_mode == 0 && dns2 != "" && dns2 != "0.0.0.0" && isValidIpAddress(dns2) == false)
+		{
+			alert(Webconfigure_deviceString.Secondary_DNS_invalid);
+			return
+		}
+		
+		if(!confirm(Webconfigure_deviceString.change_configure))
+		{
+			return
+		}
+		if(cur_search!=null)
+			url = "set-device-ip?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id +"&position="+cur_position+"&show_id=4.device_wanport"+"&search_name="+cur_search;
+		else
+			url = "set-device-ip?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id +"&position="+cur_position+"&show_id=4.device_wanport";
+		$("#dev_wanport_form").attr("action", url);
+		$("#dev_wanport_form").submit();
+	}
+	else if(form_id == "dev_advance_form")
+	{
+		var syslog_ip = $("#f_remote_syslog_ip").val();
+		var enable = $("#syslog_enabled").val();
+		if(enable == "1" && syslog_ip != "0.0.0.0" && isValidIpAddress(syslog_ip) == false)
+		{
+			alert(Webconfigure_deviceString.Remote_Syslog);
+			return
+		}
+		
+		if(cur_search!=null)
+			url = "set-device-advance?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id +"&position="+cur_position+"&show_id=5.device_advanced"+"&search_name="+cur_search;
+		else
+			url = "set-device-advance?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id +"&position="+cur_position+"&show_id=5.device_advanced";
+		
+		$("#dev_advance_form").attr("action", url);
+		$("#dev_advance_form").submit();
+	}
+	
+	else if(form_id == "dev_upgrade_form")
+	{
+		
+		if($("#auto_upgrade").val()=="0"&&device_online==0)
+		{
+		
+			alert(Webconfigure_deviceString.off_line)	
+			return
+		}
+		if($("#auto_upgrade").val()=="0"&&$('#firmware_list option').length==0)
+		{
+			alert(Webconfigure_deviceString.firmware);
+			return
+		}
+		if(cur_search!=null)
+			url = "set-device-upgrade?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id +"&position="+cur_position+"&show_id=6.device_upgrade"+"&search_name="+cur_search;
+		else
+			url = "set-device-upgrade?network=" + cur_network + "&dev_name=" + cur_dev + "&dev_id=" + cur_dev_id +"&position="+cur_position+"&show_id=6.device_upgrade";
+		//alert($("#auto_upgrade").val())
+		$("#dev_upgrade_form").attr("action", url);
+		$("#dev_upgrade_form").submit();
+	}
+}
+
+function cancel_device_configure()
+{
+	document.location.href = document.location.href;
+}
+
+function updateSshEnable(){
+    var parent = $("#sshSwitch .cb-enable").parents('.switch');
+	
+    $('.cb-disable',parent).removeClass('selected');
+    $("#sshSwitch .cb-enable").addClass('selected');
+    $('.checkbox',parent).attr('checked', true);
+	$("#ssh_enabled").val(1);
+}
+function updateSshDisable(){
+    var parent = $("#sshSwitch .cb-disable").parents('.switch');
+	
+    $('.cb-enable',parent).removeClass('selected');
+    $("#sshSwitch .cb-disable").addClass('selected');
+    $('.checkbox',parent).attr('checked', false);
+	$("#ssh_enabled").val(0);
+}
+
+function updateSyslogEnable(){
+    var parent = $("#remoteSyslogSwitch .cb-enable").parents('.switch');
+	
+    $('.cb-disable',parent).removeClass('selected');
+    $("#remoteSyslogSwitch .cb-enable").addClass('selected');
+    $('.checkbox',parent).attr('checked', true);
+    $('#f_remote_syslog_ip').removeAttr("disabled"); 
+	$("#syslog_enabled").val(1);
+}
+function updateSyslogDisable(){
+    var parent = $("#remoteSyslogSwitch .cb-disable").parents('.switch');
+	
+    $('.cb-enable',parent).removeClass('selected');
+    $("#remoteSyslogSwitch .cb-disable").addClass('selected');
+    $('.checkbox',parent).attr('checked', false);
+    $('#f_remote_syslog_ip').attr("disabled","disabled");
+	$("#syslog_enabled").val(0);
+}
+
+function updateTelnetEnable(){
+    var parent = $("#telnetSwitch .cb-enable").parents('.switch');
+	
+    $('.cb-disable',parent).removeClass('selected');
+    $("#telnetSwitch .cb-enable").addClass('selected');
+    $('.checkbox',parent).attr('checked', true); 
+	$("#telnet_enabled").val(1);
+}
+function updateTelnetDisable(){
+    var parent = $("#telnetSwitch .cb-disable").parents('.switch');
+	
+    $('.cb-enable',parent).removeClass('selected');
+    $("#telnetSwitch .cb-disable").addClass('selected');
+    $('.checkbox',parent).attr('checked', false);
+	$("#telnet_enabled").val(0);
+}
+
+function updateHttpEnable(){
+    var parent = $("#httpSwitch .cb-enable").parents('.switch');
+	
+    $('.cb-disable',parent).removeClass('selected');
+    $("#httpSwitch .cb-enable").addClass('selected');
+    $('.checkbox',parent).attr('checked', true); 
+	$("#http_enabled").val(1);
+}
+function updateHttpDisable(){
+    var parent = $("#httpSwitch .cb-disable").parents('.switch');
+	
+    $('.cb-enable',parent).removeClass('selected');
+    $("#httpSwitch .cb-disable").addClass('selected');
+    $('.checkbox',parent).attr('checked', false);
+	$("#http_enabled").val(0);
+}
+
+function updateHttpsEnable(){
+    var parent = $("#httpsSwitch .cb-enable").parents('.switch');
+	
+    $('.cb-disable',parent).removeClass('selected');
+    $("#httpsSwitch .cb-enable").addClass('selected');
+    $('.checkbox',parent).attr('checked', true); 
+	$("#https_enabled").val(1);
+}
+function updateHttpsDisable(){
+    var parent = $("#httpsSwitch .cb-disable").parents('.switch');
+	
+    $('.cb-enable',parent).removeClass('selected');
+    $("#httpsSwitch .cb-disable").addClass('selected');
+    $('.checkbox',parent).attr('checked', false);
+	$("#https_enabled").val(0);
+}
+
+
+function updateAutoUpEnable(){
+	var parent = $("#autoupSwitch .cb-enable").parents('.switch');
+	
+	$('.cb-disable',parent).removeClass('selected');
+	$("#autoupSwitch .cb-enable").addClass('selected');
+	$('.checkbox',parent).attr('checked', true); 
+	$("#auto_upgrade").val(1);
+}
+
+function updateAutoUpDisable(){
+	var parent = $("#autoupSwitch .cb-disable").parents('.switch');
+	
+	$('.cb-enable',parent).removeClass('selected');
+	$("#autoupSwitch .cb-disable").addClass('selected');
+	$('.checkbox',parent).attr('checked', false);
+	$("#auto_upgrade").val(0);
+}
+	
+
+
+$(document).ready(function(){
+	webInit();
+	if(Math.floor(cur_position/number_space) == Math.ceil(cur_position/number_space))
+	{
+		start_from_number=(Math.floor(cur_position/number_space))*number_space-number_space+1
+	}
+	else
+	{start_from_number=Math.floor(cur_position/number_space)*number_space+1;}	
+	
+	getDATA_network();
+	if(cur_nextflag!="turnpage")
+	{
+		getDevCfgDATA();
+		getSSIDCfgDATA();
+	}
+
+    //ssh
+    $("#sshSwitch .cb-disable").click(function(){
+        updateSshDisable();
+    });
+    $("#sshSwitch .cb-enable").click(function(){
+        updateSshEnable();
+    });
+	$("#autoupSwitch .cb-enable").click(function(){
+    	updateAutoUpEnable();
+		$("#Device_Firmware").hide()
+		//$("#firmware_list").attr("disabled",true)
+	});	
+	$("#autoupSwitch .cb-disable").click(function(){
+    	updateAutoUpDisable();
+		$("#Device_Firmware").show()
+		//$("#firmware_list").attr("disabled",false)
+	});	
+	//syslog
+    $("#remoteSyslogSwitch .cb-disable").click(function(){
+        updateSyslogDisable();
+    });
+    $("#remoteSyslogSwitch .cb-enable").click(function(){
+        updateSyslogEnable();
+    });
+	
+	//telnet
+    $("#telnetSwitch .cb-disable").click(function(){
+        updateTelnetDisable();
+    });
+    $("#telnetSwitch .cb-enable").click(function(){
+        updateTelnetEnable();
+    });
+	
+	//http
+    $("#httpSwitch .cb-disable").click(function(){
+        updateHttpDisable();
+    });
+    $("#httpSwitch .cb-enable").click(function(){
+        updateHttpEnable();
+    });
+	
+	//https
+    $("#httpsSwitch .cb-disable").click(function(){
+        updateHttpsDisable();
+    });
+    $("#httpsSwitch .cb-enable").click(function(){
+        updateHttpsEnable();
+    });
+	
+	$("#2g_radio_mode").change(function(){
+		$("#2g_ht20").get(0).checked = true;
+		$("#2g_ht40").get(0).checked = false;
+		$("#2g_ht40plus").get(0).checked = false;
+		$("#2g_ht40minus").get(0).checked = false;
+		display2gHT();
+		hide2gHT();
+	});	
+	
+  	$("#2g_radio_channel").change(function(){
+		$("#2g_ht20").get(0).checked = true;
+		$("#2g_ht40").get(0).checked = false;
+		$("#2g_ht40plus").get(0).checked = false;
+		$("#2g_ht40minus").get(0).checked = false;
+		display2gHT();
+		hide2gHT();
+	});
+	
+	$("#5g_radio_mode").change(function(){
+		$("#5g_ht20").get(0).checked = true;
+		$("#5g_ht40").get(0).checked = false;
+		$("#5g_ht40plus").get(0).checked = false;
+		$("#5g_ht40minus").get(0).checked = false;
+		$("#5g_ht80").get(0).checked = false;
+		display5gHT();
+		hide5gHT();
+	});	
+	
+  	$("#5g_radio_channel").change(function(){
+		$("#5g_ht20").get(0).checked = true;
+		$("#5g_ht40").get(0).checked = false;
+		$("#5g_ht40plus").get(0).checked = false;
+		$("#5g_ht40minus").get(0).checked = false;
+		$("#5g_ht80").get(0).checked = false;
+		display5gHT();
+		hide5gHT();
+	});
+
+	$('#dev_ip_mode').change(function(){
+		displayStaticIP();
+	});
+	if(cur_show_device_id!=null)
+	{
+		var strs= new Array();
+		strs=cur_show_device_id.split(".");
+		showSubSection(strs[0],strs[1]);
+		select_menu(strs[1]);
+	}
+	getmenu()
+	WebLoadString("configure_device")
+	$("#device_ssid_add").val(Xconfigure_overviewString[4])
+});
+ 
+function Search_name(Search){
+	space_page=number_space
+	Data=[]
+	var device_name=$("#search_name_id").val();
+	if($("#search_name_id").val().length<1)
+	{
+		alert(WebString.search_input_device)
+		return 
+	}
+	cur_search=device_name
+	var param = {"network": cur_network, "search_info": cur_search};
+	var url = "get-device-list-search";
+	$.getJSON(url, param,
+		function(data){ 
+			if(data == null || data == "")
+			 {
+				 $("#page_show").hide();
+				 $("#tabsv").hide()
+				 $("#subconteiner").hide()
+				 $("#dev_name_title").hide()
+				 $("#chan_multipageNumN_search").empty()
+				 alert(WebString.search_without)
+				 return;
+			 }
+			$("#subconteiner").show()
+			$("#dev_name_title").show()
+			$.each(data,function(key,value){
+					Data.push(value);
+			});
+			if(Search!=null)
+			{
+				cur_position=1
+				cur_dev = Data[0].dev_name;
+				var title = Webconfigure_deviceString.Device + cur_dev;
+				$("#dev_name_title").empty()
+				$("#dev_name_title").html(title);
+				getDevCfgDATA();
+				getSSIDCfgDATA();
+
+			}
+			if(Data.length==0)
+			{
+				$("#page_show").hide();
+			}
+			if(Data.length>40&&back_all_number>40)
+			{
+				alert(WebString.search_too_wide);
+				return
+			}
+			$("#page_show").hide();
+			$("#tabsv").hide()
+			
+			FreshDeviceList();
+			$("#page_show").hide();
+			$("#chan_multipageNumN_search").empty()
+			if(Data.length>space_page)
+			{
+				$.each($("#tabsv li"), function(i){
+					  if(i >= space_page){
+						  	  this.style.display = 'none'; 
+							 }  
+						});
+				$("#chan_multipageNumN_search").show();
+				for(i=1;i<=Math.ceil(Data.length/space_page);i++)
+				{
+					if(i==1)
+						string_page="<div class=\"page-int-device\" id=\"page"+1+"\"  onclick=\"search_page("+1+")\">"+1+"</div>";	
+					else
+						string_page+="<div class=\"page-int-device\" id=\"page"+i+"\" onclick=\"search_page("+i+")\">"+i+"</div>"	;
+
+				}
+				$("#chan_multipageNumN_search").html(string_page);
+				if(flage=1)
+				{
+					search_page(Math.ceil(cur_position/number_space))
+					flage=2
+				}
+			}
+			
+			$("#tabsv").show()
+		});
+
+}
+
+function search_page(page)
+{
+	space_page=number_space
+	var object=$("#tabsv li")
+	if(page*space_page>Data.length)
+		var end = Data.length
+	else
+		var end =page*space_page
+	$.each($("#tabsv li"), function(i){
+		if(parseInt((page*space_page-space_page))<=i && i<parseInt(end)){
+				this.style.display = '';
+				
+			}  
+		else
+			this.style.display = 'none'; 
+	});
+	for(i=1;i<=Math.ceil(Data.length/space_page);i++)
+	{
+		if(i==page)
+		{
+			$("#page"+i).addClass("page_link_device")
+		}
+		else 
+			$("#page"+i).removeClass("page_link_device")
+	}
+}
+            
+//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden" id="page_title" value="configure-device" />
+<div id="mainExt">
+	<div style=" clear:both;height:auto; top:-10px;min-height:450px; overflow:hidden" id="main">	
+			<div style=" float:left;;width:211px; height:670px; padding-left:10px;border-right:#e1e2e2 2px solid;  text-align:center;">
+							<span style="float:left; color:#a7c0e0; font-size:18px; font-weight:bold; margin-top:25px;"><script>document.write(WebString.Device_List_of)</script></span>
+                            
+							<div id="tabsv" class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix" style="height:460px; padding-top:0px; margin-top:0px;"></div>
+                            
+							<DIV id="page_show" style="height:200PX; width:200PX;  overflow:hidden;">
+                               <div id="chan_multipageNumN" style="float:left; width:200px; height:auto">     
+                                    <div id="page_number" style="float:left; text-align:center;">
+                                    </div> 
+                                </div>
+                                
+                                 
+                                <div style="float:left;width:200px; height:auto">
+                                    <div style="float:left; margin:5px">
+                                <input type="text"  id="input_number"value="" name="page"  style="width:40px; height:20px"  />
+                                    </div> 
+                                    <div class="page-int-device page_link_device" onclick="gotopage()">
+                                     <script>document.write(WebString.Goto)</script>                            	
+                                    </div> 
+                                                   
+                                    <div id="Total" class="page-int-device ">      
+                       	
+                                    </div> 
+                                </div>
+                        	 </DIV>   
+                            
+                            
+                            <div style="height:200PX; width:200PX; display:none;overflow:hidden;" id="chan_multipageNumN_search"> </div> 
+           <div class="cleared"></div>              
+		</div>
+        
+		<div style="width:770px;  float:left; margin-left:30px; overflow:hidden; " >
+			<div style=" opacity: 1; " id="contentInner">	
+				<div>
+					<div style="margin-left:20px; width:666px; margin-top:16px; margin-bottom:16px">
+						<span id = "dev_name_title" style="font-size:22px; font-weight:bold; font-family:Arial; color:#373737">
+					  </span>
+				  </div>					
+						<div id="subconteiner" style="margin-left:20px;width:666px"> 
+							<input type="hidden" id="which_form" name="which_form" value="dev_basic_form">
+							<table id="device_table" cellpadding="2px" cellspacing="0px">
+								<tr>
+								  <td>
+								    <div id="subsection0" class="subsection tabclick" onclick="showSubSection('0','device_summary');select_menu('device_summary');">
+								      <a id="tabs_ap0" href="javascript:{}" class="ap0"><script>document.write(WebString.Summary)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection1" class="subsection tabdefault" onclick="showSubSection('1','device_basic');select_menu('device_basic');">
+								      <a id="tabs_ap1" href="javascript:{}" class="ap1"><script>document.write(WebString.Basic)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection2" class="subsection tabdefault" onclick="showSubSection('2','device_radio');select_menu('device_radio');">
+								      <a id="tabs_ap2" href="javascript:{}" class="ap2"><script>document.write(WebString.Radio)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection3" class="subsection tabdefault" onclick="showSubSection('3','device_ssids');select_menu('device_ssids');">
+								      <a id="tabs_ap3" href="javascript:{}" class="ap3">SSIDs
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection4" class="subsection tabdefault" onclick="showSubSection('4','device_wanport');select_menu('device_wanport');">
+								      <a id="tabs_ap3" href="javascript:{}" class="ap3">TCP/IP
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+                                   <td>
+								    <div id="subsection6" class="subsection tabdefault" onclick="showSubSection('6','device_upgrade');select_menu('device_upgrade');">
+								      <a id="tabs_ap3" href="javascript:{}" class="ap3"><script>document.write(WebString.upgrade)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								  <td>
+								    <div id="subsection5" class="subsection tabdefault" onclick="showSubSection('5','device_advanced');select_menu('device_advanced');">
+								      <a id="tabs_ap3" href="javascript:{}" class="ap3"><script>document.write(WebString.Advanced)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+								</tr>
+							</table>
+                            
+                            
+							<div id="device_summary" class="ap_content" style="height: auto;min-height: 250px">
+                            <form id="dev_summary_form" method="post" action="">						
+								<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+									<tr>
+										<td align="left">
+											<table>
+											  <tr>
+											    <td style="width:250px;">
+													<img title="ezCloud - device" src="static/images/ap/tanaza/400x400/400_airrouter.png" onerror="this.src='static/images/ap/noapImg_400.png'" width="200">
+												</td>
+											  	<td>
+											      <table>
+											        <tr>
+											          <td align="left" id="XS0"></td>
+											          <td id = "dev_name">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS1">Vendor:</td>
+											          <td id = "dev_vendor">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS2">Model:</td>
+											          <td id = "dev_model">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS3">Serial Number:</td>
+											          <td id = "dev_sn">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS4">Firmware Version:</td>
+											          <td id = "dev_fw">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS5">MAC Address:</td>
+											          <td id = "dev_mac">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td align="left" id="XS6">Public IP:</td>
+											          <td id = "dev_ip">&nbsp;</td>
+											        </tr>
+											        <tr>
+											          <td colspan="2" style="text-align: right">
+											            <div id="device_delete_bttn" class="bttn bttn_gray" style="float:left;clear:none">
+											                <a href="javascript:{configure_delete_device(cur_dev);}">
+											                    <div class="bnt_image"><img src="static/images/button/delete_img.png"></div>&nbsp;<script>document.write(WebString.Delete)</script>
+											                </a><span></span>
+											            </div>
+                                                        <div id="device_reboot_bttn" class="bttn bttn_red" style="float:left;margin-left:10px;clear:none">
+											                <a id="rebootButton" href="javascript:{configure_reboot_device(cur_dev);}" rel="#expose" style="color:white">
+											                    <div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Reboot)</script></a><span></span>
+											            </div>
+											          </td>
+											        </tr>
+											        <tr>
+											          <td colspan="3" align="left"><a href="javascript:{monitor_showApStats()}"><img src="static/images/button/monitor_img_gr.png" alt="Monitor" style="vertical-align: middle"><span style="margin-left:15px;color:black"><script>document.write(WebString.Monitor_Access)</script></span></a>
+													  </td>
+													 </tr>
+											      </table>
+												</td>
+											  </tr>
+											</table>                            
+										</td>
+									</tr>
+								</table>
+                                </form>
+							</div>
+							
+							
+							<div id="device_basic" class="ap_content tabs_hide" style="height: auto">
+                            <form id="dev_basic_form" method="post" action="">
+								<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+									<tr>
+										<td align="left"id="XS7">Country:</td>
+										<td align="left" class="bootstrap-scope">
+											<select id="radio_country" name="radio_country" align="left"  style="width:100px" disabled="disabled">
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td align="left" id="XS8">Device name:</td>
+										<td align="left"><input id="dev_name_input" maxlength="32" name="dev_name_basic" value="" class="active_input  idleField" type="text"  
+            
+onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"><span  class="red"> *</span></td>
+									</tr>	         
+									<tr>
+										<td align="left" id="XS9">Time Zone:</td>
+										<td align="left">
+											<div class="bootstrap-scope" id="select">
+												<select name="time_Zone" id="time_Zone" align="left"  style="width:100px" disabled="disabled">
+												</select>
+											</div>
+										</td>
+									</tr>
+								</table>	
+                                </form>						
+							</div>
+							
+							
+							<div id="device_radio" class="ap_content tabs_hide" style="height: auto">
+							<form id="dev_radio_form" method="post" action="">
+								<input type="hidden" id="support_2g" name="support_2g" value="0">
+								<input type="hidden" id="support_5g" name="support_5g" value="0">
+								<tr>
+									<td colspan="2"><h3 align="left">&nbsp;&nbsp;&nbsp;2.4G</h3><hr></td>
+								</tr>
+								<table class="table_content" id="table_2g" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+									<tr>
+										<td align="left" id="XS10" >Role:</td>
+										<td class="bootstrap-scope" align="left">
+                                            <select id="2g_radio_role" name="2g_radio_role" align="left" style="width:100px">
+                                            </select>
+										</td>
+									</tr>
+									<tr>
+										<td align="left" id="XS11">Radio Mode:</td>
+										<td class="bootstrap-scope" align="left">
+                                            <select id="2g_radio_mode" name="2g_radio_mode" align="left" style="width:100px">
+                                            </select>
+										</td>
+									</tr>
+									<tr>
+									    <td align="left" id="XS12">TX Power:</td>
+									    <td class="bootstrap-scope" align="left">
+										    <select name="2g_radio_power" id="2g_radio_power" align="left" style="width:100px">
+									        </select>
+									        dBm				
+									    </td>
+									</tr>
+									<tr>
+										<td align="left" id="XS13">Channel:</td>
+										<td class="bootstrap-scope" align="left">
+                                            <select id="2g_radio_channel" name="2g_radio_channel" align="left" style="width:100px">
+                                            </select>
+										</td>
+									</tr>
+									<tr>
+										<td id = "2g_band" align="left"  ><script>document.write(Xconfigure_deviceString[14])</script> </td>
+										<td class="bootstrap-scope" align="left">
+										     <div id="2g_cw20"><input type="radio" name="2g_channel_bandwidth" id="2g_ht20" value="20" checked="checked" />HT20</div>
+										     <div id="2g_cw40"><input type="radio" name="2g_channel_bandwidth" id="2g_ht40" value="40" />HT40</div>
+										     <div id="2g_cw40plus"><input type="radio" name="2g_channel_bandwidth" id="2g_ht40plus" value="41" />HT40+</div>
+										     <div id="2g_cw40minus"><input type="radio" name="2g_channel_bandwidth" id="2g_ht40minus" value="39" />HT40-</div>	
+										</td>
+									</tr>
+								</table>
+								<tr>
+									<td colspan="2"><h3 align="left">&nbsp;&nbsp;&nbsp;5G</h3><hr></td>
+								</tr>
+								<table class="table_content" id="table_5g" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+									<tr>
+										<td align="left" id="XS15" >Role:</td>
+										<td class="bootstrap-scope" align="left">
+                                            <select id="5g_radio_role" name="5g_radio_role" align="left" style="width:100px">                        
+                                            </select>
+										</td>
+									</tr>
+									<tr>
+										<td align="left" id="XS16">Radio Mode:</td>
+										<td class="bootstrap-scope" align="left">
+                                            <select id="5g_radio_mode" name="5g_radio_mode" align="left" style="width:100px">
+                                            </select>
+										</td>
+									</tr>
+									<tr>
+									    <td align="left" id="XS17">TX Power:</td>
+									    <td class="bootstrap-scope" align="left">
+										    <select name="5g_radio_power" id="5g_radio_power"  align="left" style="width:100px">
+									        </select>
+									        dBm				
+									    </td>
+									</tr>
+									<tr>
+										<td align="left" id="XS18">Channel:</td>
+										<td class="bootstrap-scope" align="left">
+                                            <select id="5g_radio_channel" name="5g_radio_channel" align="left" style="width:100px">
+                                            </select>
+										</td>
+									</tr>
+									<tr>
+										<td id="5g_band" align="left"  ><script>document.write(Xconfigure_deviceString[14])</script></td>
+										<td class="bootstrap-scope" align="left">
+										    <div id="5g_cw20"><input type="radio" name="5g_channel_bandwidth" id="5g_ht20" value="20" checked="checked" />HT20</div>
+										    <div id="5g_cw40"><input type="radio" name="5g_channel_bandwidth" id="5g_ht40" value="40" />HT40</div>
+										    <div id="5g_cw40plus"><input type="radio" name="5g_channel_bandwidth" id="5g_ht40plus" value="41" />HT40+</div>
+										    <div id="5g_cw40minus"><input type="radio" name="5g_channel_bandwidth" id="5g_ht40minus" value="39" />HT40-</div>
+											<div id="5g_cw80" style="display:none"><input type="radio" name="5g_channel_bandwidth" id="5g_ht80" value="80" />HT80</div>											 
+										</td>
+									</tr>
+								</table>
+							</form>
+							</div> 
+							
+								<div id="device_ssids" class="ap_content tabs_hide" style="height: auto;">
+							<form id="dev_ssid_form" method="post" action="">
+									<table class="table_content" style="margin-left:auto;margin-right:auto;width:600px;margin-top:15px;border-bottom:2px solid black;" cellspacing="10px">
+										<tr>
+											<td align="center" width="40%">
+											<img style="vertical-align:middle;float:left;" src="static/images/ap/tanaza/400x400/400_airrouter.png" width="40">
+												<div style="text-align: center;display:inline;width:180px;float:right">
+												<script>document.write(Xconfigure_deviceString[19])</script> <br><span id="ssid_dev_name"></span>
+												</div>
+												<div class="cleared"></div>   
+											</td>
+											<td style="line-height:10px" width="20%"><img src="static/images/pipe.png"></td>
+											<td align="center" width="225px">
+												<img style="vertical-align:middle;float:left;" src="static/images/network_point.png" width="40">                           
+												<div style="text-align: center;display:inline;width:180px;float:right">
+												<script>document.write(Xconfigure_deviceString[20])</script> <br><span id="ssid_network_name"></span>
+												</div>
+												<div class="cleared"></div>
+											</td>
+										</tr>
+									</table>
+									<td class="td_noerror" colspan="3" align="center">
+									<table id="ssid_cfg_table" class="table_content" style="margin-left:auto;margin-right:auto;width:600px;margin-top:15px;border-bottom:2px solid black;" cellspacing="10px">
+											<tr>
+												<td  align="left">Radio</td>
+												<td class="bootstrap-scope" align="left">
+													<select id="radio_type" name="radio_type" align="left" style="width:100px" >                        
+													</select>												
+												</td>
+											</tr>
+											<tr style="display:none" >
+												<td align="left">On/Off</td>
+                                                <td align="left">
+													<select id="ssid_on" name="ssid_on" align="left" style="width:100px">
+													<option value = "1" selected = "selected" >On</option>
+													<option value = "0" >Off</option>
+													</select>
+                                                </td>
+											</tr>
+											<tr>
+												<td align="left" id="XS21">SSID Template</td>
+												<td class="bootstrap-scope" align="left">
+													<select id="ssid_tp" name="ssid_tp" align="left" style="width:100px">                        
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td align="left">VLAN ID[1-4089]</td>
+                                                <td align="left">
+												<input maxlength="4"   name="ssid_vlan" id="ssid_vlan" type="text" onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"> 
+												 <span  class="red"> *</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <input type="button"  name="device_ssid_add" id="device_ssid_add"   onclick="apply_device_configure()" value="Add">
+												</td>
+                                            </tr>
+									</table>
+                                 
+                                    <div style="height:200px; overflow:auto">
+									<table id="ssid_cfg_info"  height="40px"  class="table_content" style="margin-left:auto;margin-right:auto;width:600px;margin-top:10px; margin-bottom:20px" cellspacing="0px">
+									</table >
+                                    </div>
+										<td>
+								</form>
+								</div>
+							
+								<div id="device_wanport" class="ap_content tabs_hide" style="height: auto">
+								<form id="dev_wanport_form" method="post" action="">
+									<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+										<tr>
+											<td width="25%" align="left" id="XS22" >Configure IP:</td>
+											<td width="41%" align="left" class="bootstrap-scope">
+												<select id="dev_ip_mode" name="dev_ip_mode" align="left"  disabled="disabled" style="width:100px">
+												<option value="0">Static</option>
+												<option value="1">DHCP</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td align="left">VLAN ID[1-4089]:</td>
+											<td align="left"><input id="dev_vlan" maxlength="4" disabled="disabled" name="dev_vlan" value="" class="active_input  idleField" type="text" onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)">
+											  </td>
+											<td width="32%" align="left">
+												<script> document.write(Webconfigure_deviceString.Send_packets)</script>
+												<input type="checkbox" name="dev_tx_tag" disabled="disabled" id="dev_tx_tag" onClick = "configure_tx_tag()"/>
+												<input type="hidden" id="vlan_detag" name="vlan_detag" value="0">
+											<td width="2%">
+										</tr>
+										<tr id = "dev_ip_tr">
+											<td align="left" id="XS23">IP Address:</td>
+											<td align="left"><input id="dev_ipaddr" disabled="disabled" maxlength="15" name="dev_ipaddr" value="" class="active_input  idleField" type="text" onkeypress="return OnKeyPress(event, X_INPUT_IP);">
+											 </td>
+										</tr>
+										<tr id = "dev_netmask_tr">
+											<td align="left" id="XS24">Subnet Mask:</td>
+											<td align="left"><input id="dev_netmask" disabled="disabled"  maxlength="15" name="dev_netmask" value="" class="active_input  idleField" type="text" onkeypress="return OnKeyPress(event, X_INPUT_MAC);">
+											</td>
+										</tr>
+										<tr id = "dev_gw_tr">
+											<td align="left" id="XS25">Gateway:</td>
+											<td align="left"><input id="dev_gw" maxlength="15"  disabled="disabled"name="dev_gw" value="" class="active_input  idleField" type="text" onkeypress="return OnKeyPress(event, X_INPUT_IP);">
+											</td>
+										</tr>
+										<tr id = "dev_dns1_tr">
+											<td align="left" id="XS26">Primary DNS Server:</td>
+											<td align="left"><input id="dev_dns1" maxlength="15"  disabled="disabled"name="dev_dns1" value="0.0.0.0" class="active_input  idleField" type="text" onkeypress="return OnKeyPress(event, X_INPUT_IP);"></td>
+										</tr>
+										<tr id = "dev_dns2_tr">
+											<td align="left" id="XS27">Secondary DNS Server:</td>
+											<td align="left"><input id="dev_dns2" maxlength="15" disabled="disabled" name="dev_dns2" value="0.0.0.0" class="active_input  idleField" type="text" onkeypress="return OnKeyPress(event, X_INPUT_IP);"></td>
+										</tr>
+									</table>
+								</form>
+								</div>
+							</form>
+
+							<form id="dev_upgrade_form" method="post" action="">
+							<input type="hidden" id="auto_upgrade" name="auto_upgrade" value="0"/>
+							<div id="device_upgrade" class="ap_content tabs_hide" style="height: auto">
+                            <table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" align="center" width="90%">
+							     <tr>
+                                            <td align="left"><script>document.write(Webconfigure_deviceString.Auto_Upgrade)</script></td>
+                                            <td align="left">
+                                                <p class="field switch" id="autoupSwitch">
+                                                    <label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+                                                    <label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+                                                        <input name="f_autoup_enabled" class="checkbox" id="f_autoup_enabled" value="0" checked="checked" type="checkbox">
+                                                </p> 
+                                            </td>
+                                        </tr>
+                                        <tr id="Device_Firmware" style="display:none">
+                                            <td align="left" id="XS34_mode">Plan Version:</td>
+                                            <td align="left">
+                                              <select name="firmware_list" id="firmware_list"  style=" width:120px">
+                                              
+                                              </select>
+                                            </td>
+                                        </tr>
+
+                                        
+								</table>
+								</div>
+							</form>
+                            
+							<form id="dev_advance_form" method="post" action="">						
+							<input type="hidden" id="ssh_enabled" name="ssh_enabled" value="0">
+							<input type="hidden" id="telnet_enabled" name="telnet_enabled" value="0">
+							<input type="hidden" id="http_enabled" name="http_enabled" value="0">
+							<input type="hidden" id="https_enabled" name="https_enabled" value="0">
+							<input type="hidden" id="syslog_enabled" name="syslog_enabled" value="0">
+                            
+								<div id="device_advanced" class="ap_content tabs_hide" style="height: auto">
+									<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" align="center" width="90%">
+										<tr>
+											<td style="width:150px" align="left" id="XS28">Remote Syslog status:</td>
+											<td align="left">
+												<p class="field switch" id="remoteSyslogSwitch">
+													<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+													<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+													<input name="f_remote_syslog_enabled" class="checkbox" id="f_remote_syslog_enabled" value="0" type="checkbox">
+												</p> 
+											</td>
+										</tr>
+										<tr>
+											<td align="left" id="XS29" >Remote Syslog IP:</td>
+											<td align="left">
+												<input disabled="disabled" maxlength="32" name="f_remote_syslog_ip" id="f_remote_syslog_ip" class="remotesyslogfield active_input  idleField" required="true" trim="true" value="" type="text" onkeypress="return OnKeyPress(event, X_INPUT_IP);">
+											</td>
+										</tr>
+										<td colspan="2"><h3 align="left"></h3><hr></td>
+										<tr>
+											<td align="left" id="XS30">SSH Service Status:</td>
+											<td align="left">
+												<p class="field switch" id="sshSwitch">
+													<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+													<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+													<input name="f_maintenance_ssh_enabled" class="checkbox " id="f_maintenance_ssh_enabled" value="0" type="checkbox">
+												</p> 
+											</td>
+										</tr>
+										<tr>
+											<td style="width:150px" align="left" id="XS31">Telnet service status:</td>
+											<td align="left">
+												<p class="field switch" id="telnetSwitch">
+													<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+													<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+													<input name="f_maintenance_telnet_enabled" class="checkbox" id="f_maintenance_telnet_enabled" value="0" checked="checked" type="checkbox">
+												</p> 
+											</td>
+										</tr>
+										<tr>
+											<td style="width:150px" align="left" id="XS32">HTTP service status:</td>
+											<td align="left">
+												<p class="field switch" id="httpSwitch">
+													<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+													<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+													<input name="f_maintenance_http_enabled" class="checkbox" id="f_maintenance_http_enabled" value="0" checked="checked" type="checkbox">
+												</p> 
+											</td>
+										</tr>
+										<tr>
+											<td style="width:150px" align="left" id="XS33">HTTPS service status:</td>
+											<td align="left">
+												<p class="field switch" id="httpsSwitch">
+													<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+													<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+													<input name="f_maintenance_https_enabled" class="checkbox" id="f_maintenance_https_enabled" value="0" checked="checked" type="checkbox">
+												</p> 
+											</td>
+										</tr>
+                                        
+								</table>
+								</div>
+							</form>
+						</div>
+
+						<div id = "apply_btn_div" style="position:relative;width:240px; margin-left:518px; margin-top:5px;height:80px;"> 
+							<table id="hide_purview" >
+								<tr>
+									<td>
+										<div id="ssid_cancel_bttn" class="bttn bttn_black">
+											<a id="cancelLanButton" href="javascript:{cancel_device_configure();}">
+											<div class="bnt_image"><img src="static/images/button/refuse_img.png"></div>&nbsp;<script>document.write(WebString.Cancel)</script></a><span></span>
+										</div>
+									</td>
+									<td width="0px">&nbsp;</td>
+									<td>
+										<div id="ssid_apply_bttn" class="bttn bttn_red">
+											<a id="saveLanButton" href="javascript:{apply_device_configure(cur_dev);}" onClick = "">
+											<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Apply)</script></a><span></span>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div class="cleared"></div>
+</div>
+               
+<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+<div id="footerExt">
+	<div id="copyright" style="text-align:center; margin-top:20px">
+    <span style="color: white; font-family: Arial; font-size: 11px">
+        <script>document.write(WebString.Copyright)</script>
+    </span>
+	</div>   
+	<div style="clear:both;"></div>
+</div>
+                
+        
+{% include "page-end.html" %} 

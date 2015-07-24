@@ -1,0 +1,757 @@
+{% include "page-head.html" %} 
+<script type="text/javascript" src="static/script/jquery-form.js"></script>
+<script type="text/javascript">
+	//<![CDATA[	  
+	
+cur_menu_show_flag=getURLMultiParam("menu_show_flag");
+var cur_domain_id = 1;
+var sys_basic;
+var sys_upgrade;
+var pc = 0; 
+var timeZones = new Array();
+timeZones[0] = XntpString[0];
+timeZones[1] = XntpString[1];
+timeZones[2] = XntpString[2];
+timeZones[3] = XntpString[3];
+timeZones[4] = XntpString[4];
+timeZones[5] = XntpString[5];
+timeZones[6] = XntpString[6];
+timeZones[7] = XntpString[7];
+timeZones[8] = XntpString[8];
+timeZones[9] = XntpString[9];
+timeZones[10] = XntpString[10];
+timeZones[11] = XntpString[11];
+timeZones[12] = XntpString[12];
+timeZones[13] = XntpString[13];
+timeZones[14] = XntpString[14];
+timeZones[15] = XntpString[15];
+timeZones[16] = XntpString[16];
+timeZones[17] = XntpString[17];
+timeZones[18] = XntpString[18];
+timeZones[19] = XntpString[19];
+timeZones[20] = XntpString[20];
+timeZones[21] = XntpString[21];
+timeZones[22] = XntpString[22];
+timeZones[23] = XntpString[23];
+timeZones[24] = XntpString[24];
+
+var country_list = new Array();
+var cur_country_code = "";
+
+document.title = "ezCloud AP Management | Management - System Config";
+	
+function getTimeZoneOffset(idx)
+{
+	ret = idx - 12;
+	return ret;
+}
+function writeTimeZoneList(timezone)
+{
+	var str = "";
+	for( var i = 0; i < timeZones.length; i++ ) 
+	{
+		str += "<option value=" + getTimeZoneOffset(i) + ">" + timeZones[i] + "</option>";
+	}
+	$("#time_Zone").html(str);
+	var TR = "#time_Zone " + "option[value='" + timezone + "']";
+	$(TR).attr("selected","selected");
+}
+	
+function displayCountry(country_code)
+{			
+	for(var i =0; i < country_list.length && country_list[i] != ""; i++)
+	{
+		$("#radio_country").append('<option value="'+country_list[i]+'">'+country_list[i]+'</option>');     	
+	}
+	$("#radio_country").val(country_code);
+	cur_country_code = country_code;
+
+	return;
+}
+	
+function select_menu(menu_id)
+{
+	if(menu_id == "sys_basic")
+	{
+		$("#which_form").val("sys_basic_form");
+		display_btn(true);
+		
+	}
+	else if(menu_id == "sys_upgrade")
+	{
+		$("#which_form").val("sys_upmethod_form");
+		display_btn(true);
+	}
+	else if(menu_id == "sys_config_mgt")
+	{
+		$("#which_form").val("sys_config_mgt_form");
+		display_btn(false);
+	}
+	else if(menu_id == "sys_reboot")
+	{
+		$("#which_form").val("sys_reboot_form");
+		display_btn(false);
+	}
+}
+	
+	
+function selectUpgradeMode()
+{
+	var upgrade_mode = $("#upgrade_mode").val();
+	var remote_enable = $("#remote_enabled").val()
+	
+	$('#upgrade_server').val("");
+	if(remote_enable == '1')
+	{
+		if(upgrade_mode == "http" || upgrade_mode == "https")
+		{
+			updateRemoteDisable();
+			$("#up_server").hide();
+		}
+		else
+		{
+			$("#up_server").show();
+		}
+	}
+	else
+	{
+		$("#up_server").hide();
+	}
+	
+	if(upgrade_mode == "ftp")
+	{
+		if(remote_enable == '1')
+		{
+			$("#up_user").show();
+			$("#up_password").show();
+		}
+		else
+		{
+			$("#up_user").hide();
+			$("#up_password").hide();
+		}
+	}
+	else
+	{
+		$("#up_user").hide();
+		$("#up_password").hide();
+	}
+}
+	
+function webInit()
+{
+	$("#secondaryMenu4").show();
+	$("#tabs_4").addClass("current");
+	$("#secondaryMenu4Selection4").addClass("current secondarysectionSelected");
+	$("#network_sel").html('<option value="0" selected>All network</option>');	
+	if(cur_menu_show_flag!=null)
+	{
+		var strs= new Array();
+		strs=cur_menu_show_flag.split(".");
+		showSubSection(strs[0],strs[1]);
+		select_menu(strs[1])
+		
+	}
+
+	if("{{add_back_info}}"=="backup_fail")
+	{
+		alert(WebMg_SystemString.Backup_system_configuration);
+	}
+	else if("{{add_back_info}}"=="restore_fail")
+	{
+		alert(WebMg_SystemString.Restore_configuration_failed);
+	}
+	else if("{{add_back_info}}"=="restore_success")
+	{
+		alert(WebMg_SystemString.Restore_configuration_successful);
+	}
+	else if("{{add_back_info}}"=="reboot_fail")
+	{
+		alert(WebMg_SystemString.Reboot_failed);
+	}
+	else if("{{add_back_info}}"=="restart_fail")
+	{
+		alert(WebMg_SystemString.Restart_failed);
+	}
+
+}
+	
+function FreshSystemBasic()
+{
+	country_code = sys_basic.country_code;
+	displayCountry(country_code);
+	if(sys_basic.timezone != undefined)
+	{
+		writeTimeZoneList(sys_basic.timezone);
+	}
+	else
+	{
+		writeTimeZoneList(0);
+	}
+}
+	
+function InitUpgradeMethodData()
+{
+	if(sys_upgrade == undefined)
+		return;
+	if(sys_upgrade.upgrade_mode != undefined && sys_upgrade.upgrade_mode != "")
+	{
+		$("#upgrade_mode").val(sys_upgrade.upgrade_mode);
+	}
+	else
+	{
+		$("#upgrade_mode").val("ftp");
+	}
+		
+	if($("#upgrade_mode").val() == "ftp")
+	{
+		$("#up_user").show();
+		$("#up_password").show();
+	}
+	else
+	{
+		$("#up_user").hide();
+		$("#up_password").hide();
+	}
+	
+	
+	if(sys_upgrade.remote != undefined && sys_upgrade.remote == 0)
+	{
+		updateRemoteDisable();
+		selectUpgradeMode();
+	}
+	else
+	{
+		updateRemoteEnable();
+		selectUpgradeMode();
+	}
+		
+	if(sys_upgrade.upgrade_server != undefined && sys_upgrade.upgrade_server != "")
+	{
+		$("#upgrade_server").val(sys_upgrade.upgrade_server);
+	}
+	else
+	{
+		$("#upgrade_server").val("");
+	}
+		
+	if(sys_upgrade.upgrade_user != undefined && sys_upgrade.upgrade_user != "")
+	{
+		$("#upgrade_user").val(sys_upgrade.upgrade_user);
+	}
+	else
+	{
+		$("#upgrade_user").val("");
+	}
+		
+	if(sys_upgrade.upgrade_password != undefined && sys_upgrade.upgrade_password != "")
+	{
+		$("#upgrade_passwd").val(sys_upgrade.upgrade_password);
+	}
+	else
+	{
+		$("#upgrade_passwd").val("");
+	}
+}
+	
+function GetCountryList()
+{
+	$.getJSON("get-country-list",function(data){
+		$.each(data,function(we, el){
+			if(data == null || data == "")return;
+    		country_list.push(el);  
+		});
+	});
+}
+	
+function GetSystemBasic()
+{
+	var param = {"domain_id": cur_domain_id};
+	var url = "get-system-basic"
+	$.getJSON(url,param,function(data){
+		if(data == null || data == "")return;
+		sys_basic = data;							
+	});	
+}
+	
+function GetUpgradeMethod(nid)
+{
+	var param = {"domain_id": cur_domain_id};
+	var url = "get-system-upgrade-method"
+	$.getJSON(url,param,function(data){
+		if(data == null || data == "")return;
+		sys_upgrade = data;						
+	});	
+}
+
+function conutrychange()
+{
+	switch($("#radio_country").val())
+	    {
+	        case "CHINA":
+				$('#time_Zone').attr('value','20');
+	            break;
+			case "USA":
+				$('#time_Zone').attr('value','2');
+				break;
+			case "EURO":
+				$('#time_Zone').attr('value','7');
+				break;
+	
+		}
+	
+}
+function cancel_system_configure()
+{
+	document.location.href = document.location.href;
+}
+
+function display_btn(enable)
+{
+	if(enable)
+	{
+		$("#apply_btn_div").show();
+	}
+	else
+	{
+		$("#apply_btn_div").hide();
+	}
+}
+
+function apply_system_configure()
+{
+	var form_id = $("#which_form").val();
+	var url;
+
+	if(form_id == "sys_basic_form")
+	{
+		url = "set-system-basic?domain_id=" + cur_domain_id+"&menu_show_flag=0.sys_basic"
+		$("#sys_basic_form").attr("action", url);
+		$("#sys_basic_form").submit();
+	}		
+	else if(form_id == "sys_upmethod_form")
+	{
+		remote_mode = $("#remote_enabled").val()
+		up_mode = $("#upgrade_mode").val()
+		if( remote_mode == '1' && (up_mode == "ftp" || up_mode == "tftp"))
+		{
+			if(isValidIpAddress($("#upgrade_server").val()) == false)
+			{
+				alert(WebMg_SystemString.IP_Address);
+				return
+			}
+		}
+		url = "set-system-upgrade-method?domain_id=" + cur_domain_id+"&menu_show_flag=1.sys_upgrade"
+		$("#sys_upmethod_form").attr("action", url);
+		$("#sys_upmethod_form").submit();
+	}
+}
+function remember_show_flag(show_string)
+{
+	cur_menu_show_flag="";
+	cur_menu_show_flag=show_string;
+}
+function updateRemoteEnable(){
+    var parent = $("#remoteServerSwitch .cb-enable").parents('.switch');
+	var upgrade_mode = $("#upgrade_mode").val();
+	
+	if(upgrade_mode == "http" || upgrade_mode == "https")
+	{
+		alert(WebMg_SystemString.nosupport_remote)
+	}
+	else
+	{
+		$('.cb-disable',parent).removeClass('selected');
+		$("#remoteServerSwitch .cb-enable").addClass('selected');
+		$('.checkbox',parent).attr('checked', true);
+		$("#remote_enabled").val(1);
+	}
+}
+function updateRemoteDisable(){
+    var parent = $("#remoteServerSwitch .cb-disable").parents('.switch');
+	
+    $('.cb-enable',parent).removeClass('selected');
+    $("#remoteServerSwitch .cb-disable").addClass('selected');
+    $('.checkbox',parent).attr('checked', false);
+	$("#remote_enabled").val(0);
+}
+jQuery().ready(function(){
+	webInit();
+	GetCountryList();
+	GetSystemBasic()
+	FreshSystemBasic();
+	GetUpgradeMethod();
+	InitUpgradeMethodData()
+	$("#backup_btn").click(function(){
+		if(false == confirm(WebMg_SystemString.backup_configuration))
+		{
+			return;
+		}
+
+        $("#sys_config_mgt_form").encoding = "application/x-www-form-urlencoded";
+		$("#admin_action").val("export");
+		var url = "system-config-management?menu_show_flag=2.sys_config_mgt"
+		$("#sys_config_mgt_form").attr("action", url);
+		$("#sys_config_mgt_form").submit();
+	});
+	$("#upload_btn").click(function(){
+		var up_file = $("#upgrade_file").val();
+		if(up_file == "")
+		{
+			alert(WebMg_SystemString.choose_file);
+			return;
+		}
+        $("#sys_config_mgt_form").attr("enctype", "multipart/form-data");
+		$("#admin_action").val("import");
+		var url = "system-config-management?menu_show_flag=2.sys_config_mgt"
+		$("#sys_config_mgt_form").attr("action", url);
+		
+		
+		
+		pc=0
+		$('#spaceused1').progressBar(0)
+		$("#float_iframe,#layout").show(10)	
+		$("#title_float").text(WebString.file_uploadedtitle)
+		load_bar_file()
+		var options = {
+		dataType: 'json', 
+		forceSync:true,
+		type:'POST',
+		success: function(date){
+				console.log(date)
+				var temstring=date
+				
+				if(date[0].upload_file=="file_error")//||String(temstring).length>14)
+				{
+					clearTimeout(time);
+					alert(WebMg_SystemString.config_file_failed);
+					$("#float_iframe,#layout").hide("normal")
+					$('#spaceused1').progressBar(0)
+				}
+				else 
+				{
+					clearTimeout(time);
+					$("#float_iframe,#layout").hide("normal")
+					alert(WebMg_SystemString.config_file_successful);	
+					$('#spaceused1').progressBar(0)
+				}
+				
+			} 
+			
+		};
+		
+		$('#sys_config_mgt_form').ajaxSubmit(options); 
+		
+		//$('#sys_config_mgt_form').submit(); 
+	});
+	$("#reboot_btn").click(function(){
+		if(false == confirm(WebMg_SystemString.reboot_operation_system))
+		{
+			return;
+		}
+		$("#title_float").text(WebMg_SystemString.reboot_being)
+		$.ajaxSettings.async  = true;
+		load_bar()
+		$("#float_iframe,#layout").show("normal")
+		var param = {"reboot_action": "reboot"};
+		var url = "system-reboot-restart?menu_show_flag=3.sys_reboot"
+		$.getJSON(url,param,function(data){
+
+			if(data[0].reboot=="reboot_fail")
+			{
+				alert(WebMg_SystemString.Reboot_failed);
+				$("#float_iframe,#layout").hide()
+				clearTimeout(time); 
+				$('#spaceused1').progressBar(0)
+		
+			}
+						
+		});
+	});
+	$("#restart_btn").click(function(){
+		if(false == confirm(WebMg_SystemString.restart_service))
+		{
+			return;
+		}
+		$("#title_float").text(WebMg_SystemString.restart_being)
+		$.ajaxSettings.async  = true;
+		load_bar()
+		$("#float_iframe,#layout").show("normal")
+		var param = {"reboot_action": "restart"};
+		var url = "system-reboot-restart?menu_show_flag=3.sys_reboot"
+		$.getJSON(url,param,function(data){
+			if(data[0].restart=="restart_fail")
+			{
+				alert(WebString.Restore_configuration);
+				$("#float_iframe,#layout").hide()
+				clearTimeout(time); 
+				$('#spaceused1').progressBar(0)
+
+			}
+						
+		});
+		
+		
+	});
+    $("#remoteServerSwitch .cb-disable").click(function(){
+        updateRemoteDisable();
+		selectUpgradeMode();
+    });
+    $("#remoteServerSwitch .cb-enable").click(function(){
+        updateRemoteEnable();
+		selectUpgradeMode();
+    });
+	getmenu()
+	WebLoadString("Mg_System")
+	$('#backup_btn').val(WebString.save)
+	$('#upload_btn').val(WebString.Upload)
+	$('#reboot_btn').val(WebString.Reboot)
+	$('#restart_btn').val(WebString.Restart)
+		
+});  
+
+
+
+function load_bar() 
+{ 
+	pc+=1; 
+
+	if (pc > 100) 
+	{ 
+		logout()		
+		clearTimeout(time); 
+		return;
+	} 
+	$('#spaceused1').progressBar(pc)
+	time = setTimeout("load_bar()",50);
+} 
+
+
+function load_bar_file() 
+{ 
+	pc+=1; 
+
+	if (pc > 99) 
+	{ 
+
+		clearTimeout(time); 
+		return;
+	} 
+	$('#spaceused1').progressBar(pc)
+	time = setTimeout("load_bar_file()",59);
+} 
+
+
+		          
+	//]]>
+</script>
+<div id="layout">
+<div id="header_restart"></div>
+</div>
+
+
+ <div id="float_iframe"  >
+<table width="610"  class="float_table">
+  <tr>
+    <td rowspan="2" width="40"><img src="static/images/notice.png"  /></td>
+    <td><script>document.write(WebMg_UserString.Notice)</script>：<span id="title_float">系统正在重启中</span>，
+	<script>document.write(WebMg_SystemString.operations)</script></td>
+  </tr>
+  <tr height="50">
+    <td><span class="progressBar" id="spaceused1"></span></td>
+  </tr>
+</table>
+
+ </div>
+
+
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden" id="page_title" value="management-system" />
+
+<div id="mainExt">
+	<div style="height: auto; min-height: 570px;" id="main">
+			<div style="width: 740px; opacity: 1; margin-left:160px;" id="contentInner">
+					<input type="hidden" id="which_form" name="which_form" value="sys_basic_form">
+                	<div style="margin-left:20px; width:696px; margin-top:40px; margin-bottom:16px;">
+					</div>
+						<table cellpadding="2px" cellspacing="0px"  >
+							<tr>
+								<td  >
+								<div id="subsection0" class="subsection tabclick" onclick="showSubSection('0','sys_basic');select_menu('sys_basic');">
+									<a id="tabs_ap0" href="javascript:{}" class="ap0"><script>document.write(WebString.Basic)</script>
+									<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+									</a><span></span>
+								</div>
+								</td>
+								<td >
+								<div id="subsection1" class="subsection tabdefault" onclick="showSubSection('1','sys_upgrade');select_menu('sys_upgrade');">
+									<a id="tabs_ap1" href="javascript:{}" class="ap1"><script>document.write(WebString.Upgrade_Server)</script>
+									<img class="modImg" style="vertical-align:top;margin-top:4px; margin-right:0px" src="static/images/button/blank.png" height="12">
+									</a><span></span>
+								</div>
+								</td>
+								<td >
+								<div id="subsection2" class="subsection tabdefault" onclick="showSubSection('2','sys_config_mgt');select_menu('sys_config_mgt');">
+									<a id="tabs_ap2" href="javascript:{}" class="ap2"><script>document.write(WebString.Configuration)</script>
+									<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+									</a><span></span>
+								</div>
+								</td>
+								<td>
+								<div id="subsection3" class="subsection tabdefault" onclick="showSubSection('3','sys_reboot');select_menu('sys_reboot');">
+									<a id="tabs_ap3" href="javascript:{}" class="ap3"><script>document.write(WebString.Reboot_Restart)</script>
+									<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+									</a><span></span>
+								</div>
+								</td>
+							</tr>
+						</table>
+
+						<div id="sys_basic" class="ap_content" style="height: auto">
+							<form id="sys_basic_form" method="post" action="">
+								<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+									<tr>
+										<td width="150px" align="left" id="XS0">Country:</td>
+										<td align="left" class="bootstrap-scope">
+											<select id="radio_country" onchange="conutrychange()" name="radio_country" align="left"  style="width:100px">
+											</select>
+										</td>
+									</tr>         
+									<tr>
+										<td width="150px" align="left" id="XS1">TimeZone:</td>
+										<td align="left">
+											<div class="bootstrap-scope" id="select">
+												<select name="time_Zone" id="time_Zone" align="left"  style="width:100px">
+												</select>
+											</div>
+										</td>
+									</tr>
+                                   
+								</table>
+							</form>
+						</div>
+						
+						<div id="sys_upgrade" class="ap_content tabs_hide" style="height: auto">
+							<form id="sys_upmethod_form" method="post" action="">
+								<input type="hidden" id="remote_enabled" name="remote_enabled" value="0">
+								<table  class="table_content"  style="margin-top:20px; margin-left:20px; margin-bottom:20px"  width="400px" >
+								<tr align="left">
+									<td   width="160px" id="XS2">Upgrade Mode:</td>
+									<td >
+										<select id="upgrade_mode" name="upgrade_mode" style="width:80px" onchange="selectUpgradeMode()">
+											<option selected value="ftp">ftp</option>
+											<option value="tftp">tftp</option>
+											<option value="http">http</option>
+											<option value="https">https</option>									
+										</select>
+									</td>
+								</tr >
+								<tr>
+									<td style="width:150px" align="left" id="XS12">Remote:</td>
+									<td align="left">
+										<p class="field switch" id="remoteServerSwitch">
+											<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+											<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+											<input name="f_remote_server_enabled" class="checkbox" id="f_remote_server_enabled" value="0" type="checkbox">
+										</p> 
+									</td>
+								</tr>
+								<tr id = "up_server" align="left">
+									<td  id="XS3">Upgrade Server:</td>
+									<td>
+										<input type="text" id="upgrade_server" name="upgrade_server" class="active_input  idleField" onkeypress="return OnKeyPress(event, X_INPUT_IP);"/>	<span  class="red"> *</span>							
+									</td>
+								</tr>
+								<tr id = "up_user" align="left">
+									<td id="XS4">Upgrade User:</td>
+									<td>
+										<input type="text" id="upgrade_user" name="upgrade_user" maxlength="32" class="active_input  idleField" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"/>								
+									</td>
+								</tr>
+								<tr id = "up_password" align="left">
+									<td id="XS5" >Upgrade Password:</td>
+									<td>
+										<input type="text" id="upgrade_passwd" name="upgrade_passwd" maxlength="32" class="active_input  idleField" 
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)"/>								
+									</td>
+								</tr>
+								</table>
+							</form>
+						</div>
+						
+						<div id="sys_config_mgt" class="ap_content tabs_hide" style="height: auto">
+						<form id="sys_config_mgt_form" method="post" enctype="" action="">
+							<input type="hidden" id="admin_action" name="admin_action" value="" />
+								<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+								<tr>
+									<td width="150" align="left" id="XS6">Backup Configuration:</td>
+									<td align="left"><input name="button" type="button" id="backup_btn" value="Save" />                                   </td>
+								</tr>
+								<tr>
+									<td colspan="2" align="left" id="XS7">Specify the name and location of the file used to import the configuration</td>
+								</tr>
+								<tr>
+									<td width="150" align="left" id="XS8">Import File name:</td>
+									<td align="left">
+										<input type="file" id="upgrade_file" name="upgrade_file"  />
+										<input name="button" type="button" id="upload_btn" value="Upload" />
+									</td>
+								</tr>
+								</table>
+						</form>		
+						</div>
+
+						<div id="sys_reboot" class="ap_content tabs_hide" style="height: auto">
+							<form id="sys_reboot_form" method="post" action="">
+								<input type="hidden" id="reboot_action" name="reboot_action" value="" />
+								<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+									<tr>
+										<td width="180" align="left" id="XS10">Restart Service:</td>
+										<td align="left"><input name="button" type="button" id="restart_btn" value="Restart" /></td>
+									</tr>
+								</table>
+							</form>
+						</div>
+						
+						<div id = "apply_btn_div" style="position:relative;width:240px; margin-left:518px; margin-top:5px;height:80px;"> 
+							<table style="margin-left:25px">
+								<tr>
+									<td>
+										<div id="ssid_cancel_bttn" class="bttn bttn_black">
+											<a id="cancelLanButton" href="javascript:{cancel_system_configure();}">
+											<div class="bnt_image"><img src="static/images/button/refuse_img.png"></div>&nbsp;<script>document.write(WebString.Cancel)</script></a><span></span>
+										</div>
+									</td>
+									<td width="0px">&nbsp;</td>
+									<td>
+										<div id="ssid_apply_bttn" class="bttn bttn_red">
+											<a id="uploadButton" href="javascript:{apply_system_configure();}">
+											<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Apply)</script></a><span></span>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+			</div>
+	</div>
+</div>
+	
+<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+
+<div id="footerExt">
+	<div id="footer">
+		<div id="copyright" style="text-align:center; margin-top:20px">
+			<span style="color: white; font-family: Arial; font-size: 11px">
+            <script>document.write(WebString.Copyright)</script></span>
+		</div>               
+	</div>
+</div>
+        
+{% include "page-end.html" %} 

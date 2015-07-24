@@ -1,0 +1,1150 @@
+{% include "page-head.html" %} 
+
+<script language="javascript" type="text/javascript" src="static/script/flot/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="static/script/flot/jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="static/script/flot/jquery.flot.axislabels.js"></script>
+<script language="javascript" type="text/javascript" src="static/script/flot/jquery.flot.time.js"></script>
+<script language="javascript" type="text/javascript" src="static/script/flot/jquery.flot.pie.js"></script>
+
+<style type="text/css">
+.ap_content {
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    #background-color: #F3F3F3;
+    border: 2px solid #91aebd;
+    height: 346px;
+    margin-top: -12px;
+    position: relative;
+} 
+
+</style>
+
+<script type="text/javascript">
+	//<![CDATA[	  
+		
+var nwlist = new Array();
+var devlist = new Array();
+var devices_monitored = [];
+var clientlist = [];
+var link_status = [];
+var cur_network_id = "";
+var cur_dev_name = "";
+var cur_dev_id = "";
+var dayset = [];
+var timeset = [];
+var mark = 0;
+var disconnect_info = [];
+var tolerate = 10;   //Only when offline time is more than 10 minutes, disconnection record;
+var device_pm = new Array();
+var radio_id = 0;
+var totalPoints = 10;
+var updateInterval = 30000;  //30s
+var cur_byte_max = 1024;
+var cur_pkts_max = 10;
+var cur_byte_tSize = 128;
+var cur_pkts_tSize = 1;
+$.ajaxSettings.async = false;
+var timezone=0
+	
+cur_network_id = getURLMultiParam("network") ? getURLMultiParam("network") : "";
+cur_dev_id = getURLMultiParam("dev_id") ? getURLMultiParam("dev_id") : "";
+cur_dev_name = getURLMultiParam("dev_name") ? getURLMultiParam("dev_name") : "";
+	
+var options = {
+	series: {
+		lines: {
+			show: true,
+			fill: true,
+			lineWidth:1
+		},
+		points: {
+			show: true
+		}
+	},
+	xaxis: {
+		mode: "time",
+		tickSize: [30, "second"],
+		tickFormatter: function (v, axis) {
+			var offsetm=(-4-parseInt(timezone))*3600000
+			v=v+offsetm
+			var date = new Date(v);
+			if (date.getSeconds() % 5 == 0) {
+				var hours = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+				var minutes = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+				var seconds = date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+	
+				return hours + ":" + minutes + ":" + seconds;
+			} else {
+				return "";
+			}
+		},
+		axisLabel:WebMon_NetString.Time,
+		axisLabelUseCanvas: true,
+		axisLabelFontSizePixels: 12,
+		axisLabelFontFamily: 'Verdana, Arial',
+		axisLabelPadding: 10
+	},
+	yaxis: {
+		min: 0,
+		max: 1024,
+		tickSize: 128,
+	   tickFormatter: function (v, axis) {
+		  if(v)
+				return v;
+		  else
+				return "";
+		},
+		axisLabel: WebMon_NetString.Bytes,
+		axisLabelUseCanvas: true,
+		axisLabelFontSizePixels: 12,
+		axisLabelFontFamily: 'Verdana, Arial',
+		axisLabelPadding: 6
+	},
+	grid: {
+		hoverable: true,
+		clickable: true,
+		borderWidth:3,
+		borderColor:"rgb(255,255,255,0.8)"
+	}
+};
+	
+var pieoptions = {
+	series: 
+	{  
+		pie: 
+		{   
+			show: true,  
+			radius: 1, 
+			label: {  
+			show: true,  
+			radius: 2/3,  
+			formatter: function(label, series){  
+					return '<div style="font-size:8pt;text-align:center;color:white;">'+label+'<br/>'+Math.round(series.percent)+'%</div>';  
+				},  
+			threshold: 0.03 
+			}  
+		}  
+},  
+legend: {  
+		show: false 
+}
+}
+		
+function webInit()
+{          	
+	$("#secondaryMenu1").show();
+	$("#tabs_1").addClass("current");
+	$("#secondaryMenu1Selection2").addClass("current secondarysectionSelected");
+}
+	
+function GetNetworkList()
+{		
+	$.getJSON("networklist-get",function(data){
+		$.each(data,function(we, el){
+			nwlist.push(el);
+		});
+	});
+	if(!cur_network_id)
+	{
+		cur_network_id = nwlist[0].id;
+	}
+}
+		
+function FillNetworkSelectOption()
+{
+	var str = "";
+	$.each(nwlist,function(wid,wel){
+			str += '<option value="' + wel.id + '">' + wel.network_name +'</option>';
+	});
+	$("#network_sel").html(str);
+	if(cur_network_id == "" || cur_network_id == null)
+	{				
+		cur_network_id = nwlist[0].id;
+	}
+	$("#network_sel").val(cur_network_id);
+	//RealTimeBandwidthUsage();
+}
+	
+function configure_select_network(nid)
+{
+	cur_network_id = nid;
+	GetMonitorDeviceList();
+}
+	
+function GetDeviceCurrentConnection()
+{
+	var device_log = [];
+	var gkey = {"cur_dev_id":cur_dev_id};
+	$.getJSON("device-heartbeat-log-get", gkey, function(data){
+		if(data == null || data == "") return;							
+		$.each(data,function(idx, el){
+			device_log.push(el);
+		});
+	});
+		
+	$("#connection_img").hide();
+	$("#xap_img").show();
+	$("#xagent_img").show();
+	$("#cloudconnect_apTime").empty();
+	//alert("device_log.length is "+device_log.length);
+	if( device_log.length != 0 )
+	{
+		var m = device_log.length - 1;
+		var now = new Date().getTime();
+		var last = getDateTime(device_log[m].dev_log_time);
+		var intvtime = Math.floor((now - last.getTime())/1000);  //unit:second
+		var str = intvtime + "s";
+		if( intvtime < tolerate * 60)
+		{
+			$("#connection_img").show();
+			$("#xap_img").hide();
+			$("#xagent_img").hide();				
+		}
+		$("#cloudconnect_apTime").html(str);
+		$("#clientstatsTimestamp").html(device_log[m].dev_log_time);
+	}
+}
+	
+function RealTimeConnectionUpdate()
+{
+	GetClientList();
+	FreshClientList();
+	GetDeviceCurrentConnection();
+	setTimeout(RealTimeConnectionUpdate, updateInterval);	
+}
+	
+function show_device_status(devname,devid)
+{
+	cur_dev_name = devname;
+	cur_dev_id = devid;
+	FreshDeviceList();
+	GetClientList();
+	FreshClientList();
+	GetDeviceLinkStatus();
+	GetDeviceCurrentConnection();
+	getDisconnectionDay();
+	FillDateLinkClass();
+	FreshDeviceLinkStatus(0);
+	RealTimeConnectionUpdate();
+}
+		
+function FreshDeviceList()
+{
+	var  TR="";
+	TR += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px; ">';
+	var i=0
+	$.each(devices_monitored,function(wid, wel){	
+			if(cur_dev_name == wel.dev_name)
+			{
+				cur_dev_id = wel.dev_id;
+				TR += '<li class="accessPointLi tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected">';
+			}
+			else
+			{
+				TR += '<li class="accessPointLi tzui-state-default tzui-corner-left">';
+			}
+			TR += '<a onclick=show_device_status("'+ wel.dev_name +'",'+ wel.dev_id +') style="text-decoration:none;overflow: hidden; display: inline; cursor:pointer; height: 20px; width: 100px;">';
+			if(wel.dev_state == 1){
+				TR += '<img style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" class="shadow" src="static/images/status_ap_ok.png" alt="Access Point online" title="Access Point online">';
+			}
+			else
+			{
+				TR += '<img style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" class="shadow" src="static/images/status_ap_offline.png" alt="Access Point offline" title="Access Point offline">';
+			}
+			//TR += '<img style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" id="ssid_img" class="shadow" src="static/images/status_ap_ok.png">';
+			TR += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap" title="">'+ wel.dev_name + '</span>';
+			TR += '<\/a><\/li>'
+			i++
+	});				
+	TR += '<\/ul>\n';		
+	$("#tabsv").html(TR);
+}
+	
+function GetMonitorDeviceList()
+{
+	devices_monitored = [];
+		
+	var gkey = {"network_id": cur_network_id};
+	$.getJSON("monitored-devices-get",gkey,function(data){
+		if(data == "" || data == null) return;
+		$.each(data,function(we, el){
+			if(el.timezone!=undefined)
+			{
+				timezone=el.timezone
+			}
+			else
+			
+				devices_monitored.push(el);
+		});
+	});
+		
+	if( 0 == devices_monitored.length)
+	{
+		$("#device_summary").hide();
+		$("#no_device_monitored").show();
+		$("#subsection1").hide();
+		$("#subsection2").hide();
+		$("#tabsv").hide();
+	}
+	else
+	{
+		$("#tabsv").show();
+		$("#device_summary").show();
+		$("#no_device_monitored").hide();
+		$("#subsection1").show();
+		$("#subsection2").show();
+		if(cur_dev_name == "" || cur_dev_name == null)
+			cur_dev_name = devices_monitored[0].dev_name;
+		if(cur_dev_id == "" || cur_dev_id == null)
+			cur_dev_id = devices_monitored[0].dev_id;
+				
+		UTCDateTimeInit();
+		show_device_status(cur_dev_name,cur_dev_id)
+	}
+}
+	
+function GetClientList()
+{
+	clientlist = [];
+	var gkey = {"network_id": cur_network_id};
+	$.getJSON("specific-network-data-get", gkey, function(data){
+		if(data == null || data == "") return;							
+		$.each(data,function(idx, el){
+			clientlist.push(el);
+		});
+	});
+}
+	
+function GetCurrentDeviceStatus()
+{
+	var i = 0;
+	for( i = 0; i < devices_monitored.length; i++ )
+	{
+		if( devices_monitored[i].dev_name == cur_dev_name )
+		{				
+			return devices_monitored[i].dev_state;
+		}
+	}
+}
+	
+function FreshClientList()
+{
+	var str='';	
+	var cs = "";
+	var i = 0;
+	var cur_dev_state = GetCurrentDeviceStatus();
+	//alert("FreshClientList cur_dev_name is "+cur_dev_name);
+	//alert("clientlist.length is "+clientlist.length);						
+	$.each(clientlist,function(idx, el){
+		if( el.dev_name != cur_dev_name || 0 == cur_dev_state)
+		{
+			return true;
+		}
+			
+		cs = (i%2)?"even":"odd";
+		str +='<tr class="'+cs+'">';
+		str +='<td>';
+		str +='<div class="big">' + el.ssid_name + '</div>';
+		str +='<div class="big">' + el.sta_mac + '</div>';
+		str +='<div class="small">' + el.connected_time + '</div>';
+		str +='<div class="small">' + el.idle_time + '</div>';
+		//str +='<div class="small">null</div>';
+		str +='<div class="small">' + el.txbyte + '</div>';
+		str +='<div class="small">' + el.rxbyte + '</div>';
+		str +='<div class="small"><div style="width:95%;border:1px solid black;height:13px;text-align:center;position:relative">';
+		str +='<div class="signal" style="z-index:1;position:absolute;left:0px;top:0px;width:100%;height:13px">' + el.signal + '</div>';
+		str +='<div style="float:left;height:13px;width:79%;background-color:green;z-index:0;"></div>';
+		str +='<div class="cleared"></div></div></div><div class="cleared"></div>';
+		str +='</td>';
+		str +='</tr>';
+		i++;			
+	});
+	if(str == '')
+		$("#clientstats_tbody").html('<tr><td colspan="7" style="text-align:center" class="odd">'+WebMon_DeviceString.Noclient_connected+'</td></tr>');
+	else
+		$("#clientstats_tbody").html(str);
+}
+	
+function GetDeviceLinkStatus()
+{
+	link_status = [];	
+	var gkey = {"cur_dev_id":cur_dev_id};
+	$.getJSON("device-link-status-get", gkey, function(data){
+		if(data == null || data == "") return;							
+		$.each(data,function(idx, el){
+			link_status.push(el);
+		});
+	});
+}
+	
+function formatTime(v)
+{
+	var d = new Date(v);
+	var monthNames =XmonthString //["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+	var dayNames =XdayNamesString// ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+	if(getCookie("Language")=="EN")	
+		return dayNames[d.getDay()] +" "+d.getDate()+" "+monthNames[d.getMonth()];
+	else
+		return dayNames[d.getDay()] +" "+monthNames[d.getMonth()]+" "+d.getDate()+"号";
+}
+	
+function showAlertDetails(idx)
+{
+		
+	var day = dayset[idx];
+	var state = disconnect_info[idx].state;
+	var str = "";
+	if(state == "OK")
+		str = dayset[idx] + WebMon_DeviceString.NoDisconnection;
+	else
+		str = dayset[idx] + WebMon_DeviceString.Disconnection;
+		
+	$("#day"+mark).removeClass("selectedDay");
+	mark = idx;
+	$("#day"+mark).addClass("selectedDay");
+	$("#timelineTitle").html(str);
+	FreshDeviceLinkStatus(idx);			
+}
+	
+function getDisconnectionDay()
+{
+	disconnect_info = [];
+	for( var i = 0; i < 7; i++)
+	{
+		var tday = new Date(timeset[i]);
+		var obj = new Object();
+		var ontime = [];
+		var offtime = [];
+		var last_stat = "";
+		var interval = [];
+		var intvstr = "";
+		var day_begin_time = timeset[i] - tday.getHours()*60*60*1000 - tday.getMinutes()*60*1000 - tday.getSeconds()*1000;
+		for(var j = 0; j < link_status.length; j++)
+		{
+			var alm_time = link_status[j].dev_alm_time;
+			var gday = getDateTime(alm_time);
+			if(gday.getDate() == tday.getDate())
+			{
+				if(link_status[j].dev_alm_action == "set")
+				{
+					offtime.push(gday.getTime());
+				}
+				else if(link_status[j].dev_alm_action == "clear")
+				{
+					ontime.push(gday.getTime());
+				}
+			}
+			if(gday.getTime() < tday.getTime())
+			{
+				last_stat = link_status[j].dev_alm_action;	
+			}
+		}
+			
+		if( ontime.length == 0)
+		{					
+			if( offtime.length == 0 ) //ontime.length == 0 && offtime.length == 0
+			{
+				if(last_stat == "clear")  //online all day
+				{
+					obj.dayindex = i;
+					obj.state = "OK";
+					obj.interval = [];
+					disconnect_info.push(obj);
+					continue;
+				}	
+				else                      //offline all day
+				{
+					if(last_stat == "")
+					{
+						//alert("No alarm log on this device, erring!");							
+					}
+					obj.dayindex = i;
+					obj.state = WebMon_DeviceString.NOK;
+					intvstr = "0-23";
+					interval.push(intvstr);
+					obj.interval = interval;
+					disconnect_info.push(obj);
+					continue;
+				}					
+			}
+			else   //ontime.length == 0 && offtime.length != 0
+			{
+				//offtime.length must be 1, add last_stat must be clear(online)
+				if( offtime.length != 1 || last_stat != "clear")  
+				{
+					alert(WebMon_DeviceString.No_online_event);
+					obj.dayindex = i;
+					obj.state = WebMon_DeviceString.NOK;
+					intvstr = "0-23";
+					interval.push(intvstr);
+					obj.interval = interval;
+					disconnect_info.push(obj);
+					continue;	
+				}
+					
+				// ontime.length == 0 && offtime.length == 1				
+				var offtime_0 = offtime[0];
+				var tmpdt = new Date(offtime_0);
+				var hours = tmpdt.getHours();
+				var minutes = tmpdt.getMinutes();
+				if( minutes > tolerate ) 
+					hours++;
+				else    
+				{
+					if( parseInt(hours) == 0 )
+					{
+						obj.dayindex = i;
+						obj.state = "OK";
+						obj.interval = [];
+						disconnect_info.push(obj);
+						continue;
+					}
+				}
+				obj.dayindex = i;
+				obj.state = "OK";
+				intvstr = "0-"+hours;
+				interval.push(intvstr);
+				obj.interval = interval;
+				disconnect_info.push(obj);
+				continue;
+			}
+		}
+		else   //ontime.length != 0
+		{
+			if( offtime.length == 0 )   //ontime.length != 0 && offtime.length == 0
+			{
+				if( ontime.length != 1 )
+				{
+					alert(WebMon_DeviceString.No_offline_event);
+					obj.dayindex = i;
+					obj.state = WebMon_DeviceString.NOK;
+					intvstr = "0-23";
+					interval.push(intvstr);
+					obj.interval = interval;
+					disconnect_info.push(obj);
+					continue;
+				}
+				else  //online one time, offline none
+				{
+					// ontime.length == 0 && offtime.length == 1		
+					var ontime_0 = ontime[0];
+					var ontmpdt = new Date(ontime_0);
+					var onhours = ontmpdt.getHours();
+					var onminutes = ontmpdt.getMinutes();
+					if( (onhours == 0 && onminutes < tolerate) || 
+							(onhours == 23 && (onminutes > 60 - tolerate)) )  //online in tolerate minutes
+					{
+						obj.dayindex = i;
+						obj.state = "OK";
+						obj.interval = [];
+						disconnect_info.push(obj);	
+						continue;
+					}
+					else							
+					{
+						//alert("onminutes is "+onminutes+", tolerate is "+tolerate);
+						if( onminutes > tolerate ) 
+							onhours++;
+						intvstr = "0-" + onhours;	
+						obj.dayindex = i;
+						obj.state = WebMon_DeviceString.NOK;
+						interval.push(intvstr);
+						obj.interval = interval;
+						disconnect_info.push(obj);
+						continue;
+					}
+				} 
+			}
+			else  //ontime.length != 0 && offtime.length != 0
+			{
+				//the lastest event of current day is online or offline to be consider
+				if( last_stat == "set" )    //last alarm is offline
+				{
+					for (var m = 0 ; m < ontime.length; m++)
+					{
+						var online_time = ontime[m];							
+						var offline_time = day_begin_time;  //init						
+						if( m != 0 )
+						{
+							var f = m - 1;
+							offline_time = offtime[f];
+						}
+						var d1 = new Date(online_time);
+						var d2 = new Date(offline_time);
+						if( (online_time - offline_time) > tolerate)
+						{
+							var s1 = d2.getHours() + "-" + (d1.getHours() + 1);
+							interval.push(s1);
+						}
+					}
+					if( interval.length == 0)
+					{
+						obj.dayindex = i;
+						obj.state = "OK";
+						obj.interval = [];
+						disconnect_info.push(obj);
+						continue;
+					}
+					else
+					{
+						obj.dayindex = i;
+						obj.state = WebMon_DeviceString.NOK;
+						obj.interval = interval;
+						disconnect_info.push(obj);
+						continue;
+					}
+				}
+				else if( last_stat == "clear" )    //last alarm is online
+				{
+					for (var m = 0 ; m < offtime.length; m++)
+					{
+						var offline_time = offtime[m];
+						var online_time = ontime[m];
+						var d1 = new Date(online_time);
+						var d2 = new Date(offline_time);
+						if( m == 0)
+						{
+							if( offline_time - day_begin_time > tolerate)
+							{
+								var s1 = "0" + (d2.getHours() + 1);
+								interval.push(s1);
+							}
+						}
+						else
+						{
+							if( (online_time - offline_time) > tolerate)
+							{
+								var s1 = d2.getHours() + "-" + (d1.getHours() + 1);
+								interval.push(s1);
+							}
+						}
+						if( interval.length == 0)
+						{
+							obj.dayindex = i;
+							obj.state = "OK";
+							obj.interval = [];
+							disconnect_info.push(obj);
+							//continue;
+						}
+						else
+						{
+							obj.dayindex = i;
+							obj.state = WebMon_DeviceString.NOK;
+							obj.interval = interval;
+							disconnect_info.push(obj);
+							//continue;
+						}
+					}
+				}
+			}
+		}
+	}
+	//----------debug		
+	/*alert("disconnect_info.length is "+disconnect_info.length);
+	for(var k=0; k<disconnect_info.length; k++)
+	{
+	  alert("disconnect_info "+k+": state is "+disconnect_info[k].state+", intv len is "+disconnect_info[k].interval.length);
+	  var len = disconnect_info[k].interval.length;
+	  for(var n = 0; n < len; n++)
+	  {
+	  	alert(k+"_"+n+": intv is "+ disconnect_info[k].interval[n]);
+	  }
+	}*/
+		
+}
+	
+function FillDateLinkClass()
+{
+	for( var i = 0 ; i < disconnect_info.length; i++ )
+	{
+		if(disconnect_info[i].state == "OK")
+		{
+			$("#day" + i).removeClass("withAlerts");
+			$("#day" + i).addClass("noAlerts");
+			$("#day" + i).html("OK");
+		}
+		else
+		{
+			$("#day" + i).addClass("withAlerts");
+			$("#day" + i).removeClass("noAlerts");
+			$("#day" + i).html(WebMon_DeviceString.NOK);
+		}
+	}
+}
+	
+function UTCDateTimeInit()
+{
+	var now = new Date().getTime();
+	mark = 0;
+	dayset = [];
+	timeset = [];
+	for(var i = 0 ; i < 7; i++)
+	{
+		var tt = now - i*86400000;  //24*60*60*1000=86400000
+		var tday = formatTime(tt);
+			
+		$("#day_"+i).html(tday);
+		dayset.push(tday);
+		timeset.push(tt);			
+	}
+	getDisconnectionDay();
+	FillDateLinkClass();
+	showAlertDetails(0);
+}
+	
+function FreshDeviceLinkStatus(idx)
+{	
+	//alert("FreshDeviceLinkStatus " +idx);	
+	//alert(disconnect_info[idx].state);
+	//alert(disconnect_info[idx].interval);
+	var str = '';	
+	var flag = 0;	
+	str += '<svg height="78.30000305175781" width="720">';
+	str += '<g>';
+	str += '<g transform="translate(0,50)" class="axis">';
+		
+	for(var i = 0; i < 24; i++)
+	{
+		var tt = ( i < 10) ? ("0" + i + "h") : (i + "h");
+		flag = 0;
+		str += '<g transform="translate(' + (20 + i*27.9169897799743) + ',0)" style="opacity: 1;" class="tick">';
+		str += '<line x2="0" y2="15"></line>';
+		if(disconnect_info[idx].state == "OK")
+			str += '<text style="text-anchor: middle;" dy=".71em" x="0" y="18">' + tt +'</text>';
+		else
+		{
+			var intervals = disconnect_info[idx].interval;
+			for(var j = 0; j < intervals.length; j++)
+			{
+				var begin = intervals[j].split('-')[0];
+				var end = intervals[j].split('-')[1];
+				//alert("begin is "+ begin+", end is "+end);
+				if( i >= begin && i <= end )
+				{
+					flag = 1;
+				}
+			}
+			if( flag == 1 )
+				str += '<text style="text-anchor: middle;" dy=".71em" x="0" y="18" fill="red">' + tt +'</text>';
+			else
+			{
+				str += '<text style="text-anchor: middle;" dy=".71em" x="0" y="18">' + tt +'</text>';
+			}
+		}
+		str += '</g>';
+	}
+	str += '<path d="M20,15V0H690V15" class="domain"></path>';
+	str += '</g>';
+	str += '</g>';
+	str += '<text transform="translate(0,40)" class="timeline-label"></text>';
+	str += '</svg>';
+	$("#timeline1").html(str);
+}
+	
+	
+function GetPmData()
+{
+	device_pm = [];	
+	var gkey = {"network_id": cur_network_id};
+	$.getJSON("device-pm-get",gkey,function(data){
+		$.each(data,function(we, el){		
+			device_pm.push(el);
+		})
+	})
+}	
+	
+function UpdateBytesDataGraph()
+{
+	var bytesdata = [];
+	var sdata = [];
+	var rdata = [];
+	var sent = new Object();
+	var recv = new Object();
+	var recv_max_tmp = device_pm[0].rx_bytes_rate;
+	var send_max_tmp = device_pm[0].tx_bytes_rate;
+			
+	$.each(device_pm,function(wid, wel){
+		if( wel.dev_name != cur_dev_name )
+			return true;
+		if( wel.radio_id != radio_id)
+			return true;
+		if(wel.rx_bytes_rate > recv_max_tmp)
+				recv_max_tmp = wel.rx_bytes_rate;
+		if(wel.tx_bytes_rate > send_max_tmp)
+				send_max_tmp = wel.tx_bytes_rate;
+							
+		var rtemp = [wel.report_time, wel.rx_bytes_rate];
+		if(rdata.length < totalPoints)
+			rdata.push(rtemp);
+		var stemp = [wel.report_time, wel.tx_bytes_rate];
+		if(sdata.length < totalPoints)
+			sdata.push(stemp);
+	});
+		
+	sent.label = WebMon_NetString.Sent;
+	sent.color = "green";
+	sent.data = sdata;
+	recv.label = WebMon_NetString.Received;
+	recv.color = "orange";
+	recv.data = rdata;
+
+	bytesdata.push(sent);
+	bytesdata.push(recv);
+	var tmp_byte_max = recv_max_tmp > send_max_tmp ? recv_max_tmp : send_max_tmp;
+	if(tmp_byte_max > cur_byte_max)
+	{
+		if(tmp_byte_max > 5*cur_byte_max)
+		{
+			options.yaxis.tickSize = cur_byte_tSize*(parseInt(tmp_byte_max/cur_byte_max));
+			cur_byte_tSize = cur_byte_tSize*(parseInt(tmp_byte_max/cur_byte_max));
+		}
+		cur_byte_max = tmp_byte_max;
+	}
+	options.yaxis.tickSize = cur_byte_tSize;
+	options.yaxis.max = cur_byte_max;
+	options.yaxis.axisLabel =  WebMon_NetString.Bytes;
+	$.plot($("#bytes_placeholder"), bytesdata, options);		
+}
+	
+function FillRealTimeData(idx)
+{
+	//alert("FillRealTimeData---------------idx is "+idx);	
+	var offsetm=(-4-parseInt(timezone))*3600000
+	tmptime=device_pm[idx].report_time+offsetm	
+	var str = '';
+	str += '<br>';
+	str += '<h5 style="text-align: left;margin:5px 5px 5px 30px">'+WebMon_NetString.Uptime+'<span style="color:black">' + intTimetoDateTime(tmptime) + '</span></h5>';
+	str += '<h5 style="text-align: left;margin:5px 5px 5px 30px">'+WebMon_NetString.Received_Data+' <span style="color:black">' + device_pm[idx].rx_bytes + '</span></h5>';
+	str += '<h5 style="text-align: left;margin:5px 5px 5px 30px">'+WebMon_NetString.Sent_Data+' <span style="color:black">' + device_pm[idx].tx_bytes + '</span></h5>';
+	str += '<h5 style="text-align: left;margin:5px 5px 5px 30px">'+WebMon_NetString.Received_Packets+' <span style="color:black">' + device_pm[idx].rx_packets + '</span></h5>';
+	str += '<h5 style="text-align: left;margin:5px 5px 5px 30px">'+WebMon_NetString.Sent_Packets+' <span style="color:black">' + device_pm[idx].tx_packets + '</span></h5>';
+	$("#Uptime_Data").html(str);
+	
+		var rnodata=0
+	if((device_pm[idx].rx_packets==0||device_pm[idx].rx_packets==null)&&(device_pm[idx].rx_drop_pkts==0||device_pm[idx].rx_drop_pkts==null)&&(device_pm[idx].rx_err_pkts==0||device_pm[idx].rx_err_pkts==null))
+	{
+		rnodata=1
+	}
+	var pktsrecv = [ 
+		{ label: WebMon_DeviceString.OK, color: "blue", data: device_pm[idx].rx_packets},
+		{ label: WebMon_DeviceString.Dropped, color: "yellow", data: device_pm[idx].rx_drop_pkts},
+		{ label: WebMon_DeviceString.Error  , color: "red", data: device_pm[idx].rx_err_pkts},
+		{ label: WebMon_DeviceString.No_Data, color: "#a9c3d0",  data: rnodata} 
+	]; 
+	var nodata=0
+	if((device_pm[idx].tx_packets==0||device_pm[idx].tx_packets==null)&&(device_pm[idx].tx_drop_pkts==0||device_pm[idx].tx_drop_pkts==null)&&(device_pm[idx].tx_retry_pkts==0||device_pm[idx].tx_retry_pkts==null))
+	{
+		nodata=1
+	}
+	var pktssend = [ 
+		{ label: WebMon_DeviceString.OK , color: "blue", data: device_pm[idx].tx_packets},
+		{ label: WebMon_DeviceString.Dropped, color: "yellow", data: device_pm[idx].tx_drop_pkts},
+		{ label: WebMon_DeviceString.Error, color: "red",  data: device_pm[idx].tx_retry_pkts},
+		{ label: WebMon_DeviceString.No_Data, color: "#a9c3d0",  data: nodata} 
+	]; 
+		
+	$.plot($("#pktsrecv_pie"), pktsrecv, pieoptions);  
+	$.plot($("#pktssend_pie"), pktssend, pieoptions); 		
+}
+	
+function UpdatePacketsDataGraph()
+{
+	var i = 0;
+	var pktsdata = [];
+	var sdata = [];
+	var rdata = [];
+	var sent = new Object();
+	var recv = new Object();
+	var uptime = device_pm[0].report_time;	
+	var recv_max_tmp = device_pm[0].rx_packets_rate;
+	var send_max_tmp = device_pm[0].tx_packets_rate;
+			
+	$.each(device_pm,function(wid, wel){
+		if( wel.dev_name != cur_dev_name )
+			return true;
+		if( wel.radio_id != radio_id)
+			return true;
+		if(wel.rx_packets_rate > recv_max_tmp)
+				recv_max_tmp = wel.rx_packets_rate;
+		if(wel.tx_packets_rate > send_max_tmp)
+				send_max_tmp = wel.tx_packets_rate;	
+			
+		if( wel.report_time > uptime)
+		{
+			uptime = wel.report_time;
+			i = wid;
+		}
+		var rtemp = [wel.report_time, wel.rx_packets_rate];
+		//alert(wel.report_time);
+		//alert(wel.rx_packets_rate);
+		//alert(wel.tx_packets_rate);
+			
+		if(rdata.length < totalPoints)
+			rdata.push(rtemp);
+		var stemp = [wel.report_time, wel.tx_packets_rate];
+		if(sdata.length < totalPoints)
+			sdata.push(stemp);
+	});
+		
+	sent.label = WebMon_NetString.Sent;
+	sent.color = "green";
+	sent.data = sdata;
+	recv.label = WebMon_NetString.Received;
+	recv.color = "orange";
+	recv.data = rdata;
+
+	pktsdata.push(sent);
+	pktsdata.push(recv);
+	options.yaxis.axisLabel = WebMon_NetString.Packets;
+	var tmp_pkts_max = recv_max_tmp > send_max_tmp ? recv_max_tmp : send_max_tmp;
+	if(tmp_pkts_max > cur_pkts_max)
+	{
+		if(tmp_pkts_max > 5*cur_pkts_max)
+		{
+			options.yaxis.tickSize = cur_pkts_tSize*(parseInt(tmp_pkts_max/cur_pkts_max));
+			cur_pkts_tSize = cur_pkts_tSize*(parseInt(tmp_pkts_max/cur_pkts_max));
+		}
+		cur_pkts_max = tmp_pkts_max;
+	}
+	options.yaxis.tickSize = cur_pkts_tSize;
+	options.yaxis.max = cur_pkts_max;
+	$.plot($("#packets_placeholder"), pktsdata, options);	
+		
+	FillRealTimeData(i);
+}
+	
+function RealTimeBandwidthUsage()
+{
+	GetPmData();
+	UpdateBytesDataGraph();
+	UpdatePacketsDataGraph();		
+	setTimeout(RealTimeBandwidthUsage, updateInterval);		
+}
+	
+function MonitorRadioClassify(rid)
+{
+	radio_id = rid;
+	RealTimeBandwidthUsage();
+}
+		
+$(document).ready(function(){ 
+	webInit();
+	GetNetworkList();
+	FillNetworkSelectOption();
+	GetMonitorDeviceList();
+});  
+		          
+	//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+
+<div id="mainExt">
+	<div style="height: auto; min-height: 610px;" id="main">		
+		<div style="opacity: 1; display: block;" id="menuLevel3" class="panes">
+			<div style="opacity: 1;" id="menuLevel3Inner">
+				<div id="box" style="margin-top:15px;">
+					<div id="title_leftmenu" style="font-size:12px;">
+						<script>document.write(WebString.Device_List_of)</script>
+						<div class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix" id="tabsv">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="width: 930px; left: 0px;" >
+			<div style="width: 740px; opacity: 1; margin-left:260px;" id="contentInner">	
+				<div>
+					<div style="margin-left:20px; width:696px; margin-top:16px; margin-bottom:16px">
+					</div>
+					<table id="ssid_table" cellpadding="2px" cellspacing="0px" width="">
+						<tr>
+						  <td>
+						    <div id="subsection0" class="subsection tabclick" onclick="showSubSection('0','summary')">
+						      <a id="tabs_ap0" href="javascript:{void(0)}" class="ap0"><script>document.write(WebString.Summary)</script>
+						        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+						      </a><span></span>
+						    </div>
+						  </td>
+						  <td>
+						    <div id="subsection1" class="subsection tabdefault" onclick="showSubSection('1','real_time_statistics'); MonitorRadioClassify(0);">
+						      <a id="tabs_ap1" href="javascript:{void(0)}" class="ap1">2.4G
+						        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+						      </a><span></span>
+						    </div>
+						  </td>
+						  <td>
+						    <div id="subsection2" class="subsection tabdefault" onclick="showSubSection('2','real_time_statistics');MonitorRadioClassify(1);">
+						      <a id="tabs_ap2" href="javascript:{void(0)}" class="ap2">5G
+						        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+						      </a><span></span>
+						    </div>
+						  </td>
+						</tr>
+					</table>
+					<div id="summary" class="ap_content" style="height:auto !important;min-height:410px;background-color:white">
+						<div id="no_device_monitored">
+	            <p style="text-align: justify; margin-top:30px; margin-left:30px; margin-right:30px">
+                <script>document.write(WebMon_NetString.No_device)</script>
+	            </p>
+            </div>
+						<div id="device_summary" style="display:none">			
+							<h3 style="position: relative"><script>document.write(WebMon_DeviceString.Device_Status)</script> 
+								<!--a href="javascript:{void()}" style="text-decoration: none;position:absolute;top:0px;right:20px">
+									<img src="static/images/button/conf_img_gr.png" alt="Configure" style="vertical-align: middle">
+								</a-->
+							</h3>
+							<div class="bootstrap-scope" style="height:10px;font-size: 12px;margin-bottom: 10px;"> <script>document.write(WebMon_DeviceString.disconnections_minutes)</script></div>
+							<div class="connection_chart bootstrap-scope" id="utc_time_div">
+								<div id="day_6" class="hday"></div>
+								<div id="day_5" class="hday"></div>
+								<div id="day_4" class="hday"></div>
+								<div id="day_3" class="hday"></div>
+								<div id="day_2" class="hday"></div>
+								<div id="day_1" class="hday"></div>
+								<div id="day_0" class="hday"></div>
+								<div id="day6" class="day noAlerts" onclick="showAlertDetails(6)">OK</div>
+								<div id="day5" class="day noAlerts" onclick="showAlertDetails(5)">OK</div>
+								<div id="day4" class="day noAlerts" onclick="showAlertDetails(4)">OK</div>
+								<div id="day3" class="day noAlerts" onclick="showAlertDetails(3)">OK</div>
+								<div id="day2" class="day noAlerts" onclick="showAlertDetails(2)">OK</div>
+								<div id="day1" class="day noAlerts" onclick="showAlertDetails(1)">OK</div>
+								<div id="day0" class="day noAlerts selectedDay" onclick="showAlertDetails(0)">OK</div>
+							</div>
+							<div class="cleared"></div>
+							<div id="timelineTitle" style="height:20px;margin-top:20px;"></div>
+							<div id="timeline1" style="width: 750px;height:100px"></div>
+							<div id="scrolled_date" class="bootstrap-scope" style="width: 100%;height:20px"></div>            
+							<div style="border-bottom: 1px dotted orange">
+								<h3 style="position: relative"><script>document.write(WebMon_DeviceString.Real_Status)</script>
+									<!--a href="javascript:{configure_accessPoint_settings('8273359')}" style="text-decoration: none;position:absolute;top:0px;right:20px">
+										<img src="static/images/button/conf_img_gr.png" alt="Configure" style="vertical-align: middle">
+									</a-->
+								</h3>
+								<table style="width:100%">
+									<tr>
+										<td style="width:30%">
+											<p>
+												<script>document.write(WebMon_DeviceString.Device_last)</script>:
+											</p>
+											<p>
+												<span id="cloudconnect_apTime" style="font-weight: bold"></span>
+											</p>
+										</td>
+										<td style="width:70%">
+											<div style="position:relative;height: 150px">
+												<img id="connection_img" src="static/images/connection.png" style="position: absolute;top:75px;left:230px;display:none" width="110px">
+												<img id="xap_img" src="static/images/blank.png" style="position: absolute;top:110px;left:200px;" width="25">
+												<img id="xagent_img" src="static/images/delete50.gif" style="position: absolute;top:65px;left:265px;" width="25">
+												<img src="static/images/clouds.png" style="position: absolute;top:50px;left:350px" width="80">
+												<img src="static/images/ap.png" style="position: absolute;top:40px;left:160px" width="50">
+												<img id="apstatus_img" src="static/images/status_online.png" style="position: absolute;top:90px;left:190px" width="20">
+												<img id="agentstatus_img" src="static/images/tanazaAP_green.png" style="position: absolute;top:85px;left:150px" width="30">
+												<a href="#" style="position: absolute;top:120px;left:150px;font-weight: bold;font-size: 13px;text-decoration:none" id="agentLabel"></a>
+											</div>
+										</td>
+									</tr>
+								</table>
+							</div>
+							
+							<h3 style="padding-top: 30px"><script>document.write(WebMon_DeviceString.Connected_Stats)</script></h3>
+							<div style="width:500px;float:left;">
+								<h5 style="text-align: left;margin:5px"><script>document.write(WebMon_DeviceString.Last_Update)</script>: <span id="clientstatsTimestamp" style="color:black"></span></h5>
+							</div>
+							<div class="cleared"></div>
+							<div id="clientstats" style="width:100%;text-align: left;">
+								<table id="clientstatstable" class="nicetable" cellpadding="0" cellspacing="2">
+									<thead>
+										<tr>
+											<th class="thhead">
+												<div class="big">SSID</div>
+												<div class="big">MAC</div>
+												<div class="small"><script>document.write(WebMon_DeviceString.Connected)</script></div>
+												<div class="small"><script>document.write(WebMon_DeviceString.Idle_time)</script></div>
+												<div class="small"><script>document.write(WebMon_ClientString.Trans)</script></div>
+												<div class="small"><script>document.write(WebMon_ClientString.Rec)</script></div>
+												<div class="small"><script>document.write(WebMon_ClientString.Signal)</script></div>
+											</th>
+										</tr>
+									</thead>
+									<tbody id="clientstats_tbody"></tbody>
+								</table>
+								<br>
+							</div>	
+						</div>		
+					</div>  			
+					<div id="real_time_statistics" class="ap_content tabs_hide" style="height: auto;min-height: 400px;background-color:white">
+						<div id="devst_graph" style="width:95%;height:auto;z-index:100;margin-top:17px;margin-left:auto;margin-right:auto;position:relative;">
+							<h3 style="position: relative"><script>document.write(WebMon_DeviceString.Real_Status)</script>
+								<a href="javascript:{configure_accessPoint_settings('8273359')}" style="text-decoration: none;position:absolute;top:0px;right:0px">
+									<img src="static/images/button/conf_img_gr.png" alt="Configure" style="vertical-align: middle">
+								</a>
+							</h3>
+							<div id= "Uptime_Data" style="width:260px;float:left;">
+								<!--br>
+								<h5 style="text-align: left;margin:5px 5px 5px 30px">Uptime: <div id="total_uptime" style="color:black"></div></h5>
+								<h5 style="text-align: left;margin:5px 5px 5px 30px">Received Data: <span id="total_received_bytes" style="color:black"></span></h5>
+								<h5 style="text-align: left;margin:5px 5px 5px 30px">Sent Data: <span id="total_sent_bytes" style="color:black"></span></h5>
+								<h5 style="text-align: left;margin:5px 5px 5px 30px">Received Packets: <span id="total_received_packets" style="color:black"></span></h5>
+								<h5 style="text-align: left;margin:5px 5px 5px 30px">Sent Packets: <span id="total_sent_packets" style="color:black"></span></h5-->
+							</div>					
+							<div style="float:left;width:220px;" id="graph_received">
+		          	<div style="position: relative;">
+		          		<div><text text-anchor="start" x="5" y="19.2" font-family="Arial" font-size="10" font-weight="bold" stroke="none" stroke-width="0" fill="#000000"><b><script> document.write(WebMon_NetString.Packets_Received)</script></b></text></div>
+		          		<div id="pktsrecv_pie" dir="ltr" style="position: relative; width: 220px; height: 190px; margin-top:15px">
+		          		</div>
+		          	</div>
+			        </div>
+			        <div style="float:left;width:200px;" id="graph_sent">
+			        	<div style="position: relative;">
+		          		<div><text text-anchor="start" x="5" y="19.2" font-family="Arial" font-size="10" font-weight="bold" stroke="none" stroke-width="0" fill="#000000"><b><script> document.write(WebMon_NetString.Packets_Sent)</script></b></text></div>
+		          		<div id="pktssend_pie" dir="ltr" style="position: relative; width: 220px; height: 190px; margin-top:15px">
+		          		</div>
+		          	</div>
+			        </div>
+							<div class="cleared"></div>
+							<div style="float: right; height:30PX; font-size:14PX; margin-top:15PX; margin-right:80PX">
+                              <div style="float:right; margin:0PX 0PX 0PX 0PX"><script>document.write(WebMon_DeviceString.OK)</script></div><div  style="width:15px; height:15px; background-color:#3366cc;float:right; margin:3PX 3PX 0PX 10PX"></div> 
+                              <div style="float:right; margin:0PX 0PX 0PX 0PX "><script>document.write(WebMon_DeviceString.Dropped)</script></div><div  style="width:15px; height:15px; background-color:#ffa500;float:right; margin:3PX 3PX 0PX 10PX"></div> 
+                              <div style="float:right; margin:0PX 0PX 0PX 0PX "><script>document.write(WebMon_DeviceString.No_Data)</script></div><div  style="width:15px; height:15px; background-color:#a9c3d0;float:right; margin:3PX 3PX 0PX 10PX"></div> 
+                              <div style="float:right; margin:0PX 0PX 0PX 0PX "><script>document.write(WebMon_DeviceString.Error_Retry)</script></div><div  style="width:15px; height:15px; background-color:red;float:right; margin:3PX 3PX 0PX 10PX"></div>
+                               
+                            </div>
+							<div class="cleared"></div>
+							<h5 style="border-top:2px solid gray;padding-top:20px;margin-bottom: 0px"><script>document.write(WebMon_DeviceString.Data_Statistics)</script></h5>
+							<div style="width:680px; height:50px;">
+								<div id="div_g_composite_legend" style="float:right;text-align: left"></div>
+							</div>
+							<div id="div_g_composite" style="width:680px; height:300px;">
+								<div id="bytes_placeholder" style="width:680px; height:300px;position: relative;"></div>
+							</div>
+							<h5 style="border-top:2px solid gray;padding-top:20px;margin-bottom: 0px"><script>document.write(WebMon_DeviceString.Packets_Statistics)</script></h5>
+							<div style="width:680px; height:50px;">
+								<div id="div_g_packet_composite_legend" style="float:right;text-align: left"></div>
+							</div>
+							<div id="div_g_packet_composite" style="width:680px; height:300px;">
+								<div id="packets_placeholder" style="width:680px; height:300px; position: relative;"></div>
+							</div>
+						</div>	        
+					</div>            																		 
+				</div>
+			</div>
+        	<div class="cleared"></div>
+		</div>
+	</div>
+</div>
+	
+	<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+	
+	<div id="footerExt">
+		<div id="footer">
+			<div id="copyright" style="text-align:center; margin-top:20px">
+				<span style="color: white; font-family: Arial; font-size: 11px"><script>document.write(WebString.Copyright)</script></span>
+			</div>               
+		</div>
+	</div>
+        
+
+{% include "page-end.html" %} 

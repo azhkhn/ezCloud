@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# Start the wss server....
+#
+
+exe_dir=$(cd "$(dirname "$0")"; pwd)
+
+case "$1" in
+  start)
+	echo "Starting wss server..."
+	cd $exe_dir/wss/
+	/opt/wms/python/bin/python3.4 wss_main.py &
+	cd $exe_dir/sched/
+	/opt/wms/python/bin/python3.4 sched_offline.py &
+	/opt/wms/python/bin/python3.4 sched_pm.py &
+	;;
+  stop)
+	echo -n "Stopping wss server..."
+	kill -15 `ps -ef |grep "wss_main.py"| awk '{print $2}'`
+	kill -15 `ps -ef |grep "sched_offline.py"| awk '{print $2}'`
+	kill -15 `ps -ef |grep "sched_pm.py"| awk '{print $2}'`
+	;;
+  restart|reload)
+	"$0" stop
+	"$0" start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

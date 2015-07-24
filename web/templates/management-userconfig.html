@@ -1,0 +1,524 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+	//<![CDATA[	  
+
+var user_inof_data=[]
+var cur_user_group_name = getURLMultiParam("user_group_name");
+var gro_user_name_id = getURLMultiParam("user_name_id");
+var cur_menu_show_flag=getURLMultiParam("menu_show_flag")	
+function webInit()
+{          	
+	$("#secondaryMenu4").show();
+	$("#tabs_4").addClass("current");
+	$("#secondaryMenu4Selection3").addClass("current secondarysectionSelected");
+}
+
+$(document).ready(function(){ 
+	webInit();
+	
+	if(cur_menu_show_flag!=null)
+	{
+		var strs= new Array();
+		strs=cur_menu_show_flag.split(".");
+		showSubSection(strs[0],strs[1]);
+		hide_show(true)
+		
+	}
+	var backinfo="{{add_back_userinfo}}"
+	 if(backinfo=="edit_password_error")
+		{
+			alert(WebMg_UserString.Old_password)
+		}
+
+		
+	
+	Get_current_group_info()
+	Get_group_info()
+
+	
+	//toadd						
+}); 
+function Get_current_group_info()
+{
+	$.getJSON("get-current-groupId",function(data){
+			if(data[0].current_user_group_id==3)
+			{
+				$('#add_user_group option[value=administrator]').remove();
+				$('#add_user_group option[value=operator]').remove();
+			}
+			else if(data[0].current_user_group_id==2)
+			{
+				$('#add_user_group option[value=administrator]').remove();
+		
+			}
+			
+	});
+	
+} 
+function Get_group_info()
+{
+	
+	$.getJSON("get-group-user-info",function(data){
+
+		$.each(data,function(key,value){ 					
+			user_inof_data.push(value);                     
+		});
+		
+			FreshNetworkList()
+			input_value()
+		
+			
+		
+	});
+	
+}
+
+function addstring(id,user_name)
+{
+	var tmp_string=''
+	if(gro_user_name_id == id)
+	{
+		tmp_string += '<li class="networkLi tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected">';
+	}
+	else
+	{
+		tmp_string += '<li class="networkLi tzui-state-default tzui-corner-left">';
+	}
+	tmp_string += '<a onclick=select_user("'+ id+ '") style="cursor:pointer; text-decoration:none;overflow: hidden; display: inline; height: 20px; width: 100px;">';
+	tmp_string += '<img class="shadow" src="static/images/userone.png" style="float: left; padding-left: 6px; padding-top: 4px; margin-right: 0px;">';
+	tmp_string += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px">'+user_name+'</span>';
+	tmp_string += '<\/a><\/li>'	
+	return tmp_string
+
+}
+	
+function FreshNetworkList()
+{
+	var str_admin="";
+	var str_opterator="";
+	var str_opterator_mide=""
+	var str_mintor="";
+	var str="";
+	var cookie_user=getCookie('purview_user')
+	
+
+	str += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px;margin-top:10px">';
+	$.getJSON("get-current-groupId",function(data){
+		$.each(user_inof_data,function(we, el){
+			if(el.user_group_name=="administrator"&&data[0].current_user_group_id=='1')
+			{
+				str_admin+=addstring(el.id,el.user_name)
+			}
+			if(el.user_group_name=="operator"&&(data[0].current_user_group_id=='2'||data[0].current_user_group_id=='1'))
+			{
+				str_opterator +=addstring(el.id,el.user_name)
+			}
+			if(el.user_group_name=="monitor")
+			{
+				
+				str_mintor +=addstring(el.id,el.user_name)
+			}
+		});	
+	});
+	if(str_opterator!="")
+	{
+	
+		str_opterator_mide += '<li >';
+		str_opterator_mide += '<img  src="static/images/usergroup.png" style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;">';
+		str_opterator_mide += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px">Opterator Group</span><\/li>';
+		
+	}
+	
+
+		
+	str+=str_admin+str_opterator+	str_mintor
+	str += '<\/ul>\n';
+	
+	$("#tabsv").html(str);
+}
+function select_user(user_name_id)
+{
+		gro_user_name_id=user_name_id
+		FreshNetworkList()
+		input_value()
+		showSubSection('0','Summary');
+		hide_show(false);
+
+
+}
+
+function input_value()
+{
+	
+	$.each(user_inof_data,function(we, el){	
+		
+
+		if(gro_user_name_id==el.id)
+		{
+			$("#ssid_delete_bttn").show()
+			$("#la_user_group_name").html(el.user_group_name)
+			$("#la_user_name").html(el.user_name)
+			$("#la_user_description").html(el.user_description)
+			$("#la_telephone").html(el.telephone)
+			$("#la_email").html(el.email)
+			$("#user_name_id").val(el.id)
+			$("#la_user_group_name_edit").html(el.user_group_name)
+			$("#la_user_name_edit").html(el.user_name)
+			$('#user_group_name').val(el.user_group_name)
+			$("#user_name").val(el.user_name)
+			$("#user_description").val(el.user_description)
+			$("#telephone").val(el.telephone)
+			$("#email").val(el.email)
+			if(el.user_name=="admin")
+			{
+				$("#ssid_delete_bttn").hide()
+			}
+			return false//break
+			
+		}
+		
+		
+		
+	})
+}
+	
+function delele_user()
+{
+	if(getCookie('username')==$("#la_user_name").html())
+	{
+		if(!confirm(WebMg_UserString.Current_user + $("#la_user_name").html()+WebMg_UserString.edit_yourself))
+		{
+			return
+		}
+	}
+	else
+	{
+		if(!confirm(WebMg_UserString.delete_user + $("#la_user_name").html()))
+		{
+			return
+		}
+	}
+	url = "delete-user-name?&delete_user_name_id=" + $("#user_name_id").val()+"&delete_user_name="+				$("#la_user_name").html();
+	window.top.location.href = url;
+}
+function hide_show(flag)
+{
+	if(flag)
+		$("#user_save").show()
+	else
+		$("#user_save").hide()
+}
+function remember_show_flag(show_string)
+{
+	cur_menu_show_flag="";
+	cur_menu_show_flag=show_string;
+}
+
+function apply_user_configure()
+{
+	
+	
+	if(cur_menu_show_flag=='1.edit_user')
+	{
+		if(getCookie('username')==$("#la_user_name").html())
+		{
+			if(!confirm(WebMg_UserString.Current_user + $("#la_user_name").html()+WebMg_UserString.edit_yourself))
+			{
+				return
+			}
+				
+		}
+		if(check_editValue()==false)
+			return 
+		url = "set-user-editpassword?user_group_name="+cur_user_group_name+"&user_name_id="+gro_user_name_id+"&menu_show_flag=1.edit_user"
+		$("#user_edit").attr("action", url);
+		$("#user_edit").submit();
+	}
+	else
+	{
+		url = "set-user-editinfo?user_group_name="+cur_user_group_name+"&user_name_id="+gro_user_name_id+"&menu_show_flag=2.edit_userinfo"
+		$("#user_editinfo").attr("action", url);
+		$("#user_editinfo").submit();
+		
+	}
+}
+
+function check_editValue()
+{
+	
+		if(0 == $("#old_password").val().length )
+		{
+			alert(WebMg_UserString.Old_password);
+			$("#old_password").focus();
+			return false;
+		}
+		if(0 == $("#password").val().length )
+		{
+			alert(WebMg_UserString.New_password);
+			$("#password").focus();
+			return false;
+		}
+		if(0 == $("#Confirm_NWEpassword").val().length )
+		{
+			alert(WebMg_UserString.Confirm_New_Password_invalid);
+			$("#Confirm_NWEpassword").focus();
+			return false;
+		}
+		if($("#password").val()!=$("#Confirm_NWEpassword").val())
+		{
+			alert(WebMg_UserString.two_passwords);
+			$("#Confirm_NWEpassword").focus();
+			return false;
+		}
+	
+}
+
+
+
+	//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+
+<!---------------------To be completed------------------------>
+
+
+
+<div id="mainExt">
+	<div style="height: auto; min-height: 650px;" id="main">		
+		<div style="opacity: 1; display: block;" id="menuLevel3" class="panes">
+			<div style="opacity: 1;" id="menuLevel3Inner">    	
+				<div id="box" style="margin-top:15px;">
+					<div style="font-size:12px;">
+						<div id="title_leftmenu">
+							<script>document.write(WebMg_UserString.Users_list)</script>
+
+                            
+                            
+							<div id="tabsv" class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix"></div>
+                          
+                          
+                     
+                            
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+		
+		<div style="width: 930px; left: 0px;" >
+
+			<div style="width: 740px; opacity: 1; margin-left:260px; " id="contentInner">	
+				<div>
+					<div style="margin-left:20px; width:696px; margin-top:16px; margin-bottom:16px">
+					<span id = "ssid_name_title" style="font-size:22px; font-weight:bold; font-family:Arial; color:#373737">
+					  </span>
+					</div>
+				<table cellpadding="2px" cellspacing="0px"   >
+					<tr>
+						<td  >
+							<div id="subsection0" class="subsection tabclick" onclick="showSubSection('0','Summary');hide_show(false);remember_show_flag('0.Summary')">
+								<a id="tabs_ap0" href="javascript:{}" class="ap0"> <script>document.write(WebString.Summary)</script>
+								<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								</a><span></span>
+							</div>
+						</td>
+						<td  >
+								    <div id="subsection1" class="subsection tabdefault" onclick="showSubSection('1','edit_user');hide_show(true);remember_show_flag('1.edit_user')">
+								      <a id="tabs_ap1" href="javascript:{}" class="ap1"> <script>document.write(WebMg_UserString.Edit_Password)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+                        			<td>
+								    <div id="subsection2" class="subsection tabdefault" onclick="showSubSection('2','edit_userinfo');hide_show(true);remember_show_flag('2.edit_userinfo')">
+								      <a id="tabs_ap2" href="javascript:{}" class="ap1"><script>document.write(WebMg_UserString.Edit_Info)</script>
+								        <img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								      </a><span></span>
+								    </div>
+								  </td>
+					</tr>
+				</table>
+				<div id="Summary" class="ap_content"  >
+								<table style="width:100%">
+									<tr>
+										<td style="vertical-align: top; ">
+											<table class="table_content"  style="margin-left:20px; margin-top:20px;width:90%">
+											  <tr>
+											  	<td width="100%">
+											      <table class="ssidtable" cellspacing="0"   width="100%">
+											        <tr>
+											          <td rowspan="7" style="width:150px" valign="top">
+											            <img src="static/images/user.png">
+											          </td>
+											       	  <td align="left"><script>document.write(WebMg_UserString.User_group_name)</script>:</td>
+											          <td><label id="la_user_group_name"></label></td>
+											        </tr>
+											        <tr>
+											          <td align="left"><script>document.write(WebMg_UserString.User_name)</script>:</td>
+											          <td><label id="la_user_name"></label></td>
+											        </tr>
+											        
+											        <tr>
+											          <td align="left"><script>document.write(WebMg_UserString.User_Description)</script>:</td>
+													  <td><label id="la_user_description"></label></td>
+													 
+											        </tr>
+                                                    <tr>
+											          <td align="left"><script>document.write(WebMg_UserString.Telephone)</script>:</td>
+											          <td><label id="la_telephone"></label></td>
+											        </tr>
+                                                   <tr> 
+											          <td align="left"><script>document.write(WebMg_UserString.Email)</script>:</td>
+											          <td><label id="la_email"></label></td>
+											        </tr>
+                                                    <tr> 
+											          <td align="left"></td>
+											          <td> <div id="ssid_delete_bttn" class="bttn bttn_red">
+											                <a href="javascript:{delele_user()}">
+											                    <div class="bnt_image"><img src="static/images/button/delete_img.png"></div>&nbsp;<script>document.write(WebString.Delete)</script>
+											                </a><span></span>
+											            </div></td>
+											        </tr>
+											
+											      </table>
+													</td>
+												</tr>
+											</table>                            
+										</td>
+									</tr>
+									<tr>
+										<td style="vertical-align: top"></td>
+                            
+                            
+								</table>
+					</div>
+				<div id="edit_user" class="ap_content tabs_hide" style="height: auto">
+                    <form id="user_edit" method="post" action="set-user-edit">
+                    <input type="hidden" id="user_name_id" name="user_name_id"  value="">
+                    <input type="hidden" id="user_name"   name="user_name" value="">
+                    <input type="hidden" id="user_group_name"   name="user_group_name" value="">
+					<table class="table_content"  style="margin-top:20px; text-align:left; margin-left:20px; margin-bottom:20px" width="90%" border="0" >
+							
+                   	 
+                      <tr height="28">
+                        <td width="70px"  align="left" ><script>document.write(WebMg_UserString.User_group_name)</script></td>
+                        <td width="130px" >
+                        <label id="la_user_group_name_edit"></label></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.User_name)</script>:</td>
+                        <td> <label id="la_user_name_edit"></label></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Old_Password)</script>:</td>
+                        <td><input type="password" id="old_password" name="old_password" style="width:200px" maxlength="32" value="" 
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)";><span  class="red"> *</span></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.New_Password)</script>:</td>
+                        <td><input type="password" id="password" name="password" style="width:200px" maxlength="32" value="" 
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)"><span  class="red"> *</span></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Confirm_New_Password)</script>:</td>
+                        <td><input type="password" id="Confirm_NWEpassword" name="Confirm_NWEpassword" style="width:200px" maxlength="32" value="" 
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)"><span  class="red"> *</span></td>
+                      </tr>
+                     
+                    </table>
+					
+                    </form>		
+				</div>
+                
+                	<div id="edit_userinfo" class="ap_content tabs_hide" style="height: auto">
+                    <form id="user_editinfo" method="post" action="set-user-edit">
+					<table class="table_content"  style="margin-top:20px; text-align:left; margin-left:20px; margin-bottom:20px" width="90%" border="0" >
+							
+                   	 
+                     
+                      <tr height="28">
+                        <td align="left" height="28" width="140px" ><script>document.write(WebMg_UserString.User_Description)</script>:</td>
+                        <td><input type="text"    id="user_description" name="user_description"  style="width:200px" maxlength="32" value="" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Telephone)</script>:</td>
+                        <td><input type="text" id="telephone" name="telephone"  style="width:200px" maxlength="15" value="" 
+onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Email)</script>:</td>
+                        <td><input type="text" id="email" name="email" maxlength="32" style="width:200px" value=""		  
+       		   onafterpaste="value=value.replace(/[^\a-\z\A-\Z0-9\- \_\@\.]|\s/g,'')" 
+           onkeyup="value=value.replace(/[^\a-\z\A-\Z0-9\- \_\@\.]|\s/g,'')"  
+           onselect="value=value.replace(/[^\a-\z\A-\Z0-9\- \_\@\.]|\s/g,'')"></td>
+                      </tr>
+                      
+                    </table>
+					
+                    </form>		
+				</div>
+                
+                
+                
+				<div id="user_save" style="position:relative;width:240px; margin-left:518px; margin-top:5px;height:80px; display:none"> 
+							<table style="margin-left:25px">
+								<tr>
+									<td>
+										<div  class="bttn bttn_black">
+											<a id="cancelLanButton" href="javascript:{cancel_system_configure();}">
+											<div class="bnt_image"><img src="static/images/button/refuse_img.png"></div>&nbsp;<script>document.write(WebString.Cancel)</script></a><span></span>
+										</div>
+									</td>
+									<td width="0px">&nbsp;</td>
+									<td>
+										<div  class="bttn bttn_red">
+											<a id="uploadButton" href="javascript:{apply_user_configure();}">
+											<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Apply)</script></a><span></span>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+				
+				</div>
+			</div>
+            <div class="cleared"></div>
+		</div>
+	</div>
+</div>
+<!---------------------To be completed------------------------>
+
+
+	
+	<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+	
+	<div id="footerExt">
+		<div id="footer">
+			<div id="copyright" style="text-align:center; margin-top:20px">
+				<span style="color: white; font-family: Arial; font-size: 11px">Copyright &copy; 2015 CIG. All rights reserved.</span>
+			</div>               
+		</div>
+	</div>
+ 
+    
+   
+{% include "page-end.html" %} 

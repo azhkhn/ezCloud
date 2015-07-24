@@ -1,0 +1,379 @@
+#network_bt,#network_bt2{
+    text-align: left;
+    width:250px;
+}
+#network_bt.bootstrap-scope .btn-group .btn,#network_bt2.bootstrap-scope .btn-group .btn{
+    width:250px;
+}
+.valuetd{
+    text-align: left;
+}
+/*
+.bootstrap-scope .modifiedField .btn-default{
+    border-color: green !important;
+}
+.bootstrap-scope .modifiedField{
+    border: none !important;
+}
+.bootstrap-scope .errorField .btn-default{
+    border-color: red !important;
+}
+.bootstrap-scope .errorField{
+    border: none !important;
+}*/
+.bootstrap-scope .dropdown-menu{
+    text-align: left;
+}
+.bootstrap-scope .dropdown-menu > li > a{
+    padding: 3px 10px !important;
+}
+.tzwidget table tr td.entitylabel{
+    overflow: hidden;
+    text-overflow:ellipsis;
+    max-width: 120px;
+}
+.tzwidget table tr td.entitylabelXL{
+    max-width: 150px;
+}
+.tzwidget table tr td{
+    font-size:14px;
+}
+.tzwidget table tr th{
+    font-size:14px;
+    text-align: center;
+}
+.tzwidget .panel-heading {
+    padding: 5px 10px;
+}
+.tzwidget .alert{
+    padding:5px;
+}
+.tzwidget .panel{
+    margin-bottom: 5px;
+}
+.tzwidget .panel-body{
+    padding: 5px;
+}
+.tzwidget_summary .panel-heading{
+    font-weight: bold;
+}
+.tzwidget .panel-body{
+    position: relative;
+}
+.tzwidget .tzwidgetLoadingDiv,.tzwidget .tzwidgetErrorDiv{
+    display:none;
+    width:100%;
+    height:100%;
+    position:absolute;
+    z-index:20000;
+    opacity:1;
+    left:0px;
+    top:0px;
+}
+.tzwidget .tzwidgetLoadingDiv .tzwidgetLoadingDivBackgroundMask,.tzwidget .tzwidgetErrorDiv .tzwidgetErrorDivBackgroundMask{
+    width:100%;
+    height:100%;
+    background-color:white;
+    position:absolute;
+    top:0px;
+    right:0px;
+    opacity:0.8;
+}
+.tzwidget .tzwidgetLoadingDiv .tzwidgetLoadingContainer,.tzwidget .tzwidgetErrorDiv .tzwidgetErrorContainer{
+    position:absolute;
+    top:0px;
+    text-align: center;
+    z-index:20000;
+    font-weight:bolder;
+    color:orange;
+    font-size:20px;
+    width:100%;
+}
+.tzwidget .tzwidgetErrorDiv .tzwidgetErrorContainer{
+    color:red;
+}
+.tzwidget .tzwidgetLoadingDiv .tzwidgetLoadingContainer img, .tzwidget .tzwidgetErrorDiv .tzwidgetErrorContainer img {
+    text-align:center;
+    vertical-align:middle;
+}
+.tzwidget .tzwidget_summary_offline tbody td,.tzwidget .tzwidget_networkstatus_aps tbody td,.tzwidget .tzwidget_firmwareupdates_toupgrade tbody td{
+    cursor: pointer;
+}
+.tzwidget .tzwidgetLoadingGif{
+    display: none;
+    vertical-align: middle;
+    position:absolute;
+    top: 2px;
+    left: 10px;
+}
+.tzwidget { 
+    position: relative;
+}
+.tzwidget table tr td.entitylabel{
+    overflow: hidden;
+    text-overflow:ellipsis;
+    max-width: 120px;
+}
+.tzwidget table tr td.entitylabelXL{
+    max-width: 150px;
+}
+.tzwidget table tr td{
+    font-size:14px;
+}
+.tzwidget table tr th{
+    font-size:14px;
+    text-align: center;
+}
+.tzwidget .panel-heading {
+    padding: 5px 10px;
+}
+.tzwidget .alert{
+    padding:5px;
+}
+.tzwidget .panel{
+    margin-bottom: 5px;
+}
+.tzwidget .panel-body{
+    padding: 5px;
+}
+.tzwidget_summary .panel-heading{
+    font-weight: bold;
+}
+.tzui-state-default, .tzui-widget-content .tzui-state-default, .tzui-widget-header .tzui-state-default {
+    background: none repeat-x scroll 50% 50% #FFFFFF;
+    background-color: #F3F3F3;
+    border: 1px solid #E1E2E2;
+}
+.tzui-state-active, .tzui-widget-content .tzui-state-active, .tzui-widget-header .tzui-state-active {
+    background: none repeat-x scroll 50% 50% #FFFFFF
+}
+.tzui-tabs-vertical .tzui-tabs-nav li.tzui-tabs-selected{
+    padding-right: 2px;
+}
+/**
+* User Toolbar
+**/
+.bootstrap-scope .popover{
+    max-width: 440px !important;
+    width: 440px !important;
+    max-height: 400px;
+}
+.bootstrap-scope .popover-content{
+    max-width: 440px !important;
+    width: 440px !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 350px;
+}
+
+.bootstrap-scope .accountinfo .btn-default {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.20);
+    color: rgba(255, 255, 255, 0.821);
+}
+.bootstrap-scope .accountinfo .dropdown-menu {
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+.bootstrap-scope .table-sm-text{
+    font-size: 13px;
+}
+.bootstrap-scope .navbar-inverse{
+    border-color:#c1dcb9 !important;
+   background-color:#c1dcb9 !important;
+}
+
+.bootstrap-scope .dropdown-menu > li > a:hover, .bootstrap-scope .dropdown-menu > li > a:focus{
+    background-color: darkorange !important;
+}
+.bootstrap-scope .dropdown-menu > li.accountinfoHeader > a:hover, .bootstrap-scope .dropdown-menu > li.accountinfoHeader > a:focus {
+    background-color: inherit !important;
+    color:#333333;
+    cursor: inherit;
+}
+/**
+Disabling responsiveness
+**/
+.bootstrap-scope .container{
+    max-width: none !important;
+    width: 980px;
+}
+.bootstrap-scope .table-condensed-iper thead > tr > th,
+.bootstrap-scope .table-condensed-iper tbody > tr > th,
+.bootstrap-scope .table-condensed-iper tfoot > tr > th,
+.bootstrap-scope .table-condensed-iper thead > tr > td,
+.bootstrap-scope .table-condensed-iper tbody > tr > td,
+.bootstrap-scope .table-condensed-iper tfoot > tr > td {
+    padding: 0px;
+    font-size: 12px;
+
+}
+.bootstrap-scope .table-left-align thead > tr > th,
+.bootstrap-scope .table-left-align tbody > tr > th,
+.bootstrap-scope .table-left-align tfoot > tr > th,
+.bootstrap-scope .table-left-align thead > tr > td,
+.bootstrap-scope .table-left-align tbody > tr > td,
+.bootstrap-scope .table-left-align tfoot > tr > td {
+    text-align: left;
+}
+.bootstrap-scope .text-color{
+    color:#333333;
+}
+.bootstrap-scope .text-color-inverse{
+    color:white;
+}
+.bootstrap-scope .caret-white{
+    border-color: rgba(255,255,255,0.7) transparent -moz-use-text-color;
+}
+.emailTooLong{
+    font-size: 11px !important;
+}
+
+.bootstrap-scope .tanaza_lang_tabs li a{
+    padding: 5px 5px;
+}
+
+.bootstrap-scope .tanaza_lang_tabs .nav-tabs > li{
+    margin-bottom: -5px;
+}
+
+.bootstrap-scope .tanaza_lang_content div{
+    background-color: white;
+}
+.bootstrap-scope .tanaza_lang_tabs{
+    border-bottom: none;
+}
+.bootstrap-scope .tanaza_lang_tabs_content {
+    padding: 3px;
+}
+
+#abuse_control_ssid_container .slider.slider-horizontal{
+    width: 400px !important;
+}
+
+#abuse_control_client_container .slider.slider-horizontal{
+    width: 400px !important;
+}
+
+#f_timezone_dropdown .dropdown-menu{
+    width:250px !important;
+}
+
+#abuse_control_ssid_value{
+    color: #FFA500;
+}
+#abuse_control_client_value{
+    color: #FFA500;
+}
+
+#dataTables-blackList th{
+    background-color: white;
+    color: black;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+#dataTables-blackList td{
+    padding-left: 3px;
+    padding-right: 3px;
+    
+}
+
+.connection_chart{
+    width: 95%;
+    margin-left: 30px;
+    font-family: Arial;
+    font-size: 12px;                    
+}
+.connection_chart .hday, .connection_chart .day{
+    float:left;
+    width:95px;
+    height:40px;
+    color:white;
+    font-size: 11px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    position: relative;
+}
+.connection_chart .hday{
+    height:30px;
+    line-height: 30px;
+    color:black;
+}
+.connection_chart .day{
+    cursor: pointer;
+}
+.connection_chart .day.selectedDay{
+    border: 1px solid black !important;
+}
+.connection_chart .day.nd{
+    line-height: 40px;
+    background-color:#DCDCDC;
+    color:gray;
+    border:1px solid white;      
+    font-weight: bold;
+}
+.connection_chart .day.withAlerts{
+    line-height: 40px;
+    background-color: #FF9999;
+    border:1px solid white;
+    font-weight: bold;
+    
+}
+.connection_chart .day.noAlerts{
+    line-height: 40px;
+    background-color: #DFF0D8;
+    color:#3C763D;
+    border:1px solid white;      
+    font-weight: bold;
+}
+.connection_chart .alert_lower10 , .connection_chart .alert_lower10 .alertText{
+    background-color: #FCF8E3 !important;
+    color: #8A6D3B;
+}
+.connection_chart .alert_lower30, .connection_chart .alert_lower30 .alertText{
+    background-color: #FCF8E3 !important;
+    color: #8A6D3B !important;
+}
+.connection_chart .alert_lower50, .connection_chart .alert_lower50 .alertText{
+    background-color: #F2DEDE !important;
+    color: #A94442 !important;
+}
+.connection_chart .alert_lower70, .connection_chart .alert_lower70 .alertText{
+    background-color: #F2DEDE !important;
+    color: #A94442 !important;
+}
+.connection_chart .alert_lower90, .connection_chart .alert_lower90 .alertText{
+    background-color: #D9534F !important;
+    color: black !important;
+}
+.connection_chart .alert_high, .connection_chart .alert_high .alertText{
+    background-color: #D9534F !important;
+    color: black !important;
+}
+.connection_chart .alertText{
+    font-size: 14px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  font-family: sans-serif;
+  font-size: 10px;
+}
+
+.timeline-label {
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+.coloredDiv {
+  height:20px; width:20px; float:left;
+}

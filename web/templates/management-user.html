@@ -1,0 +1,341 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+	//<![CDATA[	  
+	
+var cur_domain_id = 1;
+var cur_search=null
+var user_info_data = []
+function webInit()
+{          	
+	$("#secondaryMenu4").show();
+	$("#tabs_4").addClass("current");
+	$("#secondaryMenu4Selection3").addClass("current secondarysectionSelected");
+	$("#network_sel").html('<option value="0" selected>All network</option>');
+}
+		
+function deleteNetwork(idx)
+{
+		
+}
+		
+function configure_network_setting(user_name_id)
+{
+		var url = "management-userconfig.html?user_name_id="+user_name_id;
+		window.top.location.href = url;
+}
+
+function addstring(i,id,user_name,user_group_name)
+{
+	var cs = i%2 ? "row1":"row2";
+	tem_str = '<tr style="cursor:pointer" class="' + cs + '">';
+	tem_str += '<td onclick=configure_network_setting("'+id+'")>';
+	tem_str += '<div style="width:70px;text-align:right;float:left">';
+	tem_str += '<img src="static/images/usergroup.png" alt="Network" style="vertical-align:middle;margin-right:30px"></div><div style="float:left;width:410px;text-align:left;">'+user_name;
+	tem_str += '<\/div>';
+	tem_str += '<div >';
+	tem_str += user_group_name
+	tem_str += '<\/div>';
+	tem_str += '<\/td><\/tr>'
+	return tem_str
+}
+
+function FreshNetworkTable()
+{
+	var i = 0;
+	var str = "";
+	var str_admin="";
+	var str_opterator="";
+	var str_mintor="";
+	var leng_str=0
+
+	$.getJSON("get-current-groupId",function(data){
+			if(data[0].current_user_group_id==3)
+			{
+				$("#add_user_group option[value='administrator']").remove();
+				$("#add_user_group option[value='operator']").remove();
+
+				                                            	
+			}
+			else if(data[0].current_user_group_id==2)
+			{
+				$("#add_user_group option[value='administrator']").remove();
+		
+			}
+			
+			for(i;i<user_info_data.length;i++)
+			{
+				if(user_info_data[i].user_group_name=="administrator"&&data[0].current_user_group_id=='1')
+				{
+					leng_str++
+					str_admin += addstring(leng_str,user_info_data[i].id,user_info_data[i].user_name,user_info_data[i].user_group_name)
+				}
+				if(user_info_data[i].user_group_name=="operator"&&(data[0].current_user_group_id=='2'||data[0].current_user_group_id=='1'))
+				{
+					leng_str++
+					str_opterator += addstring(leng_str,user_info_data[i].id,user_info_data[i].user_name,user_info_data[i].user_group_name)
+				}
+				if(user_info_data[i].user_group_name=="monitor")
+				{
+					leng_str++
+					str_mintor += addstring(leng_str,user_info_data[i].id,user_info_data[i].user_name,user_info_data[i].user_group_name)
+				}
+					 
+			}
+		})
+		str+=str_admin+str_opterator+	str_mintor
+		$("#userList").html(str);
+}
+
+
+function Get_group_info()
+{
+	
+	$.getJSON("get-group-user-info",function(data){
+
+		$.each(data,function(key,value){ 					
+			user_info_data.push(value);                     
+		});
+		
+			FreshNetworkTable()
+		
+			
+		
+	});
+	
+}
+
+
+
+		
+$(document).ready(function(){ 
+	webInit();
+	Get_group_info()
+	var backinfo="{{add_back_userinfo}}"
+	if(backinfo=="add_error")
+	{
+		$("#expose").show();
+		alert(WebMg_UserString.same_user)
+	}
+	$("#addNetworkButton").on('click',function(){
+		$("#expose").show();
+	});
+	$("#expose_close").on('click',function(){
+		$("#expose").hide();
+	});
+	
+	getmenu()
+	
+});  
+
+
+function check_addValue()
+{	
+	
+		if(user_info_data.length==16)
+		{
+			alert(WebMg_UserString.Max_users16);
+			$("#add_user_name").focus();
+			return false;
+		}
+		if(0 == $("#add_user_name").val().length )
+		{
+			alert(WebMg_UserString.User_name_invalid);
+			$("#add_user_name").focus();
+			return false;
+		}
+		if(0 == $("#add_password").val().length )
+		{
+			alert(WebMg_UserString.Password_invalid);
+			$("#add_password").focus();
+			return false;
+		}
+		if(0 == $("#Confirm_add_password").val().length )
+		{
+			alert(WebMg_UserString.Confirm_Password_invalid);
+			$("#Confirm_add_password").focus();
+			return false;
+		}
+		if($("#Confirm_add_password").val()!=$("#add_password").val())
+		{
+			alert(WebMg_UserString.two_passwords);
+			$("#Confirm_add_password").focus();
+			return false;
+		}
+	
+}
+function add_user_name()
+{	
+	if(check_addValue()==false)
+	{
+		return
+	}
+ 	cur_user_group_name=$("#add_user_group").find("option:selected").text()
+	url = "add-user";
+	$("#add_user").attr("action", url);
+	$("#add_user").submit();	
+}
+
+
+	//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<div>
+		<div id="mainExt">
+			<div style="height: auto; min-height: 600px;" id="main">
+				<div style="width: 930px;  opacity: 1;" id="contentInner">
+                        <div style="margin:100px 0 0 300px; font-size:24px; color: #69C; display:none" id="without_user"> Without any user, Please creat new user</div>
+					<br>
+					<div style="margin-left:100px" id="orange_title"><script>document.write(WebMg_UserString.Manage_Users)</script></div>
+					<br>
+					<table id="userList" style="width:680px; margin:auto" class="networkTable" border="0" cellpadding="0" cellspacing="2">
+					</table>
+                    
+                    
+					<div style="text-align:right; margin-right:0px; margin-top:15px;height:20px;">
+                                <div style="margin-left:712px">
+                                    <div id="add_net_one_bttn" class="bttn bttn_red">
+                                <a id="addNetworkButton" href="javascript:{void(0)}" rel="#expose">
+                               <div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>
+                               &nbsp;<script>document.write(WebMg_UserString.Create_New_User)</script>
+                            </a><span></span>
+                                    </div>
+                                </div>
+                            </div> 
+                            
+                          
+						</div>
+					</div>          
+				</div>
+                <div class="cleared"></div>
+			</div>
+		</div>
+			
+            
+             
+                                  
+                           
+                              
+            
+            
+            
+		<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+		
+		<div id="footerExt">
+			<div id="footer">
+				<div id="copyright" style="text-align:center; margin-top:20px">
+					<span style="color: white; font-family: Arial; font-size: 11px"><script>document.write(WebString.Copyright)</script></span>
+				</div>               
+			</div>
+		</div>
+		
+ 
+ 
+ 
+ 
+<div style="z-index: auto; background-image: none; top: 129px; left: 240px; position: fixed; display: none;" class="expose_overlay" id="expose"><a id="expose_close" class="close"></a>
+	    <div class="art-post">
+	    	<div class="art-post-tl"></div>
+	      <div class="art-post-tr"></div>
+	      <div class="art-post-bl"></div>
+	      <div class="art-post-br"></div>
+	      <div class="art-post-tc"></div>
+	      <div class="art-post-bc"></div>
+	      <div class="art-post-cl"></div>
+	      <div class="art-post-cr"></div>
+	      <div class="art-post-cc"></div>
+	      <div class="art-post-body">
+	      <div class="art-postcontent">
+						<div style="opacity: 1;width:700px; height:430px; z-index:100; padding:10px 20px 0 5px; margin-left: 20px" id="exposeCenterInner">
+                     <div style="margin-left:10px; margin-top:0px" id="orange_title" ><script>document.write(WebMg_UserString.Create_New_User)</script></div>
+					<div class=" ap_content_hide" style=" padding-left:40px; padding-right:20PX;margin:10px auto auto auto">
+                     <form id="add_user" method="post" action="add-user">		
+		   			<table class="table_content " style="margin:10px 0" width="100%" border="0" height="300" cellpadding="0" cellspacing="0px">
+                    
+                      <tr height= "28">
+                        <td width="110px"  align="left" > <script>document.write(WebMg_UserString.User_group_name)</script></td>
+                        <td width ="130px" >
+                       
+                        <select id="add_user_group" name="add_user_group"  style="width:150px">
+                                            	<option value="administrator">Administrator</option>
+                                                <option value="operator">Operator</option>
+                                                <option value="monitor">Monitor</option>
+						</select> <span  class="red"> *</span>
+                        </td>
+                        <td  width="220" rowspan="7"><script>document.write(WebMg_UserString.Notice)</script>:
+                        <BR />
+                        
+<script>document.write(WebMg_UserString.administrator)</script><BR />
+<script>document.write(WebMg_UserString.operator)</script><BR />
+<script>document.write(WebMg_UserString.monitor)</script></td>
+                      	</tr >
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.User_name)</script>:</td>
+                        <td><input type="text" id="add_user_name" maxlength="32" style="width:200px"  name="add_user_name" value="" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"><span  class="red"> *</span>
+</td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Password)</script>:</td>
+                        <td><input type="password" id="add_password" name="add_password" style="width:200px" maxlength="32" value="" 
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)"><span  class="red"> *</span></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Confirm_Password)</script> :</td>
+                        <td><input type="password" id="Confirm_add_password" name="Confirm_add_password" style="width:200px" maxlength="32" value="" 
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)"><span  class="red"> *</span></td>
+                      </tr>
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.User_Description)</script> :</td>
+                        <td><input type="text" id="add_user_description" name="add_user_description"  style="width:200px" maxlength="32" value="" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)" ></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Telephone)</script>:</td>
+                        <td><input type="text" id="add_telephone" name="add_telephone"  style="width:200px" maxlength="15" value="" onafterpaste="checkvalue(this,X_INPUT_NUM)" 
+onkeyup="checkvalue(this,X_INPUT_NUM)"  
+onselect="checkvalue(this,X_INPUT_NUM)"></td>
+                      </tr>
+                      <tr height="28">
+                        <td align="left" height="28"><script>document.write(WebMg_UserString.Email)</script>:</td>
+                        <td><input type="text" id="add_email" name="add_email" maxlength="32" style="width:200px" value=""
+           onafterpaste="value=value.replace(/[^\a-\z\A-\Z0-9\- \_\@\.]|\s/g,'')" 
+           onkeyup="value=value.replace(/[^\a-\z\A-\Z0-9\- \_\@\.]|\s/g,'')"  
+           onselect="value=value.replace(/[^\a-\z\A-\Z0-9\- \_\@\.]|\s/g,'')"></td>
+                      </tr>
+                      
+                    </table>
+					</div>
+                            
+                        <!--dada-->
+                            
+                            							<div style="float:right">
+																<div id="add_new_user" class="bttn bttn_red">
+																	<a href="javascript:{add_user_name()}"  id="networkNextButton" rel="#expose">
+																	<div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>&nbsp;<script>document.write(WebString.Add)</script></a><span></span>
+																</div>
+																
+															</div>
+                            
+                            <!--dadad-->     
+                           
+		  					
+						</div>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</form>
+</div>     
+ 
+ 
+  
+{% include "page-end.html" %} 

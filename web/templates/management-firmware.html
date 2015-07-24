@@ -1,0 +1,402 @@
+{% include "page-head.html" %} 
+<script type="text/javascript" src="static/script/jquery-form.js"></script>
+<script type="text/javascript">
+	//<![CDATA[	  
+	
+	
+var cur_domain_id = 1;
+var cur_devtype_id = '';
+var devtype = new Array();
+var fwlist = new Array();
+var pc=0
+document.title = "ezCloud AP Management | Management - Firmware";
+
+		
+function isOfficialRelease()
+{
+	if($("#file_test").attr("checked")=="checked")
+	{
+		$("#official_release").val(0);
+	}
+	else
+	{
+		$("#official_release").val(1);
+	}	
+}	
+		
+function webInit()
+{          	
+	$("#secondaryMenu4").show();
+	$("#tabs_4").addClass("current");
+	$("#secondaryMenu4Selection2").addClass("current secondarysectionSelected");
+	$("#network_sel").html('<option value="0" selected>All network</option>');
+	if("{{add_back_info}}"=="upload_fail")
+	{
+		alert(WebMg_firString.Upload_firmware_fail);
+	}
+	else if("{{add_back_info}}"=="file_invalid")
+	{
+		alert(WebMg_firString.firmware_invaild);
+	}
+	else if("{{add_back_info}}"=="version_unmatched")
+	{
+		alert(WebMg_firString.firmware_version_unmatched);
+	}
+	else if("{{add_back_info}}"=="method_error")
+	{
+		alert(WebMg_firString.set_upgrade_server);
+		window.top.location.href = "management-system.html";
+	}
+}
+
+function deleteFirmware(idx)
+{
+	$("#action").val("delete");
+	$("#fid").val(idx);
+	$("#firmwareConfigureForm").submit();	
+}
+
+function FreshFirmwareList(idx)
+{
+	var i = 0;
+	var str = '';
+	for( i = 0; i < fwlist.length; i++)
+	{
+		if(idx == fwlist[i].dev_type_id && cur_domain_id == fwlist[i].domain_id)
+		{
+			var cs = i%2 ? "even":"odd";
+			var fwtype = fwlist[i].official_release ? "official release":"test release";
+			str +=	'<tr class="' + cs + '">';
+			str += '<td>' + fwlist[i].file_name + '<\/td>';
+			str += '<td>' + fwlist[i].upload_time + '<\/td>';		
+			str += '<td>' + fwtype + '<\/td>';
+			if(fwlist[i].file_descript) 
+				str += '<td>' + fwlist[i].file_descript + '<\/td>';
+			else
+				str += '<td>none<\/td>';
+			str += '<td  class="delete_purview" onclick="deleteFirmware(' + fwlist[i].id + ');"><img class="deleteNetwork"  src="static/images/delete.gif"><\/td>';
+			str += '<\/tr>';
+		}
+	}
+	$("#firmwareList_tbody").empty();
+	$("#firmwareList_tbody").html(str);
+}
+
+function upload_devtype_firmware(idx)
+{
+	cur_devtype_id = idx;
+	$("#dev_type_id").val(idx);
+	for( var i = 0; i < devtype.length; i++ )
+	{
+		if(cur_devtype_id == devtype[i].id)
+		{
+			$("#dev_type").val(devtype[i].dev_model);
+			break;
+		}
+	}		
+	FreshDeviceTypeList();
+	FreshFirmwareList(idx);
+}
+
+function FreshDeviceTypeList()
+{
+	var str="";
+	var i = 0;		
+	str += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px;  cursor:pointer">';
+	$.each(devtype,function(we, el){
+		//alert("cur_devtype_id is "+ cur_devtype_id+", el.id is "+ el.id);	
+		if( cur_devtype_id == el.id )
+		str += '<li class="first tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected">';
+  else
+	str += '<li class="first tzui-state-default tzui-corner-left">';
+  //str += '<a onclick=upload_devtype_firmware('+ el.id + '\, \"' + el.dev_model + '\") style="text-decoration:none;overflow: hidden; display: inline; height: 20px; width: 100px;">';
+  str += '<a onclick=upload_devtype_firmware('+ el.id + ') style="text-decoration:none;overflow: hidden; display: inline; height: 20px; width: 100px; cursor:pointer">';
+  str += '<img style="float: left; padding-left: 2px; padding-top: 4px; margin-right: 0px;" id="ssid_img" class="shadow" src="static/images/ssid.png">';
+  str += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap" title="Employees">'+ el.dev_model + '</span>';
+  str += '<\/a><\/li>'	
+  i++;
+	});				
+	str += '<\/ul>\n';
+	$("#tabsv").html(str);
+}
+
+function GetDeviceTypeList()
+{
+	$.getJSON("get-device-type",function(data){
+		$.each(data,function(we, el){
+		devtype.push(el);  
+		});								
+	});	
+}
+
+function GetFirmwareList()
+{
+	//$.ajaxSettings.async = true;
+	fwlist=[];
+	var param = {"domain_id": cur_domain_id};
+	var url = "get_firmwareList";
+	$.getJSON(url,param,function(data){
+		if(data == null || data == "")return;
+		$.each(data,function(we, el){	
+		fwlist.push(el);  
+		});	
+			
+		if(devtype.length != 0)
+		{
+			FreshFirmwareList(cur_devtype_id);
+			$("#dev_type_id").val(cur_devtype_id);
+		}
+		
+							
+	});
+}
+
+$(document).ready(function(){ 
+	webInit();
+	GetDeviceTypeList();     //all network
+	cur_devtype_id = devtype[0].id;	
+	FreshDeviceTypeList();
+	GetFirmwareList();		 
+
+
+	$("#apply_bttn").on('click',function(){
+		var firm_ver = $("#firmware_ver").val();
+		var up_file = $("#upgrade_file").val();
+		var flag = 0;
+		$("#domain_id").val(cur_domain_id);
+
+		var reg_name=/^R\d\.\d\.\d{2}\.\d{3}$/;
+		if(!reg_name.test(firm_ver)){ 
+			alert(WebMg_firString.Rx); 
+			$("#firmware_ver").focus(); 
+			return false; 
+		}
+		
+		if(firm_ver == "")
+		{
+			alert(WebMg_firString.Firmware_Version)
+			return;
+		}
+		
+		if(up_file == "")
+		{
+			alert(WebMg_firString.choose_file);
+			return;
+		}
+		
+		for(var i = 0; i < fwlist.length; i++)
+		{
+			if(cur_domain_id == fwlist[i].domain_id && firm_ver == fwlist[i].fimware_ver)
+			{
+				flag = 1;
+				break;
+			}
+		}
+		
+		if(flag)
+		{
+			alert(WebMg_firString.firmware_exist);
+			return
+		}
+		up_file = up_file.substring(up_file.lastIndexOf("\\")+1);
+		if(up_file != firm_ver)
+		{
+			alert(WebMg_firString.file_with_same);
+			return;
+		}
+		pc=0
+		$('#spaceused1').progressBar(0)
+		$("#float_iframe,#layout").show(10)	
+		load_bar_file()
+		var options = {
+		dataType: 'json', 
+		forceSync:true,
+		type:'POST',
+		success: function(date){
+				if(date[0].upload=="upload_ok")
+				{	
+					clearTimeout(time);
+					$("#float_iframe,#layout").hide("normal")
+					$('#spaceused1').progressBar(0)
+					GetFirmwareList()
+					
+				}
+				if(date[0].upload=="upload_fail")
+				{
+					clearTimeout(time);
+					alert(WebMg_firString.Upload_firmware_fail);
+					$("#float_iframe,#layout").hide("normal")
+					$('#spaceused1').progressBar(0)
+				}
+				else if(date[0].upload=="file_invalid")
+				{
+					clearTimeout(time);
+					alert(WebMg_firString.firmware_invaild);
+					$("#float_iframe,#layout").hide("normal")
+					$('#spaceused1').progressBar(0)
+				}
+				else if(date[0].upload=="version_unmatched")
+				{
+					clearTimeout(time);
+					alert(WebMg_firString.firmware_version_unmatched);
+					$("#float_iframe,#layout").hide("normal")
+					$('#spaceused1').progressBar(0)
+				}
+				else if(date[0].upload=="method_error")
+				{	clearTimeout(time);
+					alert(WebMg_firString.set_upgrade_server);
+					$("#float_iframe,#layout").hide("normal")
+					$('#spaceused1').progressBar(0)
+					window.top.location.href = "management-system.html";
+				}
+			} 
+		};
+		
+		$('#firmwareConfigureForm').ajaxSubmit(options); 
+		//$("#firmwareConfigureForm").submit();
+	});
+	getmenu()
+	//toadd						
+});  
+
+
+
+
+function load_bar_file() 
+{ 
+	pc+=1; 
+
+	if (pc > 99) 
+	{ 
+
+		clearTimeout(time); 
+		return;
+	} 
+	$('#spaceused1').progressBar(pc)
+	time = setTimeout("load_bar_file()",59);
+} 
+		          
+	//]]>
+</script>
+<div id="layout">
+<div id="header_restart"></div>
+</div>
+
+
+ <div id="float_iframe"  >
+<table width="610"  class="float_table">
+  <tr>
+    <td rowspan="2" width="40"><img src="static/images/notice.png"  /></td>
+    <td><script>document.write(WebString.file_uploaded)</script></td>
+  </tr>
+  <tr height="50">
+    <td><span class="progressBar" id="spaceused1"></span></td>
+  </tr>
+</table>
+
+ </div>
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden"  id="page_title"  value="management-firmware" />
+<div id="mainExt">
+	<div style="height: auto; min-height: 386px;" id="main">
+		<div style="opacity: 1; display: block;" id="menuLevel3" class="panes">
+			<div style="opacity: 1;" id="menuLevel3Inner">
+				<div id="box" style="margin-top:15px;">
+					<div id="title_leftmenu" style="font-size:12px;">
+						<script>document.write(WebString.Device_Type)</script>
+						<div class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix" id="tabsv">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<form id="firmwareConfigureForm" method="post" enctype="multipart/form-data" action="/upload_firmware">
+			<input type="hidden" id="action" name="action" value="add" />
+			<input type="hidden" id="fid" name="fid" />
+			<input type="hidden" id="dev_type_id" name="dev_type_id" value="1" />
+			<input type="hidden" id="dev_type" name="dev_type" value="WF-180"/>
+			<input type="hidden" id="domain_id" name="domain_id" value="1"/>
+			<input type="hidden" id="official_release" name="official_release" value="1"/>			
+			<div style="width: 740px; opacity: 1; left: 190px;" id="content">
+				<div style="margin-top:30px; margin-left:30px; height:150px"  class="ap_content" >
+					<table class="table_content" style="text-align:left; margin:10px auto auto 20px">
+						<tr>
+							<td width="230px"><script>document.write(WebString.Firmware)</script></td>
+							<td>
+								<input type="text" id="firmware_ver" name="firmware_ver" class="active_input  idleField" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"/>	<span  class="red"> *</span>							
+							</td>						
+						</tr>
+						<tr>
+							<td width="200px"><script>document.write(WebString.Firmware_File)</script></td>
+							<td>
+								<input type="file" id="upgrade_file" name="upgrade_file"/>						
+							</td>
+						</tr>
+						<tr>
+							<td width="200px"><script>document.write(WebString.File_Description)</script></td>
+							<td>
+								<input type="text" id="file_descript" name="file_descript" class="active_input  idleField" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)"/> 					
+							</td>
+						</tr>
+						<tr>
+							<td width="200px"><script>document.write(WebString.File_Role)</script></td>
+							<td>
+								<input type="radio" name="file_role" id="file_offical" value="1" checked onclick="isOfficialRelease();"/><script>document.write(WebString.official_release)</script>
+								&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="file_role" id="file_test" value="0" onclick="isOfficialRelease();"/><script>document.write(WebString.test_release)</script>					
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="position:relative;width:240px; margin-left:600px; margin-top:5px;height:40px;"> 
+					<table>
+						<tr>
+							<td>
+								<div id="apply_bttn" class="bttn bttn_red">
+									<a id="uploadButton" href="javascript:{void(0)}">
+									<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;<script>document.write(WebString.Upload)</script></a><span></span>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>		
+			
+				<table id="firmwaretable"  width="720"  class="table_content" cellpadding="0" cellspacing="0" style="margin-left:30px; margin-top:10px">
+                		<tr height="40" >
+                        <td colspan="5"  align="left"><script>document.write(WebString.Firmware_Lists)</script>
+                        </td>
+                        </tr>
+					
+						<tr bgcolor="#719eb5"  height="27" >
+							
+								<td  ><span style="color:#FFF"><script>document.write(WebString.Firmware_Name)</script></span></td>
+								<td><span style="color:#FFF"><script>document.write(WebString.Upload_Time)</script></span></td>
+								<td><span style="color:#FFF"><script>document.write(WebString.File_Role)</script></span></td>
+								<td width="200"><span style="color:#FFF"><script>document.write(WebString.File_Description)</script></span></td>
+								<td ><span style="color:#FFF"><script>document.write(WebString.Delete)</script></span></td>
+							
+						</tr>
+					
+					<tbody id="firmwareList_tbody" bgcolor="#f3f3f3"></tbody>
+				</table>									
+			</div>
+		</form>
+	</div>
+</div>
+	
+<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+
+<div id="footerExt">
+	<div id="footer">
+		<div id="copyright" style="text-align:center; margin-top:20px">
+			<span style="color: white; font-family: Arial; font-size: 11px"><script>document.write(WebString.Copyright)</script></span>
+		</div>               
+	</div>
+</div>
+        
+{% include "page-end.html" %} 

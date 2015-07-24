@@ -1,0 +1,297 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+	//<![CDATA[	  
+var network_info = new Array();	
+var cur_domain_id = 1;
+var cur_search=null
+function webInit()
+{          	
+	$("#secondaryMenu4").show();
+	$("#tabs_4").addClass("current");
+	$("#search_id").css("visibility","visible")
+	$("#secondaryMenu4Selection1").addClass("current secondarysectionSelected");
+	$("#network_sel").html('<option value="0" selected>All network</option>');
+	if("{{add_back_info}}"=="dev_exist")
+	{
+		alert(WebManage_NetworksString.devices_exist);
+	}
+	else if("{{add_back_info}}"=="del_fail")
+	{
+		alert(WebManage_NetworksString.Delete_failed);
+	}
+	else if("{{add_back_info}}"=="db_none")
+	{
+		alert(WebManage_NetworksString.System_error);
+	}
+}
+		
+function deleteNetwork(idx)
+{
+	if(idx == 1)
+	{
+		alert(WebManage_NetworksString.Default_network);
+		return;
+	}
+	$("#action").val("delete");
+	$("#network_id").val(idx);
+	$("#ModifyNetwork_Form").submit();			
+}
+		
+function editNetwork(idx)
+{
+	$("#expose").show();
+	$("#add_new_network").hide();
+	$("#edit_network_bttn").show();
+	$("#edit_network_bttn").on('click',function(){
+		$("#action").val("edit");
+		$("#network_id").val(idx);
+		$("#network_name").val($("#addNetworkName").val());
+		$("#ModifyNetwork_Form").submit();
+	}); 		
+}
+		
+function configure_network_setting(nid,network_name)
+{
+	if(cur_search!=null)
+		var url = "management-networkconfig.html?network_id=" + nid+"&network_name="+network_name+"&search_name="+cur_search;
+	else
+		var url = "management-networkconfig.html?network_id=" + nid+"&network_name="+network_name;
+	window.top.location.href = url;
+}
+function FreshNetworkTable()
+{
+	var i = 0;
+	var str = "";		
+
+	$.each(network_info,function(we, el){	
+			var cs = i%2 ? "row2":"row1";
+		    str += '<tr style="cursor:pointer" class="' + cs + '">';
+		    str += '<td onclick=configure_network_setting('+el.id+',"'+el.network_name+'")>';
+		    str += '<div style="width:40px;text-align:right;float:left">';
+		    str += '<img src="static/images/network.png" alt="Network" style="vertical-align:middle;margin-right:5px"></div><div style="float:left;width:460px;text-align:left;">'+el.network_name;
+		    str += '<\/div>';
+		    str += '<\/td>'
+		    str += '<td>';
+		    str += '<div style="line-height:10px"><img id="delNetwork" class="deleteNetwork" onclick="deleteNetwork(' + el.id + ')" src="static/images/delete.gif">';
+		    str += '&nbsp;&nbsp;&nbsp;&nbsp;';
+		    str += '<\/div>';
+		    str += '<\/td><\/tr>'
+		    i++;        
+		});		
+		$("#networkList").html(str);
+}
+function GetNetworkData()
+{
+	$.getJSON("networklist-get",function(data){	
+		$.each(data,function(we, el){	
+		network_info.push(el); 
+		});		
+		FreshNetworkTable()
+	});
+}
+		
+function submitAddNetwork(){
+	$("#ModifyNetwork_Form").submit();
+	$("#expose").hide();
+}
+		
+$(document).ready(function(){ 
+	webInit();
+	GetNetworkData();
+	getmenu()
+			
+	$("#addNetworkButton").on('click',function(){
+		$("#expose").show();
+	});
+	$("#expose_close").on('click',function(){
+		$("#expose").hide();
+	});
+	$("#add_new_network").on('click',function(){
+		if( $("#addNetworkName").val().length==0 )
+		{
+			alert(WebManage_NetworksString.valid_Network)
+			return false;
+		}
+		ERROR=false
+		$.each(network_info,function(we, el){
+			if($("#addNetworkName").val()==el.network_name)
+			{
+				alert(WebManage_NetworksString.used_Network)
+				ERROR=true
+				return false;
+			}
+		})
+		if(ERROR)
+		 	return
+		if(network_info.length>31)
+		{
+			alert(Webconfigure_ssidsummaryString.Max32)
+			return
+		}
+		$("#domain_id").val(cur_domain_id);
+		submitAddNetwork();
+	}); 
+	//toadd						
+});  
+		          
+function Search_name()
+{
+	
+	network_info=[]
+	var search_info=$("#search_name_id").val();
+	if($("#search_name_id").val().length<1)
+	{
+		alert(WebString.search_input_network)
+		return 
+	}
+	cur_search=search_info
+	var param = {"search_info": search_info};
+	var url = "networklist-get-search";
+	$.getJSON(url,param, function(data){ 
+			if(data == null || data == "")
+			 {
+				 $("#networkList").hide()
+				 alert(WebString.search_without)
+				 return ;
+			 }
+			$("#networkList").show()
+			$.each(data,function(key,value){
+				 network_info.push(value);
+			});
+			FreshNetworkTable()
+	});
+}
+
+	//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden" id="page_title" value="management-network" />
+<div>
+	<form id="ModifyNetwork_Form" method="post" action="/configure-network">
+		<div id="mainExt">
+			<div id="main">
+				<input type="hidden" id="action" name="action" value="add" />
+				<input type="hidden" id="network_id" name="network_id" value="1" />
+				<input type="hidden" id="network_name" name="network_name" value="1" />
+				<input type="hidden" id="domain_id" name="domain_id" value="1"/>
+				<div style="width: 930px; opacity: 1;" id="contentInner">
+					<br>
+					<div style="margin-left:100px" id="orange_title"> <script>document.write(WebManage_NetworksString.Manage_network)</script></div>
+					<br>
+					<table id="networkList" style="width:680px; margin:auto" class="networkTable" border="0" cellpadding="0" cellspacing="2">
+					</table>
+					<div style="text-align:right; margin-right:87px; margin-top:15px;height: 80px;">
+						<div style="margin-left:712px">
+							<div id="add_net_one_bttn" class="bttn bttn_red">
+		        		<a id="addNetworkButton" href="javascript:{void(0)}" rel="#expose">
+		               <div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>
+		               &nbsp;<script>document.write(WebString.Add)</script>
+		            </a><span></span>
+		          </div>
+						</div>
+					</div>          
+				</div>
+			</div>
+		</div>
+			
+		<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+		
+		<div id="footerExt">
+			<div id="footer">
+				<div id="copyright" style="text-align:center; margin-top:20px">
+					<span style="color: white; font-family: Arial; font-size: 11px">
+                     <script>document.write(WebString.Copyright)</script>
+                    </span>
+				</div>               
+			</div>
+		</div>
+		
+		<div style="z-index: auto; background-image: none; top: 129px; left: 200px; position: fixed; display: none;" class="expose_overlay" id="expose"><a id="expose_close" class="close"></a>
+	    <div class="art-post">
+	    	<div class="art-post-tl"></div>
+	      <div class="art-post-tr"></div>
+	      <div class="art-post-bl"></div>
+	      <div class="art-post-br"></div>
+	      <div class="art-post-tc"></div>
+	      <div class="art-post-bc"></div>
+	      <div class="art-post-cl"></div>
+	      <div class="art-post-cr"></div>
+	      <div class="art-post-cc"></div>
+	      <div class="art-post-body">
+	        <div class="art-postcontent">
+						<div style="opacity: 1; width:800px; height:268px; z-index:100; margin-left: 20px" id="exposeCenterInner">
+							<h2 style=" font-size:22px; font-family:Arial; font-weight:bold; color:#373737"><script>document.write(WebManage_NetworksString.New_Network)</script></h2>
+		   				<div style="border: 2px solid #e1e2e2; height:175px; text-align:center; -moz-border-radius: 4px; -webkit-border-radius: 4px;"> 
+		   					<table class="toolcontainer" align="center" width="70%">
+	    						<tr valign="middle">
+	     							<td>
+											<div style="width:402px; text-align:center; margin-left:0px; margin-top:12px; border-right:1px solid #e1e2e2">
+	      								<table align="center" width="90%">
+	     										<tr>
+	      										<td style="font-family:Arial; font-size:12px; font-weight:bold; color:#373737" align="left">
+														<script>document.write(WebManage_NetworksString.Network_Name)</script>	
+				                    </td>
+			                    </tr>
+			                    <tr>
+				                    <td style="font-family:Arial; font-size:12px; font-weight:bold; color:red" align="left">
+										        </td>
+			                    </tr>
+			                    <tr height="38px" valign="bottom">
+				                     <td align="left">
+	
+    			                        <input class="idleField" maxlength="32"  id="addNetworkName" name="addNetworkName" onafterpaste="checkvalue(this,X_INPUT_IDANDCH)" 
+onkeydown="if(event.keyCode==13){event.keyCode=0;return false}"
+onkeyup="checkvalue(this,X_INPUT_IDANDCH)"  
+onselect="checkvalue(this,X_INPUT_IDANDCH)"
+ value="" size="50px"  type="text">
+				                        <img style="vertical-align:middle" src="static/images/help.png" alt="Help">
+				                     </td>
+			                    </tr>
+			                    <tr align="right" height="45px" valign="bottom">
+														<td>  
+															<div style="float:right">
+																<div id="add_new_network" class="bttn bttn_red">
+																	<a href="javascript:{void(0)}"  id="networkNextButton" rel="#expose">
+																	<input type="hidden" id="network" name="network">
+																	<div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>&nbsp;<script>document.write(WebString.Add)</script></a><span></span>
+																</div>
+																<div id="edit_network_bttn" class="bttn bttn_red" style="display:none">
+																	<a href="javascript:{void(0)}" rel="#expose">
+																	<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;Save</a><span></span>
+																</div>
+															</div>
+														</td>
+			                    </tr>
+					              </table>
+											</div>
+	     							</td>
+	     							<td>
+											<div style="width:400px; float:left; text-align:center">
+	       								<table style="vertical-align:middle; margin-top:5px" align="center"> 
+	      									<tr>
+	       										<td>
+															<img src="static/images/ssid-big.png" alt="Network">
+														</td>
+	       										<td width="10%">&nbsp;</td>
+	       										<td style="font-family:Arial; font-size:12px; color:#373737" align="left">
+															An Network..<br>
+	       										</td>
+	      									</tr>
+	       								</table>
+											</div>
+	     							</td>
+	    						</tr>
+		   					</table>
+		  				</div>
+						</div>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</form>
+</div>        
+{% include "page-end.html" %} 

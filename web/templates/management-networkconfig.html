@@ -1,0 +1,866 @@
+{% include "page-head.html" %} 
+
+<script src="static/script/amap.js"></script>
+<script type="text/javascript">
+	//<![CDATA[	  
+var cur_menu_show_flag=getURLMultiParam("menu_show_flag");		
+var cur_network_id = getURLMultiParam("network_id");
+var cur_domain_id = 1;
+var nwlist = new Array();
+var devtype = new Array();
+var up_rules = new Array();
+var fwlist = new Array();
+var nwmaps = new Array();
+
+var mapObj;
+var windowsArr = [];
+var marker = [];	
+var imageLayer;
+var floor_num = 1;
+
+cur_search=getURLMultiParam("search_name");
+cur_network = getURLMultiParam("network_name");
+
+document.title = "ezCloud AP Management | Management - Network Config";
+var initlng = 116.327911;
+var initlat = 39.939229;
+var initzoom = 16;
+
+
+	
+	
+function webInit()
+{          	
+	$("#secondaryMenu4").show();
+	$("#tabs_4").addClass("current");
+	$("#search_id").css("visibility","visible")
+	$("#secondaryMenu4Selection1").addClass("current secondarysectionSelected");
+	$("#network_sel").html('<option value="0" selected>All network</option>');		
+}	
+	
+function select_menu(menu_id)
+{
+	if(menu_id == "network_basic")
+	{
+		mainHight()
+		$("#which_form").val("network_basic_form");
+	}
+	else if(menu_id == "network_upgrade")
+	{
+		mainHight()
+		$("#which_form").val("network_up_form");
+	}
+	else
+	{
+		if(($("#tabsv").height()+30)>730)
+		{
+			$("#main").height($("#tabsv").height()+30)
+		}
+		else
+			$("#main").height(730)
+		$("#which_form").val("network_map_form");	
+	}
+}	
+
+function select_network(nid,network_name)
+{
+	cur_network=network_name
+	cur_network_id = nid;	
+	FreshNetworkList();
+	FreshNetworkBasic();
+	FreshUpgradeRuleTable(nid);
+	GetNetworkMapInfo();
+	showSubSection('0','network_basic');
+	select_menu('network_basic')
+}
+	
+function FreshNetworkList()
+{
+	var str="";
+	str += '<ul class="tzui-tabs-nav tzui-helper-reset tzui-helper-clearfix tzui-widget-header tzui-corner-all" style="padding-left: 35px;margin-top:10px">';
+	$.each(nwlist,function(we, el){	
+		if(cur_network_id == el.id)
+	  	str += '<li class="networkLi tzui-state-default tzui-corner-left tzui-state-active tzui-tabs-selected">';
+  else
+  	str += '<li class="networkLi tzui-state-default tzui-corner-left">';
+  str += '<a onclick=select_network('+ el.id+',"'+el.network_name + '") style="cursor:pointer; text-decoration:none;overflow: hidden; display: inline; height: 20px; width: 100px;">';
+  str += '<img class="shadow" src="static/images/network.png" style="float: left; padding-left: 6px; padding-top: 4px; margin-right: 0px;">';
+  str += '<span style="display: block; float: left; overflow: hidden; width: 137px; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px">'+el.network_name+'</span>';
+  str += '<\/a><\/li>'		        
+	});				
+	str += '<\/ul>\n';
+	$("#tabsv").html(str);
+}
+		
+function GetNetworkList()
+{	
+	nwlist=[]
+	if(cur_search!=null)//&&cur_menu_show_flag!="1.wireless_basic")
+	{
+		$("#search_name_id").val(cur_search)
+		Search_name()
+		return;
+	}	
+	$.getJSON("networklist-get",function(data){
+		if(data == null || data == "")return;
+		$.each(data,function(we, el){
+    		nwlist.push(el);  
+		});	
+	});	
+	if(!cur_network_id)
+	{
+		cur_network_id = nwlist[0].id;
+	}
+}
+		
+function GetDeviceTypeList()
+{
+	$.getJSON("get-device-type",function(data){
+		if(data == null || data == "")return;
+		$.each(data,function(we, el){
+    		devtype.push(el);  
+		});								
+	});	
+}	
+	
+function GetUpgradeRuleInfo()
+{
+	$.getJSON("get-network-upgrade-rule", function(data){
+		if(data == null || data == "")return;
+		$.each(data,function(we, el){
+    		up_rules.push(el);  
+		});								
+	});	
+}
+	
+function GetFirmwareList()
+{
+	var param = {"domain_id": cur_domain_id};
+	$.getJSON("get_firmwareList",param,function(data){
+		if(data == null || data == "")return;
+		$.each(data,function(we, el){	
+    		fwlist.push(el);  
+		});						
+	});
+}
+	
+function FreshUpgradeRuleTable(nid)
+{
+	var i = 0;
+	var str = "";
+	var dtype = "";
+	str += '<tr><td align="center">'+WebString.Device_Type+'</td><td align="center">'+WebString.Plan_Version+'</td></tr>';
+	$.each(devtype,function(we, el){
+		str += '<tr><td align="center">';
+		str += el.dev_model;
+		str += '</td>';
+		str += '<td>';
+		str += '<select id="plan_ver_sel_' + el.id+ '">';
+		str += '<option value="R0.0.00.000">'+WebString.Latest_Version+'</option>';
+		$.each(fwlist,function(wid,wel){
+			if(wel.dev_type_id == el.id && wel.official_release)
+			{
+				str += '<option value="' + wel.fimware_ver + '">' + wel.fimware_ver +'</option>';	
+			}
+		});
+		str += '</select>'
+		str += '</td></tr>';
+	});	
+	$("#up_rule_table").html(str);
+	$.each(nwlist,function(we, el){
+		if(el.id == nid)
+		{
+			$.each(up_rules,function(we, el){
+				var obj_sel;
+				if(el.network_id == nid)
+				{
+					pbj_sel = '#plan_ver_sel_' + el.dev_type_id;
+					$(pbj_sel).val(el.plan_version);
+				}
+			});
+			return;
+		}
+	});						
+}
+	
+function FreshNetworkBasic()
+{
+	$.each(nwlist,function(we, el){	
+		if(cur_network_id == el.id)
+		{
+			$("#network_name_input").val(el.network_name);
+			if($("#network_name_input").val() == "default_network")
+			{
+				$('#network_name_input').attr("disabled","disabled");
+			}
+			else
+			{
+				$('#network_name_input').removeAttr("disabled"); 
+			}
+			if(el.auto_upgrade != undefined && el.auto_upgrade == "1")
+			{	
+				updateAutoUpEnable();
+			}
+			else
+			{
+				updateAutoUpDisable();
+			}
+		}
+	});
+}
+	
+function updateAutoUpEnable(){
+	var parent = $("#autoupSwitch .cb-enable").parents('.switch');
+	
+	$('.cb-disable',parent).removeClass('selected');
+	$("#autoupSwitch .cb-enable").addClass('selected');
+	$('.checkbox',parent).attr('checked', true); 
+	$("#auto_upgrade").val(1);
+}
+
+function updateAutoUpDisable(){
+	var parent = $("#autoupSwitch .cb-disable").parents('.switch');
+	
+	$('.cb-enable',parent).removeClass('selected');
+	$("#autoupSwitch .cb-disable").addClass('selected');
+	$('.checkbox',parent).attr('checked', false);
+	$("#auto_upgrade").val(0);
+}
+	
+function cancel_network_configure()
+{
+	document.location.href = document.location.href;
+}
+	
+function apply_network_configure()
+{
+	var devtypes = "";
+	var planvers = "";
+	var plan_ver_str = "";
+	var i = 0;
+	var form_id = $("#which_form").val();
+	var url;
+	if(form_id == "network_basic_form")
+	{	
+		if(networkcheckvalue()==false)
+			return
+		cur_network=$("#network_name_input").val()
+		if(cur_search!=null)
+			url = "set-network-basic?network_id=" + cur_network_id+"&network_name="+cur_network+"&search_name="+cur_search+"&menu_show_flag=0.network_basic";
+		else
+			url = "set-network-basic?network_id=" + cur_network_id+"&network_name="+cur_network+"&menu_show_flag=0.network_basic";
+		$("#network_basic_form").attr("action", url);
+		$("#network_basic_form").submit();
+	}		
+	else if(form_id == "network_up_form")
+	{
+		$.each(devtype,function(we, el){
+			plan_ver_str = $("#plan_ver_sel_"+el.id).val();
+			if(i == 0)
+			{
+				devtypes += el.id;
+				planvers += plan_ver_str;
+			}
+			else
+			{
+				devtypes += "|" + el.id;
+				planvers += "|" + plan_ver_str;
+			}
+			i++;
+		});
+		$("#dev_type_id").val(devtypes);
+		$("#plan_version").val(planvers);
+		cur_network=$("#network_name_input").val()
+		if(cur_search!=null)
+			url = "set-network-upgrade-rule?network_id=" + cur_network_id+"&network_name="+cur_network+"&search_name="+cur_search+"&menu_show_flag=1.network_upgrade";
+		else
+			url = "set-network-upgrade-rule?network_id=" + cur_network_id+"&network_name="+cur_network+"&menu_show_flag=1.network_upgrade";
+		$("#network_up_form").attr("action", url);
+		$("#network_up_form").submit();
+	}
+	else
+	{	
+		 try
+		 {
+			var testnetwork = new AMap.Marker({});//Temporary variable test network
+		 }
+		 catch(e)
+		 {
+			 alert(WebString.network_disconnected)
+			 return
+		 }
+			
+			
+		if( 1 == $("#map_type").val() )
+		{
+			var up_file = $("#map_file").val();
+			if( up_file == "" )
+			{ 
+				alert(WebMg_NetcfgString.Add_Marker);
+				return;
+			}
+		}
+		if( 0 != nwmaps.length )
+		{
+			if (!confirm(WebString.Change_network))
+			  {
+				  return;
+			  }
+		}
+		url = "upload_network_map?network_id=" + cur_network_id;
+		$("#network_map_form").attr("action", url);
+		$("#action").val("add");		
+		$("#network_map_form").submit();		
+	}
+}
+
+function inlitmap()
+{
+	LoadNetworkMap()
+	GetNetworkMapInfo();
+	
+}
+
+
+function LoadNetworkMap()
+{
+	mapObj = new AMap.Map("mapContainer", {
+		resizeEnable: true,
+		scrollWhell: true,
+		doubleClickZoom: true,
+		view: new AMap.View2D({
+			resizeEnable: true,
+			center:new AMap.LngLat(initlng, initlat),//地图中心点
+			zoom:initzoom//地图显示的缩放级别
+		}),
+		keyboardEnable:false
+	});
+	
+	AMap.event.addListener(mapObj,'complete',addMapCompleteListener);		
+	AMap.event.addListener(mapObj,'zoomchange',addMapZoomchangeListener);	
+	AMap.event.addListener(mapObj,'dragend',addMapDragendListener);	
+}
+
+function NetworkFloorIdSelect()
+{
+	try 
+   { 
+		var idx = 0;
+		var flag = false;		
+		var floor_id = $("#floor_select").val();		
+		$("#keyword").attr("readonly", true);
+		$("#longitude").attr("readonly", true);
+		$("#latitude").attr("readonly", true);
+		$("#zoomlevel").attr("readonly", true);
+		$("#storey_height").attr("readonly", true);
+		
+		for(var i = 0; i < nwmaps.length; i++)
+		{
+			if( floor_id == nwmaps[i].floor_id ) 
+			{
+				flag = true;
+				idx = i;
+				break;
+			}
+		}
+		if( flag == true )
+		{
+			$("#delete_map_bttn").show();
+			$("#add_marker_bttn").hide();
+			$("#keyword").val(nwmaps[idx].address);
+			$("#longitude").val(nwmaps[idx].longitude);
+			$("#latitude").val(nwmaps[idx].latitude);
+			$("#zoomlevel").val(nwmaps[idx].zoomlevel);
+			$("#storey_height").val(nwmaps[idx].storey_height);
+			
+			imageLayer = new AMap.ImageLayer({	
+				url:"static/images/maps/" + nwmaps[idx].map_image,
+				bounds: new AMap.Bounds( //经纬度边界
+				new AMap.LngLat(nwmaps[idx].longitude - 0.014748, nwmaps[idx].latitude - 0.007046),
+				new AMap.LngLat(nwmaps[idx].longitude + 0.014748, nwmaps[idx].latitude + 0.007046)),
+				//可见zoom范围
+				zooms: [14, 18] 
+			})
+			
+			mapObj = new AMap.Map("mapContainer", {
+				resizeEnable: false,
+				scrollWhell: true,
+				doubleClickZoom: false,
+				layers:[
+					new AMap.TileLayer(),
+					imageLayer
+				],
+				view: new AMap.View2D({
+					resizeEnable: true,
+					center:new AMap.LngLat(nwmaps[idx].longitude, nwmaps[idx].latitude),//地图中心点
+					zoom:nwmaps[idx].zoomlevel//地图显示的缩放级别
+				}),
+				keyboardEnable:false
+			});	
+		}
+		else
+		{
+			$("#delete_map_bttn").hide();
+			$("#add_marker_bttn").show();
+			initlng = nwmaps[0].longitude;
+			initlat = nwmaps[0].latitude;
+			initzoom = nwmaps[0].zoomlevel;	
+			LoadNetworkMap();
+		}
+	 }
+	 catch (e) 
+	 { 
+		//alert(WebString.network_disconnected)
+		return
+	 }
+}
+
+function FreshNetworkMapInfo()
+{
+	try 
+  { 	
+		floor_num = 1;	
+		if( nwmaps.length > 0 )
+		{
+			var map_type = nwmaps[0].map_type;
+			if( 0 == map_type )
+			{
+				$("#longitude").val(nwmaps[0].longitude);
+				$("#latitude").val(nwmaps[0].latitude);
+				$("#zoomlevel").val(nwmaps[0].zoomlevel);
+				GlobalMapSelected();
+				initlng = nwmaps[0].longitude;
+				initlat = nwmaps[0].latitude;
+				initzoom = nwmaps[0].zoomlevel;	
+				LoadNetworkMap();
+			}
+			else
+			{
+				PlaneMapSelected();
+				floor_num = nwmaps[0].storey_height;
+				$("#storey_height").val(floor_num);
+				NetWorkStoreySelectFill(floor_num);	
+				$("#floor_select").val(nwmaps[0].floor_id);
+				NetworkFloorIdSelect();	
+			}		
+		}
+		else
+		{
+			LoadNetworkMap(initlng, initlat, initzoom);
+		}
+	}
+	catch (e) 
+	{ 
+		//alert(WebString.network_disconnected);
+		return;
+	}
+		
+}
+
+function GetNetworkMapInfo()
+{
+	nwmaps=[]
+	var param = {"network_id": cur_network_id};
+	$.getJSON("get-network-map",param, function(data){
+		if(data == null || data == "")
+		{
+			nwmaps = [];
+			return;
+		}
+		$.each(data,function(key,value){
+			 nwmaps.push(value);
+		});			
+	});
+
+	FreshNetworkMapInfo();			
+}
+	
+function NetWorkStoreySelectFill(high)
+{
+	$("#floor_select").empty();
+	if( high > 1 )
+	{			
+		for (var h = 1; h <= high; h++)
+		{
+			$("#floor_select").append("<option value=" + h + ">" + h + "<\/option>");
+		}
+	}
+	else
+	{
+		$("#floor_select").append("<option value=1>1</option>");
+	}
+}
+
+function StoreyHeightSet()
+{
+	floor_num = $("#storey_height").val();
+	if( floor_num < 1 )
+	{
+		floor_num = 1;
+		$("#storey_height").val(1);
+	}
+	NetWorkStoreySelectFill(floor_num);	
+}
+
+function heightset(e)
+{
+	if(e.which == 13)  //enter click
+	{
+		StoreyHeightSet();
+	}
+}
+
+function heightchange()
+{
+	StoreyHeightSet();
+}
+
+function DeleteOneMap()
+{	
+	var url = "upload_network_map?network_id=" + cur_network_id;
+	$("#network_map_form").attr("action", url);
+	$("#map_action").val("delete");
+	
+	if (!confirm(WebString.Delete_plane))
+	{
+		return;
+	}
+	$("#network_map_form").submit();
+}
+
+function AddNetworkMarker()
+{
+	$("#map_file").click();
+}
+
+function GlobalMapSelected()
+{
+	var parent = $("#mapTypeSwitch .cb-enable").parents('.switch');
+	$('.cb-disable',parent).removeClass('selected');
+	$("#mapTypeSwitch .cb-enable").addClass('selected');
+	$('.checkbox',parent).attr('checked', true); 
+	$("#plane_config_div").hide();
+	$("#map_type").val(0);		
+}
+
+function PlaneMapSelected()
+{
+	var parent = $("#mapTypeSwitch .cb-disable").parents('.switch');	
+	$('.cb-enable',parent).removeClass('selected');
+	$("#mapTypeSwitch .cb-disable").addClass('selected');
+	$('.checkbox',parent).attr('checked', false);
+	$("#plane_config_div").show();
+	$("#map_type").val(1);
+}
+
+jQuery().ready(function(){ 
+	webInit();
+	GetNetworkList();
+	FreshNetworkList();
+	FreshNetworkBasic();
+	GetDeviceTypeList();
+	GetFirmwareList();
+	GetUpgradeRuleInfo();
+	FreshUpgradeRuleTable(cur_network_id);
+	getmenu();
+	
+
+	$("#autoupSwitch .cb-disable").click(function(){
+    	updateAutoUpDisable();
+	});
+	$("#autoupSwitch .cb-enable").click(function(){
+    	updateAutoUpEnable();
+	});	
+	
+	$("#mapTypeSwitch .cb-enable").click(function(){
+		GlobalMapSelected();    
+	});
+	$("#mapTypeSwitch .cb-disable").click(function(){
+		PlaneMapSelected();
+	});	
+	
+	if(cur_menu_show_flag!=null)
+	{
+		var strs= new Array();
+		strs=cur_menu_show_flag.split(".");
+		showSubSection(strs[0],strs[1]);
+		select_menu(strs[1]);
+	}	
+	$("#add_marker_bttn").val(WebString.Add_Marker)		
+	
+	loadScript()
+	mainHight()
+	
+			
+});  
+
+function mainHight()
+{
+	if(($("#tabsv").height()+30)>386)
+	{
+		$("#main").height($("#tabsv").height()+30)
+	}
+}
+
+function loadScript() {
+
+  var script = document.createElement("script");
+  	script.type = "text/javascript";
+	script.src ="http://webapi.amap.com/maps?v=1.3&key=9ce441d7b1fe68999fc41be3d60c7acb&&callback=inlitmap";
+	document.body.appendChild(script);
+}
+function networkcheckvalue()
+{
+		
+		if( $("#network_name_input").val().length==0 )
+		{
+			alert(WebMg_NetcfgString.Enter_Network_Name)
+			return false;
+		}
+		if(cur_network == $("#network_name_input").val())
+		{
+			return true
+		}
+		ERROR=false
+		$.each(nwlist,function(we, el){
+			if($("#network_name_input").val()==el.network_name)
+			{
+				alert(WebMg_NetcfgString.Network_Name_used)
+				ERROR=true
+				return false;
+			}
+		})
+		if(ERROR)
+			return false
+}
+function remember_show_flag(show_string)
+{
+	cur_menu_show_flag="";
+	cur_menu_show_flag=show_string;	
+	purview();
+}	
+function purview()
+{
+	var cookie_user=getCookie('purview_user')
+	if(cookie_user.substr(6,1)=='2')
+	{
+		if(cur_menu_show_flag=='1.network_upgrade'&&cookie_user.substr(1,1)=='0')
+		{
+			$("#ssid_apply_bttn").show()
+			$("#network_cancel_bttn").show()
+		}
+		else
+		{
+			$("#ssid_apply_bttn").hide()
+			$("#network_cancel_bttn").hide()
+		}
+	}
+}
+	
+function Search_name(Search)
+{
+	nwlist=[]
+	var search_info=$("#search_name_id").val();
+	if($("#search_name_id").val().length<1)
+	{
+		alert(WebString.search_input_network)
+		return;
+	}
+	cur_search=search_info
+	var param = {"search_info": search_info};
+	var url = "networklist-get-search";
+	$.getJSON(url,param, function(data){ 
+			if(data == null || data == "")
+			 {
+				 $("#contentInner").hide()
+				 $("#tabsv").hide()
+				 alert(WebString.search_without)
+				 return ;
+			 }
+			$("#contentInner").show()
+		 	$("#tabsv").show()
+			$.each(data,function(key,value){
+				 nwlist.push(value);
+			});
+			if(Search!=null)
+			{
+				cur_network_id = nwlist[0].id;
+				cur_network = nwlist[0].network_name;
+				FreshNetworkBasic();
+				GetDeviceTypeList();
+				GetFirmwareList();
+				GetUpgradeRuleInfo();
+	
+			}
+			FreshNetworkList()
+	});
+}	          
+	//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden" id="page_title" value="management-networkconfig" />
+
+<div id="mainExt">
+	<div style="height: auto; min-height: 386px;" id="main">
+		<div style="opacity: 1; display: block;" id="menuLevel3" class="panes">
+			<div style="opacity: 1;" id="menuLevel3Inner">
+					
+					<div id="title_leftmenu" style="font-size:16px; margin-top:15px;  ">
+						<script>document.write(WebMg_NetcfgString.networklist)</script>
+						<div class="tzui-tabs tzui-widget tzui-widget-content tzui-corner-all tzui-tabs-vertical tzui-helper-clearfix" id="tabsv" style="overflow: hidden; position:absolute">
+						</div>
+					</div>
+				<div class="cleared"></div>
+			</div>
+		</div>
+		
+		<div style="width: 930px; left: 0px;" >
+			<div style="width: 740px; opacity: 1; margin-left:260px;" id="contentInner">
+				<input type="hidden" id="which_form" name="which_form" value="network_basic_form">
+             	<div style="margin-left:20px; width:696px; margin-top:16px; margin-bottom:16px;">
+               	 <!--span id = "network_name_title" style="font-size:20px; font-weight:bold; font-family:Arial; color:#373737">
+					  </span-->
+					</div>
+				<table cellpadding="2px" cellspacing="0px" width="">
+					<tr>
+						<td>
+							<div id="subsection0" class="subsection tabclick" onclick="showSubSection('0','network_basic');remember_show_flag('0.network_basic');select_menu('network_basic');">
+								<a id="tabs_ap0" href="javascript:{}" class="ap0">
+                                <script>document.write(WebString.Basic)</script>                                
+								<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								</a><span></span>
+							</div>
+						</td>
+						<td>
+							<div id="subsection1" class="subsection tabdefault" onclick="showSubSection('1','network_upgrade');remember_show_flag('1.network_upgrade');select_menu('network_upgrade');">
+								<a id="tabs_ap1" href="javascript:{}" class="ap1">
+                                <script>document.write(WebString.Upgrade_Rule)</script>  
+                            								<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								</a><span></span>
+							</div>
+						</td>
+						<td>
+							<div id="subsection2" class="subsection tabdefault" onclick="showSubSection('2','network_map');remember_show_flag('2.network_map');select_menu('network_map');">
+								<a id="tabs_ap2" href="javascript:{}" class="ap2">
+                                <script>document.write(WebString.Map)</script> 
+                                
+								<img class="modImg" style="vertical-align:top;margin-top:4px" src="static/images/button/blank.png" height="12">
+								</a><span></span>
+							</div>
+						</td>
+					</tr>
+				</table>
+				
+				<div id="network_basic" class="ap_content" style="height: auto">
+                    <form id="network_basic_form" method="post" action="">
+						<input type="hidden" id="auto_upgrade" name="auto_upgrade" value="0"/>
+						<table class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+							<tr>
+								<td align="left"><script>document.write(WebManage_NetworksString.Network_Name)</script> :</td>
+								<td align="left" class="bootstrap-scope">
+									<input id="network_name_input" maxlength="40" name="network_name" value="" class="active_input  idleField" type="text"onafterpaste="checkvalue(this,X_INPUT_IDANDCH)" 
+onkeyup="checkvalue(this,X_INPUT_IDANDCH)"  
+onselect="checkvalue(this,X_INPUT_IDANDCH)"><span  class="red"> *</span>
+								</td>
+							</tr>
+							<tr>
+								<td align="left"><script>document.write(WebMg_NetcfgString.Auto_Upgrade)</script>:</td>
+								<td align="left">
+									<p class="field switch" id="autoupSwitch">
+										<label class="cb-enable "><span><script>document.write(WebString.Enable)</script></span></label>
+										<label class="cb-disable selected"><span><script>document.write(WebString.Disable)</script></span></label>
+											<input name="f_autoup_enabled" class="checkbox" id="f_autoup_enabled" value="0" checked="checked" type="checkbox">
+									</p> 
+								</td>
+							</tr>
+						</table>	
+                    </form>		
+				</div>
+				
+				<div id="network_upgrade" class="ap_content tabs_hide" style="height: auto">
+					<form id="network_up_form" method="post" action="">
+						<input type="hidden" id="fw_id" name="fw_id"/>
+						<input type="hidden" id="dev_type_id" name="dev_type_id"/>
+						<input type="hidden" id="plan_version" name="plan_version"/>
+						<table id="up_rule_table" class="table_content" style="margin-top:20px; margin-left:20px; margin-bottom:20px" width="90%">
+						</table>								
+					</form>
+				</div>
+				
+				<div id="network_map" class="ap_content tabs_hide" style="height: auto">
+					<form id="network_map_form" method="post" enctype="multipart/form-data" action="">
+						<input type="hidden" id="map_action" name="map_action" value="add">
+						<input type="hidden" id="map_type" name="map_type" value="0"/>
+						<div style="text-align:left;margin-top:10px;margin-bottom:10px">
+							<label style="margin-left:30px"><script>document.write(WebString.Search)</script>:</label>
+							<input id="keyword" name="keyword" type="text" onkeyup='keydown(event)' onkeydown='keydown(event)'>
+							<label style="margin-left:60px">X:</label><input id="longitude" name="longitude" type="text" size="12">
+							<label style="margin-left:30px">Y:</label><input id="latitude" name="latitude" type="text" size="12">
+							<label style="margin-left:30px">ZoomLevel:</label><input id="zoomlevel" name="zoomlevel" type="text" size="4">
+							<div id="result1" name="result1"></div>							
+						</div>
+						<div style="width:736px;height:auto;min-height:480px;border:#ccc solid 1px;" id="mapContainer"></div>
+						<div id="map_type_div" style="text-align:left;margin-left:30px;margin-top:10px;margin-bottom:10px">
+							<table><tr>				
+							<td><label>Map Type:</label></td>
+							<td><p class="field switch" id="mapTypeSwitch">
+								<label class="cb-enable selected checked"><span>Map</span></label>
+								<label class="cb-disable "><span>Plane Map</span></label>
+									<input name="planemap_enable" class="checkbox" id="planemap_enable" value="0" checked="checked" type="checkbox">
+							</p></td>
+							</tr></table>
+						</div>
+						<div class="cleared"></div>
+						<div id="plane_config_div" style="text-align:left;margin-top:10px;margin-bottom:10px; display:none">	
+							<label id="s_h" style="margin-left:30px;"><script>document.write(WebString.Storey_Height)</script>:</label>
+							<input id="storey_height" name="storey_height" type="text" size="4" value="1" onkeydown='heightset(event)' onchange="heightchange();">
+							<label id="f_s" style="margin-left:30px;"><script>document.write(WebString.Floor_Select)</script>:</label>
+							<select id="floor_select" name="floor_select" style="width:60px;" onchange="NetworkFloorIdSelect()"><option value="1" selected>1</option></select>
+							<input type="button" id="delete_map_bttn" value="Delete" onclick="DeleteOneMap();" style="margin-left:30px;display:none">
+							<input type="button" id="add_marker_bttn" name="add_marker_bttn" value="Add Marker" onclick="AddNetworkMarker();" style="margin-left:30px;">
+							<input type="file" id="map_file" name="map_file" style="display:none"/>
+						</div>						
+					</form>
+				</div>
+				
+				<div style="position:relative;width:240px; margin-left:518px; margin-top:5px;height:80px;"> 
+					<table style="margin-left:25px">
+						<tr>
+							<td>
+								<div id="network_cancel_bttn" class="bttn bttn_black">
+									<a id="cancelNetworkButton" href="javascript:{cancel_network_configure();}">
+										<div class="bnt_image"><img src="static/images/button/refuse_img.png"></div>&nbsp;<script>document.write(WebString.Cancel)</script></a><span></span>
+								</div>
+							</td>
+							<td width="0px">&nbsp;</td>
+							<td>
+								<div id="ssid_apply_bttn" class="bttn bttn_red">
+									<a id="uploadButton" href="javascript:{apply_network_configure();}">
+									<div class="bnt_image"><img src="static/images/button/apply_img.png"></div>&nbsp;
+                                    <script>document.write(WebString.Apply)</script></a><span></span>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				
+			</div>
+		</div>
+		<div class="cleared"></div>
+	</div>
+</div>
+	
+<div style="width: 100%; background-color: #d2d3d0; height: 3px;"></div>
+
+<div id="footerExt">
+	<div id="footer">
+		<div id="copyright" style="text-align:center; margin-top:20px">
+			<span style="color: white; font-family: Arial; font-size: 11px"><script>document.write(WebString.Copyright)</script></span>
+		</div>               
+	</div>
+</div>
+        
+{% include "page-end.html" %} 

@@ -1,0 +1,19 @@
+<div style="margin:auto; width:1040px; height:90px; " >
+    <div style="float:left; margin-top:20px; width:200px; height:70px;background-image:url(static/images/tzlogo-logo-min.png); background-repeat:no-repeat;">
+    </div>
+	<div style="float:left;  margin:40px 0 20px 20px; width:320px; height:30px;">
+    <label ><script>document.write(MenuString.Network);</script></label>
+		<select id="network_sel" name="network_sel" style="margin-left:5px"  onchange="configure_select_network(this.value)">
+		</select>
+	</div>
+    
+  <div style="float:left;  margin:10px 0 0 120px; width:350px; height:30px; text-align:right; color:#469fb9; font-size:12px;font-family:Arial;  "><span style="margin-right:15px"><script>document.write(WebString.Welcome+getCookie('username'));</script> </span> <span onclick="logout();"  style="cursor:pointer; margin-right:15px"><script>document.write(WebString.Logout);</script></span> <span onclick="setCookie('Language','EN')" style="cursor:pointer;">English |</span>  <span onclick="setCookie('Language','CN')" style="cursor:pointer;">简体中文</span></div>
+
+  <div ID="search_id" style="float:left; visibility:hidden;  margin:5px 0 15px 280px; width:210px; height:30px;">
+    
+    <input type="text" id= "search_name_id" value="" style="width:130px; height:20px" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)" />
+    <input type="button" id="Search" value="Search" onclick="Search_name('Search')" />
+	</div>
+</div>

@@ -1,0 +1,477 @@
+{% include "page-head.html" %} 
+
+<script type="text/javascript">
+//<![CDATA[
+
+var cur_network_id = 0;	
+var	cur_network = "";
+var ssidData = new Array();
+var nwlist = new Array();
+var start_from_number=1;//设置全局变量
+var number_space=20;
+var back_all_number=630;
+var cur_search=null
+
+cur_network = getURLMultiParam("network");
+		
+function configure_add_ssid(){
+	url = "add-ssid.html?addSsidName=" + name + "&network=" + cur_network;
+	window.top.location.href = url;
+}
+function configure_ssid_setting(name,i)
+{
+	if(cur_search!=null)
+		url = "configure-ssidsummary.html?ssidname=" + name + "&network=" + cur_network +"&position="+ ((parseInt(i)+parseInt(start_from_number)-1))+"&search_name="+cur_search;
+	else
+		url = "configure-ssidsummary.html?ssidname=" + name + "&network=" + cur_network + "&position="+ ((parseInt(i)+parseInt(start_from_number)-1));
+	window.top.location.href = url;
+}
+				
+function FreshTitle()
+{
+	var TR = "";
+	TR = WebString.Ssid_Profile_List + cur_network + '"';	
+	$("#title").html(TR);
+}
+		
+function webInit()
+{          	
+	$("#secondaryMenu2").show();
+	$("#tabs_2").addClass("current");
+	$("#search_id").css("visibility","visible")
+	$("#secondaryMenu2Selection3").addClass("current secondarysectionSelected");
+}
+
+function GetSSIDData(tmp)
+{	
+	if(String(tmp)!="undefined")
+	{
+		number_space=tmp;
+		start_from_number=1
+	}
+	ssidData=[]		
+	var param = {"network": cur_network, "start": start_from_number,"offset": number_space};
+	var url = "get-ssid-list";
+	$.getJSON(url, param,
+		function(data){ 
+		$.each(data,function(key,value){  
+			ssidData.push(value);  
+		});	
+		FreshSSIDTable();			
+	});
+}
+		
+function FreshSSIDTable()
+{
+	var str="";	
+	var i = 0;
+	var cs = "";
+	var length=0	
+	str += "<table class='networkTable' style='width:750px; margin:auto; border:0; cellpadding:0; cellspacing:0'>";
+	$.each(ssidData,function(we, el)
+	{	
+		if(el.total != "undefined" && el.start != "undefined" &&  el.offset != "undefined" &&  el.data_type == "summary" )
+		{
+			back_all_number=el.total;
+			start_from_number=el.start;
+			number_space=el.offset;
+			if(back_all_number==0|| Math.ceil(back_all_number/number_space)==1)
+			{
+				$("#chan_multipageNumN").hide()
+			}
+			else
+			{
+				$("#chan_multipageNumN").show()
+			}
+			//return;   // continue
+		}
+		if(cur_network_id == el.network_id)
+		{
+			//alert("---------cur_network_id is "+cur_network_id);
+			length++;
+			cs = i%2 ? "row2":"row1";
+			str += '<tr style="cursor:pointer" class=' + cs + '>';
+			str += '<td onclick=configure_ssid_setting("'+String(el.ssid_name)+'",'+length+')>';
+			str += '<div style="width:40px;text-align:right;float:left">';
+			str += '<img  id="ssid_img7" src="static/images/ssid.png" alt="Loading Configuration .. please wait" style="vertical-align:middle;margin-right:5px">';
+			str += '<\/div>';
+			str += '<div style="float:left;width:220px;overflow: hidden; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px;text-align:left">'+ el.ssid_name + '<\/div>';
+			str += '<div style="float:left;width:270px;overflow: hidden; text-overflow: ellipsis;white-space:nowrap;padding-left: 5px;text-align:left"><img src="static/images/captive-wpa.png" style="vertical-align:middle" width="25px">'+el.security_type+'<\/div> ';
+			str += '<div style="float:left;width:150px;">'+el.ap_num+Webconfigure_ssidString.associated_devices+'<\/div>';
+			str += '<\/td>';
+			/*str += '<td>';
+			str += '<div style="line-height:10px"><img id="delssid" onclick="deleteSSID(' + el.id + ')" src="static/images/delete.gif">';
+    str += '<\/div>';
+    str += '<\/td>'*/
+			str += '<\/tr>';
+			i++;
+		}
+	});
+	str += '</table>\n';
+	$("#ssidProfile_table").empty()
+	$("#ssidProfile_table").html(str);
+	FreshTitle();
+	show_pagination(back_all_number,number_space)
+	
+}
+
+
+function postpagenumber(present_page)
+{
+	start_from_number=(present_page-1)*number_space+1;
+	getDATA_network();
+
+}
+function submitAddSsid(){
+	if( $("#addSsidName").val().length==0 )
+	{
+		alert(Webconfigure_ssidsummaryString.valid_SSID)
+		return false;
+	}
+
+	$("#Addssid_Form").submit();
+	$("#expose").hide();
+}
+		
+function FillNetworkSelectOption()
+{
+	var str = "";
+	$.each(nwlist,function(wid,wel){
+			str += '<option value="' + wel.network_name + '">' + wel.network_name +'</option>';
+			if(cur_network == wel.network_name)
+    {
+    	cur_network_id = wel.id;
+    }
+	});
+	$("#network_sel").html(str);
+	if(cur_network == "" || cur_network == "undefined" || cur_network == null)
+	{				
+		cur_network = nwlist[0].network_name;
+		cur_network_id = nwlist[0].id;
+	}
+
+	$("#network_sel").val(cur_network);
+	//FreshSSIDTable();
+}
+		
+function configure_select_network(network)
+{
+
+	url = "configure-ssid.html?network=" + network;
+	window.top.location.href = url;
+	/*cur_network = network;
+	$.each(nwlist,function(we, el){
+    if(cur_network == el.network_name)
+    {
+    	cur_network_id = el.id;
+    	return false;
+    } 
+	});			
+	FreshSSIDTable();*/
+}
+
+function getDATA_network()
+{
+	var url = "networklist-get";
+	$.getJSON(url,
+		function(data){ 
+			if(data == null || data == "")return;
+			$.each(data,function(key,value){
+					nwlist.push(value);
+			});
+			FillNetworkSelectOption();
+			GetSSIDData();
+			
+		} 
+    );	
+}
+
+
+/*
+function GetNetworkList()
+{			
+	$.getJSON("networklist-get",function(data){
+		$.each(data,function(we, el){
+    nwlist.push(el);  
+		});	
+	});	
+}
+*/
+
+$(document).ready(function(){
+	webInit();
+	WebLoadString()
+	if(cur_network==null)
+	{
+		cur_network="{{back_network_name}}"
+	}
+	if("{{add_back_info}}"=="None")
+	{
+		alert(WebString.Ssid_name_exsit)
+	}
+	else if("{{add_back_info}}"== 32)
+	{
+		alert(Webconfigure_ssidString.ssid_template_32)
+	}	
+	getDATA_network()
+	//GetNetworkList();				
+	//GetSSIDData();
+	//FreshSSIDTable();	
+	//FillNetworkSelectOption();
+	$("#addSsidButton").on('click',function(){
+	$("#expose").show();
+	});
+	$("#expose_close").on('click',function(){
+	$("#expose").hide();
+	});
+	$("#add_new_ssid").on('click',function(){	
+		
+			submitAddSsid();
+	}); 
+	$("#network").val(cur_network);	 
+	getmenu()  
+});
+
+function Search_name(){
+	space_page=number_space
+	ssidData=[]
+	var search_info=$("#search_name_id").val();
+	if($("#search_name_id").val().length<1)
+	{
+		alert(WebString.Enter_search_ssid )
+		return 
+	}
+	cur_search=search_info
+	var param = {"network": cur_network, "search_info": search_info};
+	var url = "get-ssid-list-search";
+	$.getJSON(url, param,
+		function(data){ 
+			if(data == null || data == "")
+			 {
+				 $("#chan_multipageNumN").hide();
+				 $("#chan_multipageNumN_search").hide();
+				 $("#ssidProfile_table").hide()
+				 alert(WebString.search_without)
+				 return ;
+			 }
+			$.each(data,function(key,value){
+				 ssidData.push(value);
+			});
+			if(ssidData.length==0)
+			{
+				$("#chan_multipageNumN").hide();
+			}
+			if(ssidData.length>40&&back_all_number>40)
+			{
+				alert(WebString.search_range_ssid);
+				return
+			}
+			$("#chan_multipageNumN").hide();
+			$("#ssidProfile_table").hide()
+			FreshSSIDTable();
+			$("#chan_multipageNumN_search").empty()
+			if(ssidData.length>space_page)
+			{
+				$.each($("#ssidProfile_table tr"), function(i){
+					  if(i >= space_page){
+						  	  this.style.display = 'none'; 
+							 }  
+						});
+				$("#chan_multipageNumN_search").show();
+				for(i=1;i<=Math.ceil(ssidData.length/space_page);i++)
+				{
+					if(i==1)
+						string_page="<div class=\"page-int page_link\" id=\"page"+1+"\"  onclick=\"search_page("+1+")\">"+1+"</div>";	
+					else
+						string_page+="<div class=\"page-int\" id=\"page"+i+"\" onclick=\"search_page("+i+")\">"+i+"</div>"	;
+
+				}
+				$("#chan_multipageNumN_search").html(string_page);
+			}
+			$("#ssidProfile_table").show()
+			
+		} 
+    );
+
+}
+
+function search_page(page)
+{
+	
+	space_page=number_space
+	var object=$("#ssidProfile_table tr")
+	if(page*space_page>ssidData.length)
+		var end = ssidData.length
+	else
+		var end =page*space_page
+	$.each($("#ssidProfile_table tr"), function(i){
+		if(parseInt((page*space_page-space_page))<=i && i<parseInt(end)){
+				this.style.display = '';
+				
+			}  
+		else
+			this.style.display = 'none'; 
+	});
+	for(i=1;i<=Math.ceil(ssidData.length/space_page);i++)
+	{
+		if(i==page)
+		{
+			$("#page"+i).addClass("page_link")
+		}
+		else 
+			$("#page"+i).removeClass("page_link")
+	}
+}
+
+//]]>
+</script>
+
+{% include "page-center.html" %} 
+{% include "header.html" %}
+{% include "menu.html" %}
+<input  type="hidden" id="page_title" value="configure-ssid" />
+  
+  <div id="mainExt">
+	<div style="height: auto; min-height: 610px;" id="main">
+		<div style="width: 930px; opacity: 1;" id="contentInner">
+			<div style="width:927px; float:left">
+                <div id="title" style="color:#bf4803; font-family:Arial; font-weight:bold; font-size:22px; text-align:left; margin-left:12px; padding-top:16px; float:left; width:400px;">
+                </div>
+           		 <br>
+                <div id="ssidProfile_table" style="margin-left:50px; margin-top:2px; float:left;">
+                </div>
+				<div style="margin-right:110px; float:right; margin-top:10px;" >
+                    <div>
+                        <div class="bttn bttn_red" id="addSsidButton">
+                            <a  href="javascript:{void(0)}" rel="#expose">
+                            <div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>
+                                &nbsp;<script>document.write(WebString.Add_Ssid_Profile)</script>&nbsp;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+               
+               
+  
+            
+     <!-- add by mouxiaohuan 2015-4-17 -start-->       
+           
+                <div style="display: inline; width:800px; float:left; text-align:center;height:25px; margin:0px auto 30px 160px;" id="chan_multipageNumN">
+                    <DIV id="index_page_fourt_page">
+                    </DIV>
+                    <DIV id="page_number">
+                    </DIV>
+                    <DIV id="next_page_end_page">
+                    </DIV>
+                    <div class="page-int" id="show20" onclick="GetSSIDData(20)" ><script>document.write(WebString.Page)</script> 20</div>
+                    <div class="page-int" id="show50" onclick="GetSSIDData(50)" ><script>document.write(WebString.Page)</script> 50</div>
+                </div> 
+                
+             	<div style="display: none; width:800px; float:left; text-align:center;height:25px; margin:0px auto 30px 400px;" id="chan_multipageNumN_search">
+        		</div>
+       
+     <!-- add by mouxiaohuan 2015-4-17   -end-->                     
+                
+                
+                <div style="float:right;margin-right:40px;margin-top: 10px">
+                </div>
+            </div>
+            <div class="cleared"></div>
+        </div>
+	</div>
+</div>
+
+
+
+  
+  <div style="width: 100%;
+   background-color: #d2d3d0; height: 3px;"></div>
+  <div id="footerExt">
+  	<div id="copyright" style="text-align:center; margin-top:20px">
+	    <span style="color: white; font-family: Arial; font-size: 11px">
+	       <script>document.write(WebString.Copyright)</script>  
+	    </span>
+		</div>                
+  </div>
+  
+  <div style="z-index: 100; background-image: none; top: 79px; left: 200px; position: fixed; display: none;" class="expose_overlay" id="expose"><a id="expose_close" class="close"></a>
+    <div class="art-post">
+    	<div class="art-post-tl"></div>
+      <div class="art-post-tr"></div>
+      <div class="art-post-bl"></div>
+      <div class="art-post-br"></div>
+      <div class="art-post-tc"></div>
+      <div class="art-post-bc"></div>
+      <div class="art-post-cl"></div>
+      <div class="art-post-cr"></div>
+      <div class="art-post-cc"></div>
+      <div class="art-post-body">
+        <div class="art-postcontent">
+					<div style="opacity: 1; width:800px; height:268px; z-index:100; margin-left: 20px" id="exposeCenterInner">
+						<h2 style=" font-size:22px; font-family:Arial; font-weight:bold; color:#373737"> <script>document.write(Webconfigure_ssidString.New_Ssid)</script></h2>
+	   				<div style="border: 2px solid #e1e2e2; height:175px; text-align:center; -moz-border-radius: 4px; -webkit-border-radius: 4px;"> 
+	   					<table class="toolcontainer" align="center" width="70%">
+    						<tr valign="middle">
+     							<td>
+										<div style="width:402px; text-align:center; margin-left:0px; margin-top:12px; border-right:1px solid #e1e2e2">
+											<form id="Addssid_Form" method="post" action="/add-ssid">
+        								<table align="center" width="90%">
+       										<tr>
+        										<td style="font-family:Arial; font-size:12px; font-weight:bold; color:#373737" align="left">
+															<script>document.write(Webconfigure_ssidString.Ssid_Name)</script>
+				                    </td>
+			                    </tr>
+			                    <tr>
+				                    <td style="font-family:Arial; font-size:12px; font-weight:bold; color:red" align="left">
+										        </td>
+			                    </tr>
+			                    <tr height="38px" valign="bottom">
+				                     <td align="left">
+				                        <input class="idleField" maxlength="32" name="addSsidName" id="addSsidName" value="" size="50px"  type="text"
+onkeydown="if(event.keyCode==13){event.keyCode=0;return false}"
+onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)">
+				                        <img style="vertical-align:middle" src="static/images/help.png" alt="Help">
+				                     </td>
+			                    </tr>
+			                    <tr align="right" height="45px" valign="bottom">
+														<td>  
+															<div style="float:right">
+																<div id="add_new_ssid" class="bttn bttn_red">
+																	<a href="javascript:{void(0)}"  id="ssidNextButton" rel="#expose">
+																	<input type="hidden" id="network" name="network">
+																	<div class="bnt_image"><img src="static/images/button/add_access_point_img.png"></div>&nbsp;<script>document.write(WebString.Add)</script></a><span></span>
+																</div>
+															</div>
+														</td>
+			                    </tr>
+					              </table>
+     									</form>
+										</div>
+     							</td>
+     							<td>
+										<div style="width:400px; float:left; text-align:center">
+       								<table style="vertical-align:middle; margin-top:5px" align="center"> 
+      									<tr>
+       										<td>
+														<img src="static/images/ssid-big.png" alt="Network">
+													</td>
+       										<td width="10%">&nbsp;</td>
+       										<td style="font-family:Arial; font-size:12px; color:#373737" align="left">
+														<script>document.write(Webconfigure_ssidString.ssid_profile)</script>...<br>
+       										</td>
+      									</tr>
+       								</table>
+										</div>
+     							</td>
+    						</tr>
+	   					</table>
+	  				</div>
+					</div>
+        </div>
+      </div>
+    </div>
+  </div>
+        
+{% include "page-end.html" %} 

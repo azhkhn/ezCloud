@@ -1,0 +1,343 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link type="text/css"  rel="stylesheet" href="css/dsoho.css"  />
+<title>Login page</title>
+<style>
+
+.button2 {
+    border-top: #469fb9 1px solid; 
+	border-left:#469fb9 1px solid; 
+	border-bottom: #469fb9 1px solid; 	
+	border-right: #469fb9 1px solid;
+    background: #469fb9;
+    margin: 0px;
+    color: #ffffff;
+	cursor:pointer;
+	text-align:center;
+    display:inline-block;
+   /* -moz-display:inline-block;*/
+    font-family:Verdana;*font-family:Georgia;_font-family:Tahoma;
+    padding:0 10px 1px;*padding:3px 3px 1px;_padding:0 4px 1px;
+    line-height:18px;*line-height:14px;_line-height:16px;
+    vertical-align:middle;
+    height:23px;font-size:12px;width:70px;
+} 
+.kuangjiang{
+width:730px;
+height:450px;
+margin:70px auto 0 auto;
+font-family:Arial;
+color:#373737;
+vertical-align:middle;
+
+
+}
+
+.kuangjiang-top{
+width:730px;
+height:14px;
+}
+.kuangjiang-top-left{
+width:15px;
+height:14px;
+float:left;
+background-image: url(static/images/left-top.gif) ;
+background-repeat:no-repeat;
+overflow:hidden;
+}
+.kuangjiang-top-right{
+width:15px;
+height:14px;
+float:right;
+background-image: url(static/images/right-top.gif) ;
+background-repeat:no-repeat;
+overflow:hidden;
+}
+.kuangjiang-top-mild{
+width:700px;
+height:14px;
+float:left;
+background-image: url(static/images/top-t.gif);
+background-repeat: repeat-x;
+overflow:hidden;
+}
+
+.mild{
+width:730px;
+height:350px;
+}
+.kuangjiang-right{
+width:5px;
+height:350px;
+float:right;
+background-image:url(static/images/right-t.gif);
+background-repeat: repeat-y;
+overflow:hidden;
+
+}
+
+.kuangjiang-left{
+width:5px;
+height:350px;
+float:left;
+background-image:url(static/images/left-t.gif);
+background-repeat: repeat-y;
+overflow:hidden;
+
+}
+
+.kuangjiang-mild{
+width:720px;
+height:90px;
+float:left;
+background-color:#EEEEEE;
+overflow:hidden;
+
+}
+.kuangjiang-mild-tian{
+	float:left;
+width:227px;
+height:57px;
+margin:10px 10px 10px 35px;
+background-image: url(static/images/tzlogo-logo-min.png);
+background-repeat:no-repeat;
+overflow:hidden;
+}
+.kuangjiang-nei{
+ float:left;
+ width:720px;
+ height:auto;
+ 
+}
+.wangguan{
+width:400px;
+height:180px;
+font-size:14px;
+padding-top:10PX;
+
+margin: 20PX 0 0 200PX;
+border: #E7E7E7  0px  solid;
+}
+
+.font-1{
+	width:300px;
+	height:50px;
+	float:left;
+	margin-top: 0px;
+	margin-right: 0;
+	margin-bottom: 0;
+	margin-left: 10px;
+	line-height:20PX;
+}
+.foot{
+width:730px;
+height:15px;
+}
+.foot-left{
+width:14px;
+height:15px;
+float:left;
+background-image:url(static/images/foot-left.gif);
+background-repeat:no-repeat;
+overflow:hidden;
+}
+.foot-right{
+width:14px;
+height:15px;
+float:right;
+background-image: url(static/images/foot-right.gif);
+background-repeat:no-repeat;
+overflow:hidden;
+}
+
+.foot-mild{
+float:left;
+width:702px;
+height:15px;
+background-image: url(static/images/foot-t.gif);
+background-repeat: repeat-x;
+overflow:hidden;
+}
+
+</style>
+<script type="text/javascript" src="static/jquery/jquery-1.10.1.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/json/json.min.js?v=2.8.6"></script>
+<script type="text/javascript" src="static/script/common.js"></script>
+<script type="text/javascript">
+var LG=getCookie("Language")
+if(LG=="CN")
+document.write("<script type=\"text/javascript\" src=\"static/script/lang_cn.js\"><\/script>");
+else
+document.write("<script type=\"text/javascript\" src=\"static/script/lang_en.js\"><\/script>");
+</script>
+<script language="javascript" type="text/javascript">
+$.ajaxSettings.async = false;
+var domainlist=[]
+function Cancle()
+{	
+    document.userlogin.username.value="";
+    document.userlogin.password.value="";
+    return false;
+}
+
+
+function CheckForm()
+{
+	if(document.userlogin.username.value=="")
+	{
+		alert(WebLoginString.input_Username);
+		document.userlogin.username.focus();
+		return false;
+	}
+	if(document.userlogin.password.value == "")
+	{
+		alert(WebLoginString.input_Password);
+		document.userlogin.password.focus();
+		return false;
+	}
+}	
+function checkDate()
+{
+
+    var cf = document.forms[0]
+	if(CheckForm()==false)
+	{
+	 return false;
+	}
+	$.each(domainlist,function(wid,wel){
+		if(wel.domain_name==$("#domain_name").val())
+		{
+			$("#domain_id").val(wel.domain_id)
+			return false
+		}
+	});
+	$("#userlogin").submit()
+}
+$(document).ready(function(){ 
+	var login_info="{{login_info}}"
+	if(login_info=="password_error")
+		alert(WebLoginString.error_Password)
+	else if(login_info=="user_error")
+		alert(WebLoginString.username_noexist)
+	if(LG=="CN")
+		CN_ID()
+	else
+		EN_ID()
+	//$("#Login").attr("disabled",true)
+	Get_domain_id_list();
+})
+function CN_ID(){
+		$("#language").val("CN")
+		$("#Username").html("用户名")
+		$("#Password").html("密&nbsp;&nbsp;&nbsp;码")
+		$("#Domain_name").html("域&nbsp;&nbsp;&nbsp;名")
+		$("#login").val("登陆")
+		$("#cancel").val("取消")
+
+	}
+function EN_ID(){	
+		$("#language").val("EN")
+		$("#Username").html("Username")
+		$("#Password").html("Password")
+		$("#Domain_name").html("Domain name")
+		$("#login").val("Login")
+		$("#cancel").val("Cancel")
+	}
+function Get_domain_id_list()
+{
+	
+	$.getJSON("get_domain_id_list",function(data){
+		$.each(data,function(key,value){ 					
+			domainlist.push(value);                     
+		});
+		FilldomainSelectOption()
+	});
+}
+
+function FilldomainSelectOption()
+{
+	var str = "";
+	$.each(domainlist,function(wid,wel){
+		str += '<option value="' + wel.domain_name + '">' + wel.domain_name +'</option>';
+	});
+	$("#domain_name").html(str);
+
+}
+
+
+
+
+</script>
+
+</head>
+
+<body link="#FFFFFF" vlink="#FFFFFF" alink="#FFFFFF">
+<form action="user_login" method="post" name="userlogin" id="userlogin" >
+<input   type="hidden" name="language"    id="language" value="EN" />
+<input   type="hidden" name="domain_id"    id="domain_id" value="" />
+<DIV class="kuangjiang">
+    <div class="kuangjiang-top">
+        <div class="kuangjiang-top-left"></div>
+        <div class="kuangjiang-top-mild"></div>
+        <div class="kuangjiang-top-right"></div>
+    </div>
+    <div class="mild">
+        <div class="kuangjiang-left"></div>
+        <div class="kuangjiang-mild" >
+        <div class="kuangjiang-mild-tian"> </div>
+        <div  style="float: right; margin:20px 30px auto  auto; color:#469fb9; font-size:14px;"><span style="cursor:pointer;color:#469fb9"  onClick="EN_ID()"> English </span>  &nbsp; | <span onClick="CN_ID()"  style="cursor:pointer; color:#FFFFF"> &nbsp; 中 文</span></div>
+        
+
+
+    </div>	
+    <div class="kuangjiang-right"></div>
+	    <div class="kuangjiang-nei">
+        <div class="wangguan"><table width="340" height="160" border="0" cellpadding="0" cellspacing="0">
+       
+            <tr>
+                <td width="111"><label id="Username">Username</label>:</td>
+                <td width="229"><input   style="width:150px"  maxlength="32" type="text" name="username" onafterpaste="checkvalue(this,X_INPUT_ID)" 
+onkeyup="checkvalue(this,X_INPUT_ID)"  
+onselect="checkvalue(this,X_INPUT_ID)" ></td>
+            </tr>
+            <tr>
+                <td><label id="Password">Password</label>:</td>
+                <td><input  style="width:150px" type="password"  maxlength="32" name="password"  
+onafterpaste="checkvalue(this,X_INPUT_PASSWD)" 
+onkeyup="checkvalue(this,X_INPUT_PASSWD)"  
+onselect="checkvalue(this,X_INPUT_PASSWD)"/></td>
+            </tr>
+            <tr>
+                <td><label id="Domain_name">Domain name</label>:</td>
+                <td> <select id="domain_name" name="domain_name"  style="width:155px">
+                                            	
+						</select></td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp; </td>
+            </tr>
+            <tr><!--<input type="hidden" name="curl" id="curl">-->
+                <td>&nbsp;</td>
+                <td>
+    		     &nbsp;
+    		     &nbsp; &nbsp; &nbsp; &nbsp; <input type="button"  name="login"  value="Login"  id="login" class="button2"  onclick="return checkDate();" />
+    		     &nbsp; 
+    		     <input type="button" name="cancel" value="Cancel"  id="cancel" class="button2"  onclick="return Cancle();" />
+    		    </td>
+            </tr>
+        </table>
+        </div>
+        </div> 
+    </div> 
+    <div  class="foot" >
+        <div class="foot-left"></div>
+    	<div class="foot-mild"></div>
+        <div class="foot-right"></div>
+    </div>
+</DIV>
+</form>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<div id="menuLevel1">
+	<div id="menuLevel1Container">      
+		<ul class="menuLevel_1"> 
+			<li id="menuLevel1Selection0" class="section">
+				<a id="tabs_0" href="dashboard.html" class="w0" onClick="showSecondaryMenu(0, 0);" onMouseOver="changeMenu(0,0,'over');" onMouseOut="changeMenu(0,0,'out');">
+					<img id="menuLevel1Img0" src="static/images/button/dash_img_gr.png" class="i_menu" alt="Dashboard"/> <script>document.write(MenuString.Dashboard);</script>
+				</a>
+			</li>
+			<li id="menuLevel1Selection1" class="section" onClick="showSecondaryMenu(1, 0);" onMouseOver="changeMenu(1,0,'over');" onMouseOut="changeMenu(1,0,'out');">
+				<a id="tabs_1" href="monitor-overview.html" class="w1">
+					<img id="menuLevel1Img1" src="static/images/button/monitor_img_gr.png" class="i_menu" alt="Monitor"/> <script>document.write(MenuString.Monitor);</script>
+				</a>
+			</li>
+			<li id="menuLevel1Selection2" class="section" onClick="showSecondaryMenu(2, 0);" onMouseOver="changeMenu(2,0,'over');" onMouseOut="changeMenu(2,0,'out');">
+				<a id="tabs_2" href="configure-overview.html" class="w2">
+					<img id="menuLevel1Img2" src="static/images/button/conf_img_gr.png" class="i_menu" alt="Configure"/> <script>document.write(MenuString.Configure);</script>
+				</a>
+			</li>
+			<li id="menuLevel1Selection3" class="section" onClick="showSecondaryMenu(3, 0);" onMouseOver="changeMenu(3,0,'over');" onMouseOut="changeMenu(3,0,'out');">
+				<a id="tabs_3" href="diagnose.html" class="w3">
+					<img id="menuLevel1Img3" src="static/images/button/manage_img_gr.png" class="i_menu" alt="Manage Networks"/> <script>document.write(MenuString.Diagnose);</script>
+				</a>
+			</li>
+			<li id="menuLevel1Selection4" class="section" onClick="showSecondaryMenu(4, 0);" onMouseOver="changeMenu(4,0,'over');" onMouseOut="changeMenu(4,0,'out');">
+				<a id="tabs_4" href="management-information.html" class="w4">
+					<img id="menuLevel1Img4" src="static/images/button/manage_img_gr.png" class="i_menu" alt="Manage Networks"/> <script>document.write(MenuString.Management);</script>
+				</a>
+			</li>
+		</ul>
+	</div>
+</div>
+
+<div id="menuLevel2">
+	<div id="menuLevel2Container">
+		<div id="secondaryMenu0">
+			<div style="display: none;" class="submenu_none">
+				<div class="secondaryMenuContainer">
+					<div id="secondaryMenu0Selection0"></div>
+				</div>
+			</div>
+		</div>
+		<div id="secondaryMenu1" class="secondaryMenuContainer submenu">
+			<ul class="menuLevel_2">
+				<li>
+					<a id="secondaryMenu1Selection0" class="secondarysection" onclick="showSecondaryMenu(1, 0);" onmouseover="changeSubMenu(1,0,'over');" onmouseout="changeSubMenu(1,0,'out');" href="javascript:{now_network_name('monitor-overview.html')}">
+						&nbsp;&nbsp;<script>document.write(MenuString.Overview);</script> <img src="static/images/button/arrow_gr.png" class="i_submenu" alt="Overview">&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu1Selection1" class="secondarysection" onclick="showSecondaryMenu(1, 1);" onmouseover="changeSubMenu(1,1,'over');" onmouseout="changeSubMenu(1,1,'out');" href="javascript:{now_network_name('monitor-network.html')}">
+						&nbsp;&nbsp;<script>document.write(MenuString.Network_Statistics);</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Network Statistics">&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu1Selection2" class="secondarysection" onclick="showSecondaryMenu(1, 2);" onmouseover="changeSubMenu(1,2,'over');" onmouseout="changeSubMenu(1,2,'out');" href="javascript:{now_network_name('monitor-device.html')}">
+						&nbsp;&nbsp;<script>document.write(MenuString.Device_Statistics);</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Device Statistics">&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu1Selection3" class="secondarysection" onclick="showSecondaryMenu(1, 3);" onmouseover="changeSubMenu(1,3,'over');" onmouseout="changeSubMenu(1,3,'out');" href="javascript:{now_network_name('monitor-client.html')}">
+						&nbsp;&nbsp;<script>document.write(MenuString.Client_Statistics );</script><img src="static/images/button/arrow_og.png" class="i_submenu" alt="Client Statistics">&nbsp;&nbsp;
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div id="secondaryMenu2" class="secondaryMenuContainer submenu">
+			<ul class="menuLevel_2">
+				<li>
+					<a id="secondaryMenu2Selection0" class="secondarysection" onClick="showSecondaryMenu(2, 0);" onMouseOver="changeSubMenu(2,0,'over');" onMouseOut="changeSubMenu(2,0,'out');" href="javascript:{now_network_name('configure-overview.html')}">
+						&nbsp;&nbsp;<script>document.write(MenuString.Device );</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Overview"/>&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu2Selection3" class="secondarysection" onclick="showSecondaryMenu(2, 3);" onmouseover="changeSubMenu(2,3,'over');" onmouseout="changeSubMenu(2,3,'out');" href="javascript:{now_network_name('configure-ssid.html')}">
+						&nbsp;&nbsp;<script>document.write(MenuString.SSID );</script> <img src="static/images/button/arrow_gr.png" class="i_submenu" alt="Ssid">&nbsp;&nbsp;
+					</a>
+				</li>
+			</ul>
+		</div>       
+		<div id="secondaryMenu3">
+			<div style="display: none;" class="submenu_none">
+				<div class="secondaryMenuContainer">
+					<div id="secondaryMenu3Selection0"></div>
+				</div>
+			</div>
+		</div>        
+		<div id="secondaryMenu4" class="secondaryMenuContainer submenu">
+			<ul class="menuLevel_2">
+            	<li>
+					<a id="secondaryMenu4Selection0" class="secondarysection" onclick="showSecondaryMenu(4, 0);" onmouseover="changeSubMenu(4,0,'over');" onmouseout="changeSubMenu(4,0,'out');" href="management-information.html">
+						&nbsp;&nbsp;<script>document.write(MenuString.Information);</script>  <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Networks">&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu4Selection1" class="secondarysection" onclick="showSecondaryMenu(4, 1);" onmouseover="changeSubMenu(4,1,'over');" onmouseout="changeSubMenu(4,0,'out');" href="management-network.html">
+						&nbsp;&nbsp;<script>document.write(MenuString.Networks);</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Networks">&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu4Selection2" class="secondarysection" onclick="showSecondaryMenu(4,3);" onmouseover="changeSubMenu(4,2,'over');" onmouseout="changeSubMenu(4,1,'out');" href="management-firmware.html">
+						&nbsp;&nbsp;<script>document.write(MenuString.Firmware);</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="Firmware">&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu4Selection3" class="secondarysection" onClick="showSecondaryMenu(4, 3);" onMouseOver="changeSubMenu(4,3,'over');" onMouseOut="changeSubMenu(4,1,'out');" href="management-user.html">
+						&nbsp;&nbsp;<script>document.write(MenuString.User);</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="User"/>&nbsp;&nbsp;
+					</a>
+				</li>
+				<li>
+					<a id="secondaryMenu4Selection4" class="secondarysection" onClick="showSecondaryMenu(4, 5);" onMouseOver="changeSubMenu(4,3,'over');" onMouseOut="changeSubMenu(4,1,'out');" href="management-system.html">
+						&nbsp;&nbsp;<script>document.write(MenuString.System);</script> <img src="static/images/button/arrow_og.png" class="i_submenu" alt="System"/>&nbsp;&nbsp;
+					</a>
+				</li>
+			</ul>
+		</div>        
+	</div>
+</div>
